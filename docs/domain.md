@@ -18,24 +18,26 @@ CREATE TABLE currencies (
   code        TEXT    NOT NULL UNIQUE, -- ISO 4217 (USD, EUR, RON)
   name        TEXT    NOT NULL,
   symbol      TEXT    NOT NULL,
+  decimal_places INTEGER NOT NULL DEFAULT 2, -- cents scale (USD=2, BTC=8, JPY=0)
   is_base     INTEGER NOT NULL DEFAULT 0 -- 1 = system base currency
 );
 
 CREATE TABLE exchange_rates (
   id           INTEGER PRIMARY KEY,
   currency_id  INTEGER NOT NULL REFERENCES currencies(id),
-  rate         REAL    NOT NULL, -- 1 unit of currency_id = X units of base
+  rate         INTEGER NOT NULL, -- scaled integer; actual = rate / 10^currencies.decimal_places
   date         TEXT    NOT NULL, -- YYYY-MM-DD
   UNIQUE (currency_id, date)
 );
 
 -- 2. Securities (Stocks, Crypto, etc.)
 CREATE TABLE securities (
-  id           INTEGER PRIMARY KEY,
-  ticker       TEXT    NOT NULL UNIQUE,
-  name         TEXT    NOT NULL,
-  currency_id  INTEGER NOT NULL REFERENCES currencies(id),
-  type         TEXT    NOT NULL  -- stock | etf | crypto
+  id              INTEGER PRIMARY KEY,
+  ticker          TEXT    NOT NULL UNIQUE,
+  name            TEXT    NOT NULL,
+  currency_id     INTEGER NOT NULL REFERENCES currencies(id),
+  type            TEXT    NOT NULL, -- stock | etf | crypto
+  quantity_scale  INTEGER NOT NULL DEFAULT 6 -- decimal places for quantity (BTC=8, stock=4)
 );
 
 CREATE TABLE security_prices (
@@ -75,7 +77,7 @@ CREATE TABLE transaction_entries (
   side            TEXT    NOT NULL, -- debit | credit
   amount          INTEGER NOT NULL CHECK (amount > 0), -- Native cents
   amount_base     INTEGER NOT NULL, -- Base currency cents at transaction date
-  quantity        REAL,             -- For security transactions
+  quantity        INTEGER,          -- scaled integer; actual = quantity / 10^securities.quantity_scale
   memo            TEXT              -- Line-specific note
 );
 

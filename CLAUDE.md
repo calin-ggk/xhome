@@ -28,6 +28,9 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Hierarchy:** Use the `category` path strategy (e.g., `expense/food/%`) for hierarchical queries.
 - **Rounding:** Perform all calculations in cents. Format to decimal ONLY in the UI layer.
 - **Database:** Use `better-sqlite3` or the React Router 7 recommended SQLite adapter.
+- **Layering:** Routes only handle validation, a single service call, and redirect/response. No business logic or DB access in loaders/actions.
+- **Services:** All business logic lives in `app/services/`. A service may call repositories but never touches the DB directly.
+- **Repositories:** All DB queries live in `app/repositories/`. No raw DB calls outside this layer.
 
 ## Reference
 

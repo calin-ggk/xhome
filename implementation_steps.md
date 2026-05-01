@@ -7,11 +7,13 @@
   - Install and configure **Bulma CSS** (via npm).
   - Install core dependencies: `drizzle-orm`, `better-sqlite3`, `zod`, `pino`, `i18next`, `lucide-react`.
   - Install dev dependencies: `drizzle-kit`, `@types/better-sqlite3`.
+  - Enable TypeScript strictness in `tsconfig.json`: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`.
 - [ ] **Infrastructure**
   - Add `./var/` to `.gitignore`. Configure `DATABASE_URL=./var/finance.db` in `.env`.
   - Setup **Drizzle Schema** in `app/db/schema.ts` based on `docs/domain.md`.
   - Configure `db` client singleton in `app/db/client.ts` (reads `DATABASE_URL` from env).
   - Define base currency constant in `app/config.ts` (e.g., `export const BASE_CURRENCY = 'RON'`).
+  - Add Zod env validation in `app/config.ts` (fail-fast on missing `DATABASE_URL`).
   - Setup Logging (Pino) and i18n providers.
   - Initial DB Migration (`drizzle-kit push`).
 
