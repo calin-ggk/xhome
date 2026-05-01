@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
+import { check, integer, sqliteTable, text, uniqueIndex, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // 1. Currencies & Exchange Rates
@@ -31,25 +31,22 @@ export const securities = sqliteTable('securities', {
   quantityScale: integer('quantity_scale').notNull().default(6),
 });
 
-export const securityPrices = sqliteTable('security_prices', {
-  id:         integer('id').primaryKey(),
-  securityId: integer('security_id').notNull().references(() => securities.id),
-  date:       text('date').notNull(),
-  price:      integer('price').notNull(),
-}, t => [uniqueIndex('security_prices_security_date').on(t.securityId, t.date)]);
-
 // 3. Accounts
 
 export const accounts = sqliteTable('accounts', {
-  id:         integer('id').primaryKey(),
-  name:       text('name').notNull(),
-  type:       text('type').notNull(), // debit | credit
-  currencyId: integer('currency_id').notNull().references(() => currencies.id),
-  category:   text('category').notNull().unique(), // e.g. "asset/bank/revolut"
-  securityId: integer('security_id').references(() => securities.id),
-  meta:       text('meta'), // JSON
-  isActive:   integer('is_active').default(1),
-}, t => [index('idx_accounts_category').on(t.category)]);
+  id:           integer('id').primaryKey(),
+  name:         text('name').notNull(),
+  type:         text('type').notNull(),        // 'debit' | 'credit'
+  accountType:  text('account_type').notNull(), // 'simple' | 'deposit' | 'security'
+  currencyId:   integer('currency_id').notNull().references(() => currencies.id),
+  category:     text('category').notNull().unique(), // e.g. "asset/bank/revolut"
+  isActive:     integer('is_active').notNull().default(1),
+  securityId:   integer('security_id').references(() => securities.id), // security subtype only
+}, t => [
+  index('idx_accounts_category').on(t.category),
+  check('chk_security_has_id',    sql`${t.accountType} != 'security' OR ${t.securityId} IS NOT NULL`),
+  check('chk_security_type_only', sql`${t.accountType}  = 'security' OR ${t.securityId} IS NULL`),
+]);
 
 // 4. Transactions
 
@@ -69,8 +66,10 @@ export const transactionEntries = sqliteTable('transaction_entries', {
   amount:        integer('amount').notNull(),
   amountBase:    integer('amount_base').notNull(),
   // scaled integer; actual = quantity / 10^securities.quantity_scale
-  quantity:      integer('quantity'),
-  memo:          text('memo'),
+  quantity:     integer('quantity'),      // security accounts only
+  interestRate: integer('interest_rate'), // deposit accounts only (opening/renewal entries)
+  maturityDate: text('maturity_date'),   // deposit accounts only (opening/renewal entries)
+  memo:         text('memo'),
 });
 
 // 5. Tags
@@ -102,8 +101,6 @@ export type ExchangeRate          = typeof exchangeRates.$inferSelect;
 export type InsertExchangeRate    = typeof exchangeRates.$inferInsert;
 export type Security              = typeof securities.$inferSelect;
 export type InsertSecurity        = typeof securities.$inferInsert;
-export type SecurityPrice         = typeof securityPrices.$inferSelect;
-export type InsertSecurityPrice   = typeof securityPrices.$inferInsert;
 export type Account               = typeof accounts.$inferSelect;
 export type InsertAccount         = typeof accounts.$inferInsert;
 export type Transaction           = typeof transactions.$inferSelect;

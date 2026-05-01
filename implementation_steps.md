@@ -17,7 +17,17 @@
   - Setup Logging (Pino) and i18n providers.
   - Initial DB Migration (`drizzle-kit push`).
 
-## Phase 2: Core Layout (ING HomeBank Style)
+## Phase 2: Authentication
+
+- [ ] **Single-user login**
+  - Add `AUTH_USERNAME` and `AUTH_PASSWORD_HASH` to `.env` (bcrypt hash; no DB or schema changes).
+  - `app/routes/login.tsx` — login form, validate credentials against env vars, create session.
+  - `app/routes/logout.tsx` — destroy session and redirect to `/login`.
+  - Session via `createCookieSessionStorage` (React Router 7 built-in); secret in `SESSION_SECRET` env var.
+  - Auth guard in the root loader: redirect unauthenticated requests to `/login`.
+  - Zod env validation in `app/config.ts`: fail-fast on missing `AUTH_USERNAME`, `AUTH_PASSWORD_HASH`, `SESSION_SECRET`.
+
+## Phase 3: Core Layout (ING HomeBank Style)
 
 - [ ] **Routing Structure** (`app/routes/`)
   - `_app.tsx` — root layout (sidebar + header)
@@ -43,7 +53,7 @@
   - Dashboard with summary cards and "Recent Transactions" list.
   - Mini-chart for cash flow using **Recharts**.
 
-## Phase 3: Account & Transaction Management
+## Phase 4: Account & Transaction Management
 
 - [ ] **Account Module**
   - Hierarchical list view (Path Strategy).
@@ -53,12 +63,14 @@
   - Server-side balance validation (Sum = 0).
   - Currency conversion at entry time: pre-fill exchange rate from `exchange_rates` table (closest rate on or before transaction date), shown as an editable field so the user can override before saving. `amount_base` is computed from the confirmed rate.
 
-## Phase 4: Reports (The Core Goal)
+## Phase 5: Reports (The Core Goal)
 
 - [ ] **Snapshot Strategy**
   - Current (open) month is always computed on-the-fly from entries.
   - Closed months use pre-computed `account_monthly_snapshots` for performance.
   - "Generate missing snapshots" button in Settings: detects all months with transactions but no snapshot and backfills them all in one operation (handles skipped months automatically).
+- [ ] **Security pricing at snapshot time:**
+  - Fetch close price from an external API (e.g. Yahoo Finance) for each security account on the snapshot date. If the API is unavailable or returns no data, show a simple form to enter prices manually before saving the snapshot.
 - [ ] **Financial Statements**
   - Balance Sheet (Assets vs Liabilities).
   - Income Statement (Profit & Loss).

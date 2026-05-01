@@ -34,7 +34,9 @@ npm run dev            # http://localhost:5173
 | `npm run dev` | Start development server with HMR |
 | `npm run build` | Production build |
 | `npm run typecheck` | Type-check with generated route types |
-| `npx drizzle-kit push` | Apply schema changes to the DB |
+| `npm run db:push` | Apply schema changes to the dev DB |
+| `npm run db:push:test` | Apply schema changes to the test DB |
+| `npm run seed` | Populate test DB with realistic fixture data |
 | `npx drizzle-kit studio` | Browse database in the browser |
 
 ## Project Structure

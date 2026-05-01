@@ -22,6 +22,13 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Entry:** A single leg linking an `account` to a `side` (debit/credit) and an `amount`.
 - **Tags:** Many-to-many relationship with `transactions` for cross-cutting tracking.
 
+## Testing
+
+- Every new feature must include Vitest tests (`npm test`) covering the happy path and key error cases.
+- Test files co-located as `*.test.ts` next to the file under test.
+- Test loaders, actions, and service/repository functions. Do not test UI rendering.
+- Route tests: mock `app/session.server` and external modules. Repository tests: use a real in-memory SQLite DB.
+
 ## Implementation Specifics
 
 - **Validation:** Use **Zod** for all input validation in Actions and Loaders.

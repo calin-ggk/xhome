@@ -40,24 +40,21 @@ CREATE TABLE securities (
   quantity_scale  INTEGER NOT NULL DEFAULT 6 -- decimal places for quantity (BTC=8, stock=4)
 );
 
-CREATE TABLE security_prices (
-  id           INTEGER PRIMARY KEY,
-  security_id  INTEGER NOT NULL REFERENCES securities(id),
-  date         TEXT    NOT NULL, -- YYYY-MM-DD
-  price        INTEGER NOT NULL, -- In security's currency cents
-  UNIQUE (security_id, date)
-);
-
--- 3. Accounts
+-- 3. Accounts (Single Table Inheritance)
 CREATE TABLE accounts (
-  id           INTEGER PRIMARY KEY,
-  name         TEXT    NOT NULL,
-  type         TEXT    NOT NULL, -- debit | credit
-  currency_id  INTEGER NOT NULL REFERENCES currencies(id),
-  category     TEXT    NOT NULL UNIQUE, -- e.g., "asset/bank/revolut"
-  security_id  INTEGER REFERENCES securities(id), -- Only for share accounts
-  meta         TEXT,             -- JSON for specific data (interest rates, etc.)
-  is_active    INTEGER DEFAULT 1
+  id            INTEGER PRIMARY KEY,
+  name          TEXT    NOT NULL,
+  type          TEXT    NOT NULL CHECK (type IN ('debit', 'credit')),
+  account_type  TEXT    NOT NULL CHECK (account_type IN ('simple', 'deposit', 'security')),
+  currency_id   INTEGER NOT NULL REFERENCES currencies(id),
+  category      TEXT    NOT NULL UNIQUE, -- e.g., "asset/bank/revolut"
+  is_active     INTEGER NOT NULL DEFAULT 1,
+
+  -- security subtype
+  security_id   INTEGER REFERENCES securities(id), -- required when account_type = 'security'
+
+  CHECK (account_type != 'security' OR security_id IS NOT NULL),
+  CHECK (account_type  = 'security' OR security_id IS NULL)
 );
 CREATE INDEX idx_accounts_category ON accounts (category);
 
@@ -77,7 +74,9 @@ CREATE TABLE transaction_entries (
   side            TEXT    NOT NULL, -- debit | credit
   amount          INTEGER NOT NULL CHECK (amount > 0), -- Native cents
   amount_base     INTEGER NOT NULL, -- Base currency cents at transaction date
-  quantity        INTEGER,          -- scaled integer; actual = quantity / 10^securities.quantity_scale
+  quantity        INTEGER,          -- scaled integer; only for security accounts
+  interest_rate   INTEGER,          -- basis points; only for deposit accounts (opening/renewal entries)
+  maturity_date   TEXT,             -- YYYY-MM-DD; only for deposit accounts (opening/renewal entries)
   memo            TEXT              -- Line-specific note
 );
 
