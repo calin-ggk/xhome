@@ -5,22 +5,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  redirect,
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { getSession } from "./session.server";
 import "./app.css";
-
-const PUBLIC_PATHS = ['/login'];
-
-export async function loader({ request }: Route.LoaderArgs) {
-  const { pathname } = new URL(request.url);
-  if (PUBLIC_PATHS.includes(pathname)) return null;
-  const session = await getSession(request.headers.get('Cookie'));
-  if (!session.get('authenticated')) throw redirect('/login');
-  return null;
-}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -74,14 +62,16 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <section className="section">
+      <div className="container">
+        <h1 className="title">{message}</h1>
+        <p className="subtitle">{details}</p>
+        {stack && (
+          <pre style={{ overflowX: 'auto', padding: '1rem', background: '#f5f5f5' }}>
+            <code>{stack}</code>
+          </pre>
+        )}
+      </div>
+    </section>
   );
 }
