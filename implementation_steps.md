@@ -19,7 +19,7 @@
 
 ## Phase 2: Authentication
 
-- [ ] **Single-user login**
+- [x] **Single-user login**
   - Add `AUTH_USERNAME` and `AUTH_PASSWORD_HASH` to `.env` (bcrypt hash; no DB or schema changes).
   - `app/routes/login.tsx` — login form, validate credentials against env vars, create session.
   - `app/routes/logout.tsx` — destroy session and redirect to `/login`.
@@ -29,23 +29,6 @@
 
 ## Phase 3: Core Layout (ING HomeBank Style)
 
-- [ ] **Routing Structure** (`app/routes/`)
-  - `_app.tsx` — root layout (sidebar + header)
-  - `_app._index.tsx` — `/` Dashboard
-  - `_app.transactions._index.tsx` — `/transactions`
-  - `_app.transactions.new.tsx` — `/transactions/new`
-  - `_app.transactions.$id.tsx` — `/transactions/:id`
-  - `_app.accounts._index.tsx` — `/accounts`
-  - `_app.accounts.new.tsx` — `/accounts/new`
-  - `_app.accounts.$id.tsx` — `/accounts/:id`
-  - `_app.reports.balance-sheet.tsx` — `/reports/balance-sheet`
-  - `_app.reports.income.tsx` — `/reports/income`
-  - `_app.reports.net-worth.tsx` — `/reports/net-worth`
-  - `_app.settings.currencies.tsx` — `/settings/currencies`
-  - `_app.settings.exchange-rates.tsx` — `/settings/exchange-rates` (manual entry + Yahoo Finance fetch)
-  - `_app.settings.securities.tsx` — `/settings/securities`
-  - `_app.settings.tags.tsx` — `/settings/tags`
-  - `_app.settings.preferences.tsx` — `/settings/preferences` (default report time range, etc.)
 - [ ] **App Shell**
   - Sticky Sidebar with navigation groups: **Main** (Dashboard, Transactions), **Accounts**, **Analytics** (Reports), **Settings** (Currencies, Exchange Rates, Securities, Tags, Preferences).
   - Header with Net Worth summary and "Quick Action" buttons.
