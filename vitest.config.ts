@@ -5,5 +5,6 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
     include: ['app/**/*.test.{ts,tsx}'],
+    reporters: ['verbose'],
   },
 });

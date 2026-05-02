@@ -9,7 +9,7 @@ const envSchema = z.object({
 
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
-  console.error('Missing required environment variables:', parsed.error.flatten().fieldErrors);
+  console.error('Missing required environment variables:', z.treeifyError(parsed.error));
   process.exit(1);
 }
 
