@@ -73,7 +73,7 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxWidth: '1440px', margin: '0 auto' }}>
       <header style={{
         backgroundColor: '#0D6B6B',
         display: 'flex',

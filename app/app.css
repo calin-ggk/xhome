@@ -3,6 +3,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
+  background-color: #D8D8D8;
 }
 
 .app-hamburger {
