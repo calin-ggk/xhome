@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { NavLink, Outlet, redirect, useLoaderData } from 'react-router';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -8,13 +8,14 @@ import {
   LineChart,
   List,
   LogOut,
+  Menu,
   Plus,
   Settings,
   TrendingUp,
 } from 'lucide-react';
 import type { Route } from './+types/_app';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/config';
+import { BASE_CURRENCY } from '~/constants';
 import { getSession } from '~/session.server';
 import { getNetWorth } from '~/services/dashboard.service';
 
@@ -69,9 +70,10 @@ const activeStyle = {
 
 export default function AppLayout() {
   const { netWorth } = useLoaderData<typeof loader>();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <header style={{
         backgroundColor: '#0D6B6B',
         display: 'flex',
@@ -81,10 +83,13 @@ export default function AppLayout() {
         flexShrink: 0,
         gap: '1rem',
       }}>
+        <button type="button" className="app-hamburger" onClick={() => setSidebarOpen(o => !o)}>
+          <Menu size={22} />
+        </button>
         <span style={{ color: 'white', fontWeight: 600, fontSize: '1.1rem', marginRight: 'auto' }}>
           Finance Tracker
         </span>
-        <span style={{ color: 'white', fontSize: '0.875rem' }}>
+        <span className="app-net-worth" style={{ color: 'white', fontSize: '0.875rem' }}>
           Net Worth:{' '}
           <strong style={{ color: 'white' }}>{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
         </span>
@@ -115,8 +120,13 @@ export default function AppLayout() {
         </NavLink>
       </header>
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
-        <aside style={{
+      <div className="app-content" style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+        {sidebarOpen && (
+          <div className="app-overlay" onClick={() => setSidebarOpen(false)} />
+        )}
+        <aside
+          className={`app-sidebar${sidebarOpen ? ' is-open' : ''}`}
+          style={{
           width: '220px',
           minWidth: '220px',
           backgroundColor: 'white',
@@ -146,6 +156,7 @@ export default function AppLayout() {
                         end={end ?? false}
                         className={({ isActive }) => (isActive ? 'is-active' : '')}
                         style={({ isActive }) => (isActive ? activeStyle : baseLinkStyle)}
+                        onClick={() => setSidebarOpen(false)}
                       >
                         <span className="icon is-small" style={{ marginRight: '0.4rem' }}>
                           <Icon size={14} />

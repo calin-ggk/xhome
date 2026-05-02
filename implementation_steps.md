@@ -32,14 +32,13 @@
 - [x] **App Shell**
   - Sticky Sidebar with navigation groups: **Main** (Dashboard, Transactions), **Accounts**, **Analytics** (Reports), **Settings** (Currencies, Exchange Rates, Securities, Tags, Preferences).
   - Header with Net Worth summary and "Quick Action" buttons.
-- [ ] **Home Page**
-  - Dashboard with summary cards and "Recent Transactions" list.
-  - Mini-chart for cash flow using **Recharts**.
-
-- [ ] **Responsive Layout**
+- [x] **Responsive Layout**
   - Collapsible sidebar (hamburger toggle) on narrow viewports.
   - Header adapts: Net Worth hidden on small screens, sidebar becomes a slide-in drawer.
   - Touch-friendly tap targets (min 44px) for nav items.
+- [ ] **Home Page**
+  - Dashboard with summary cards and "Recent Transactions" list.
+  - Mini-chart for cash flow using **Recharts**.
 
 ## Phase 4: Account & Transaction Management
 

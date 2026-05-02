@@ -14,5 +14,3 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
-
-export const BASE_CURRENCY = 'RON';
