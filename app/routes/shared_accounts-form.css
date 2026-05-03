@@ -1,9 +1,38 @@
 .account-form-page {
-  max-width: 560px;
+  max-width: 620px;
+}
+
+.account-form-page .field {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+  align-items: baseline;
+}
+
+.account-form-page .field > .label {
+  grid-column: 1;
+  text-align: right;
+  margin-bottom: 0;
+}
+
+.account-form-page .field > .control {
+  grid-column: 2;
+}
+
+.account-form-page .field > .help {
+  grid-column: 2;
+  margin-top: 0;
+}
+
+
+.account-form-page .field.is-grouped {
+  display: flex;
+  justify-content: center;
 }
 
 .account-security-field {
-  display: block;
+  display: grid;
 }
 
 .account-security-field.is-hidden {

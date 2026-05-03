@@ -159,15 +159,10 @@ export default function EditAccountPage() {
           </div>
 
           <div className="field">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                name="isActive"
-                value="1"
-                defaultChecked={account.isActive === 1}
-              />
-              {' '}{t('accounts.formIsActive')}
-            </label>
+            <label className="label">{t('accounts.formIsActive')}</label>
+            <div className="control">
+              <input type="checkbox" name="isActive" value="1" defaultChecked={account.isActive === 1} />
+            </div>
           </div>
 
           <div className="field is-grouped mt-5">

@@ -145,10 +145,10 @@ export default function NewAccountPage() {
           </div>
 
           <div className="field">
-            <label className="checkbox">
+            <label className="label">{t('accounts.formIsActive')}</label>
+            <div className="control">
               <input type="checkbox" name="isActive" value="1" defaultChecked />
-              {' '}{t('accounts.formIsActive')}
-            </label>
+            </div>
           </div>
 
           <div className="field is-grouped mt-5">

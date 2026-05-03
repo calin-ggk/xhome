@@ -101,20 +101,22 @@ export default function AccountsIndex() {
       {deleteTarget && (
         <div className="modal is-active">
           <div className="modal-background" onClick={() => setDeleteTarget(null)} />
-          <div className="modal-card">
+          <div className="modal-card accounts-confirm-modal">
             <header className="modal-card-head">
               <p className="modal-card-title">{t('accounts.delete')}</p>
               <button type="button" className="delete" onClick={() => setDeleteTarget(null)} />
             </header>
             <section className="modal-card-body">
               <p>{t('accounts.confirmDelete', { name: deleteTarget.name })}</p>
-            </section>
-            <footer className="modal-card-foot">
-              <form method="post">
+              <form id="delete-account-form" method="post">
                 <input type="hidden" name="_intent" value="delete" />
                 <input type="hidden" name="id" value={deleteTarget.id} />
-                <button type="submit" className="button is-danger">{t('accounts.delete')}</button>
               </form>
+            </section>
+            <footer className="modal-card-foot">
+              <button type="submit" form="delete-account-form" className="button is-danger">
+                {t('accounts.delete')}
+              </button>
               <button type="button" className="button" onClick={() => setDeleteTarget(null)}>
                 {t('accounts.cancel')}
               </button>
