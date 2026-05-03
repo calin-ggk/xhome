@@ -1,5 +1,5 @@
 import "./_app.accounts._index.css";
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, redirect, useActionData, useLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
@@ -31,13 +31,38 @@ export default function AccountsIndex() {
   const actionData  = useActionData<typeof action>();
   const { t } = useTranslation();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [filter, setFilter] = useState('');
+
+  const prefixes = useMemo(() => extractPrefixes(groups), [groups]);
+  const visibleGroups = filter
+    ? groups
+        .map(g => ({ ...g, accounts: g.accounts.filter(a => a.category.startsWith(filter)) }))
+        .filter(g => g.accounts.length > 0)
+    : groups;
 
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
 
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
-          <h1 className="title is-5 mb-0">{t('accounts.title')}</h1>
+          <div className="accounts-header-left">
+            <h1 className="title is-5 mb-0">{t('accounts.title')}</h1>
+            <div className="accounts-filter-row">
+              <input
+                className="input is-small accounts-filter-input"
+                list="accounts-category-list"
+                value={filter}
+                onChange={e => setFilter(e.target.value)}
+                placeholder={t('accounts.filterPlaceholder')}
+              />
+              <datalist id="accounts-category-list">
+                {prefixes.map(p => <option key={p} value={p} />)}
+              </datalist>
+              {filter && (
+                <button type="button" className="delete is-small" onClick={() => setFilter('')} />
+              )}
+            </div>
+          </div>
           <Link to="/accounts/new" className="button is-primary is-small">
             {t('accounts.newAccount')}
           </Link>
@@ -49,10 +74,10 @@ export default function AccountsIndex() {
           </div>
         )}
 
-        {groups.length === 0 ? (
+        {visibleGroups.length === 0 ? (
           <p className="has-text-grey is-size-7">{t('accounts.empty')}</p>
         ) : (
-          groups.map(({ prefix, accounts }) => (
+          visibleGroups.map(({ prefix, accounts }) => (
             <div key={prefix}>
               <p className="accounts-group-label">{t(`accounts.group${capitalize(prefix)}`, { defaultValue: prefix })}</p>
               <table className="table is-fullwidth is-hoverable is-size-7 mb-4">
@@ -127,6 +152,19 @@ export default function AccountsIndex() {
 
     </section>
   );
+}
+
+function extractPrefixes(groups: { accounts: { category: string }[] }[]): string[] {
+  const set = new Set<string>();
+  for (const { accounts } of groups) {
+    for (const { category } of accounts) {
+      const parts = category.split('/');
+      for (let i = 1; i <= parts.length; i++) {
+        set.add(parts.slice(0, i).join('/'));
+      }
+    }
+  }
+  return Array.from(set).sort();
 }
 
 function capitalize(s: string): string {

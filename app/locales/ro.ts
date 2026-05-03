@@ -93,6 +93,7 @@ const ro: TranslationSchema = {
     cancel:             'Anulează',
     duplicateCategory:  'Există deja un cont cu această cale de categorie.',
     notFound:           'Contul nu a fost găsit.',
+    filterPlaceholder:  'Filtrează după categorie…',
   },
 };
 

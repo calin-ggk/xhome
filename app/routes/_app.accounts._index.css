@@ -1,3 +1,19 @@
+.accounts-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.accounts-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.accounts-filter-input {
+  max-width: 240px;
+}
+
 .accounts-group-label {
   text-transform: uppercase;
   font-size: 0.7rem;
