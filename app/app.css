@@ -5,3 +5,9 @@ html, body {
   overflow: hidden;
   background-color: #D8D8D8;
 }
+
+.error-stack {
+  overflow-x: auto;
+  padding: 1rem;
+  background: #f5f5f5;
+}
