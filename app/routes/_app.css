@@ -43,6 +43,23 @@
   text-decoration: none;
 }
 
+.app-btn-lang {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  letter-spacing: 0.03em;
+}
+
+.app-btn-lang:hover {
+  border-color: white;
+  color: white;
+}
+
 .app-btn-logout {
   color: rgba(255, 255, 255, 0.8);
   display: inline-flex;

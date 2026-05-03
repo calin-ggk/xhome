@@ -1,6 +1,7 @@
 import "./_app.css";
 import { Fragment, useState } from 'react';
 import { NavLink, Outlet, redirect, useLoaderData, useLocation } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart2,
@@ -19,6 +20,7 @@ import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
 import { getSession } from '~/session.server';
 import { getNetWorth } from '~/services/dashboard.service';
+import { LANG_KEY } from '~/i18n';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get('Cookie'));
@@ -26,32 +28,32 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { netWorth: getNetWorth(db) };
 }
 
-type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
-type NavGroup = { label: string; items: NavItem[] };
+type NavItem  = { to: string; key: string; icon: LucideIcon; end?: boolean };
+type NavGroup = { key: string; items: NavItem[] };
 
 const NAV: NavGroup[] = [
   {
-    label: 'Main',
+    key: 'nav.main',
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/transactions', label: 'Transactions', icon: List },
+      { to: '/',             key: 'nav.dashboard',    icon: LayoutDashboard, end: true },
+      { to: '/transactions', key: 'nav.transactions', icon: List },
     ],
   },
   {
-    label: 'Accounts',
-    items: [{ to: '/accounts', label: 'Accounts', icon: Landmark }],
+    key: 'nav.accounts',
+    items: [{ to: '/accounts', key: 'nav.accounts', icon: Landmark }],
   },
   {
-    label: 'Analytics',
+    key: 'nav.analytics',
     items: [
-      { to: '/reports/balance-sheet', label: 'Balance Sheet', icon: BarChart2 },
-      { to: '/reports/income', label: 'Income', icon: TrendingUp },
-      { to: '/reports/net-worth', label: 'Net Worth', icon: LineChart },
+      { to: '/reports/balance-sheet', key: 'nav.balanceSheet', icon: BarChart2 },
+      { to: '/reports/income',        key: 'nav.income',       icon: TrendingUp },
+      { to: '/reports/net-worth',     key: 'nav.netWorth',     icon: LineChart },
     ],
   },
   {
-    label: 'Settings',
-    items: [{ to: '/settings', label: 'Settings', icon: Settings }],
+    key: 'nav.settings',
+    items: [{ to: '/settings', key: 'nav.settings', icon: Settings }],
   },
 ];
 
@@ -63,12 +65,20 @@ export default function AppLayout() {
   const { netWorth } = useLoaderData<typeof loader>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
+  const { t, i18n } = useTranslation();
+
   const activeItem = NAV.flatMap(g => g.items).find(item =>
     item.end ? pathname === item.to : pathname.startsWith(item.to)
   );
   const headerTitle = activeItem
-    ? `Finance Tracker — ${activeItem.label}`
-    : 'Finance Tracker';
+    ? `${t('financeTracker')} — ${t(activeItem.key)}`
+    : t('financeTracker');
+
+  const toggleLang = () => {
+    const next = i18n.language.startsWith('ro') ? 'en' : 'ro';
+    void i18n.changeLanguage(next);
+    localStorage.setItem(LANG_KEY, next);
+  };
 
   return (
     <div className="app-wrapper">
@@ -78,12 +88,15 @@ export default function AppLayout() {
         </button>
         <span className="app-title">{headerTitle}</span>
         <span className="app-net-worth">
-          Net Worth:{' '}
+          {t('header.netWorth')}:{' '}
           <strong className="has-text-white">{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
         </span>
+        <button type="button" className="app-btn-lang" onClick={toggleLang}>
+          {i18n.language.startsWith('ro') ? 'EN' : 'RO'}
+        </button>
         <NavLink to="/transactions/new" className="app-btn-add">
           <Plus size={14} />
-          Transaction
+          {t('header.addTransaction')}
         </NavLink>
         <NavLink to="/logout" className="app-btn-logout">
           <LogOut size={18} />
@@ -97,10 +110,10 @@ export default function AppLayout() {
         <aside className={`app-sidebar${sidebarOpen ? ' is-open' : ''}`}>
           <nav className="menu">
             {NAV.map(group => (
-              <Fragment key={group.label}>
-                <p className="app-nav-group-label">{group.label}</p>
+              <Fragment key={group.key}>
+                <p className="app-nav-group-label">{t(group.key)}</p>
                 <ul className="menu-list">
-                  {group.items.map(({ to, label, icon: Icon, end }) => (
+                  {group.items.map(({ to, key, icon: Icon, end }) => (
                     <li key={to}>
                       <NavLink
                         to={to}
@@ -111,7 +124,7 @@ export default function AppLayout() {
                         <span className="icon is-small">
                           <Icon size={14} />
                         </span>
-                        {label}
+                        {t(key)}
                       </NavLink>
                     </li>
                   ))}
@@ -127,7 +140,7 @@ export default function AppLayout() {
       </div>
 
       <footer className="app-footer">
-        © {new Date().getFullYear()} Finance Tracker
+        {t('footer.copyright', { year: new Date().getFullYear() })}
       </footer>
     </div>
   );

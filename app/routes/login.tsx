@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { redirect, useActionData } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { env } from '../config';
 import { getSession, commitSession } from '../session.server';
 import type { Route } from './+types/login';
@@ -19,7 +20,7 @@ export async function action({ request }: Route.ActionArgs) {
     username === env.AUTH_USERNAME &&
     (await bcrypt.compare(password, env.AUTH_PASSWORD_HASH));
 
-  if (!valid) return { error: 'Invalid username or password.' };
+  if (!valid) return { errorKey: 'login.invalidCredentials' };
 
   const session = await getSession(request.headers.get('Cookie'));
   session.set('authenticated', true);
@@ -30,6 +31,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function LoginPage() {
   const data = useActionData<typeof action>();
+  const { t } = useTranslation();
 
   return (
     <section className="hero is-fullheight">
@@ -37,11 +39,11 @@ export default function LoginPage() {
         <div className="container">
           <div className="columns is-centered">
             <div className="column is-4">
-              <h1 className="title has-text-centered">Finance Tracker</h1>
+              <h1 className="title has-text-centered">{t('financeTracker')}</h1>
               <div className="box">
                 <form method="post">
                   <div className="field">
-                    <label className="label" htmlFor="username">Username</label>
+                    <label className="label" htmlFor="username">{t('login.username')}</label>
                     <div className="control">
                       <input
                         id="username"
@@ -54,7 +56,7 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <div className="field">
-                    <label className="label" htmlFor="password">Password</label>
+                    <label className="label" htmlFor="password">{t('login.password')}</label>
                     <div className="control">
                       <input
                         id="password"
@@ -65,12 +67,12 @@ export default function LoginPage() {
                       />
                     </div>
                   </div>
-                  {data?.error && (
-                    <p className="help is-danger">{data.error}</p>
+                  {data?.errorKey && (
+                    <p className="help is-danger">{t(data.errorKey)}</p>
                   )}
                   <div className="field mt-4">
                     <button className="button is-primary is-fullwidth" type="submit">
-                      Sign in
+                      {t('login.signIn')}
                     </button>
                   </div>
                 </form>

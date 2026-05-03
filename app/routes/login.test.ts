@@ -51,7 +51,7 @@ describe('action', () => {
     form.append('username', 'admin');
     form.append('password', 'wrong');
     const result = await action(makeArgs('POST', form) as never);
-    expect(result).toEqual({ error: 'Invalid username or password.' });
+    expect(result).toEqual({ errorKey: 'login.invalidCredentials' });
   });
 
   it('returns error for wrong username', async () => {
@@ -60,7 +60,7 @@ describe('action', () => {
     form.append('username', 'notadmin');
     form.append('password', 'anything');
     const result = await action(makeArgs('POST', form) as never);
-    expect(result).toEqual({ error: 'Invalid username or password.' });
+    expect(result).toEqual({ errorKey: 'login.invalidCredentials' });
   });
 
   it('redirects to / with session cookie on valid credentials', async () => {

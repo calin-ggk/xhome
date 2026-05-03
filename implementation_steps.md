@@ -14,7 +14,7 @@
   - Configure `db` client singleton in `app/db/client.ts` (reads `DATABASE_URL` from env).
   - Define base currency constant in `app/config.ts` (e.g., `export const BASE_CURRENCY = 'RON'`).
   - Add Zod env validation in `app/config.ts` (fail-fast on missing `DATABASE_URL`).
-  - Setup Logging (Pino) and i18n providers.
+  - Setup Logging (Pino).
   - Initial DB Migration (`drizzle-kit push`).
 
 ## Phase 2: Authentication
@@ -40,17 +40,32 @@
   - Dashboard with summary cards and "Recent Transactions" list.
   - Mini-chart for cash flow using **Recharts**.
 
-## Phase 4: Account & Transaction Management
+## Phase 4: Internationalisation (i18n)
+
+- [x] **i18n Setup**
+  - Install `react-i18next`; `i18next` already installed.
+  - `app/i18n.ts` — configure i18next with inline resources (no HTTP backend); always init with `lng: 'en'`.
+  - `app/locales/en.ts` — English translations.
+  - `app/locales/ro.ts` — Romanian translations (typed against English shape).
+  - Wrap app in `I18nextProvider` in `app/root.tsx`; sync language from `localStorage` after hydration.
+  - Language toggle button (EN / RO) in the app header; persists in `localStorage`.
+  - Retrofit all existing UI strings in `_app.tsx`, `_app._index.tsx`, `_app.settings._index.tsx`, `login.tsx`.
+
+## Phase 5: Account Module
 
 - [ ] **Account Module**
   - Hierarchical list view (Path Strategy).
-  - Create/Edit account modals with Zod validation.
+  - Create/Edit account pages (dedicated routes) with Zod validation.
+  - Delete confirmation modal (modals are for confirmations only, not editing).
+
+## Phase 6: Transaction Engine
+
 - [ ] **Transaction Engine**
   - Double-entry form (Multi-leg support).
   - Server-side balance validation (Sum = 0).
   - Currency conversion at entry time: pre-fill exchange rate from `exchange_rates` table (closest rate on or before transaction date), shown as an editable field so the user can override before saving. `amount_base` is computed from the confirmed rate.
 
-## Phase 5: Reports (The Core Goal)
+## Phase 7: Reports (The Core Goal)
 
 - [ ] **Snapshot Strategy**
   - Current (open) month is always computed on-the-fly from entries.
