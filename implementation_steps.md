@@ -36,7 +36,7 @@
   - Collapsible sidebar (hamburger toggle) on narrow viewports.
   - Header adapts: Net Worth hidden on small screens, sidebar becomes a slide-in drawer.
   - Touch-friendly tap targets (min 44px) for nav items.
-- [ ] **Home Page**
+- [x] **Home Page**
   - Dashboard with summary cards and "Recent Transactions" list.
   - Mini-chart for cash flow using **Recharts**.
 

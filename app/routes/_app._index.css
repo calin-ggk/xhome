@@ -1,0 +1,43 @@
+.dash-card {
+  background: white;
+  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+}
+
+.dash-card-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  margin-bottom: 0.2rem;
+}
+
+.dash-card-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.dash-card-value--teal   { color: #0D6B6B; }
+.dash-card-value--green  { color: #27AE60; }
+.dash-card-value--orange { color: #F5821A; }
+.dash-card-value--red    { color: #E74C3C; }
+
+.dash-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #999;
+  margin-bottom: 0.75rem;
+}
+
+.dash-tx-date {
+  white-space: nowrap;
+  color: #888;
+  font-size: 0.8rem;
+}
