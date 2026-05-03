@@ -1,0 +1,27 @@
+.settings-cell {
+  vertical-align: middle;
+}
+
+.settings-icon-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-icon {
+  color: #2AA5A5;
+}
+
+.settings-desc-cell {
+  vertical-align: middle;
+  color: #666;
+}
+
+.settings-action-cell {
+  vertical-align: middle;
+  text-align: right;
+}
+
+.settings-link {
+  color: #F5821A;
+}

@@ -59,96 +59,39 @@ function fmtNetWorth(cents: number): string {
   return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-const baseLinkStyle = { display: 'flex', alignItems: 'center', paddingLeft: '0.5rem' };
-const activeStyle = {
-  ...baseLinkStyle,
-  color: '#F5821A',
-  borderLeft: '3px solid #F5821A',
-  paddingLeft: 'calc(0.5rem - 3px)',
-  backgroundColor: '#FFF8F4',
-  fontWeight: 500 as const,
-};
-
 export default function AppLayout() {
   const { netWorth } = useLoaderData<typeof loader>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxWidth: '1440px', margin: '0 auto' }}>
-      <header style={{
-        backgroundColor: '#0D6B6B',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 1rem',
-        height: '52px',
-        flexShrink: 0,
-        gap: '1rem',
-      }}>
+    <div className="app-wrapper">
+      <header className="app-header">
         <button type="button" className="app-hamburger" onClick={() => setSidebarOpen(o => !o)}>
           <Menu size={22} />
         </button>
-        <span style={{ color: 'white', fontWeight: 600, fontSize: '1.1rem', marginRight: 'auto' }}>
-          Finance Tracker
-        </span>
-        <span className="app-net-worth" style={{ color: 'white', fontSize: '0.875rem' }}>
+        <span className="app-title">Finance Tracker</span>
+        <span className="app-net-worth">
           Net Worth:{' '}
-          <strong style={{ color: 'white' }}>{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
+          <strong className="has-text-white">{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
         </span>
-        <NavLink
-          to="/transactions/new"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            backgroundColor: '#F5821A',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '0.3rem 0.75rem',
-            fontSize: '0.85rem',
-            fontWeight: 500,
-            textDecoration: 'none',
-          }}
-        >
+        <NavLink to="/transactions/new" className="app-btn-add">
           <Plus size={14} />
           Transaction
         </NavLink>
-        <NavLink
-          to="/logout"
-          style={{ color: 'rgba(255,255,255,0.8)', display: 'inline-flex', alignItems: 'center' }}
-        >
+        <NavLink to="/logout" className="app-btn-logout">
           <LogOut size={18} />
         </NavLink>
       </header>
 
-      <div className="app-content" style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      <div className="app-content">
         {sidebarOpen && (
           <div className="app-overlay" onClick={() => setSidebarOpen(false)} />
         )}
-        <aside
-          className={`app-sidebar${sidebarOpen ? ' is-open' : ''}`}
-          style={{
-          width: '220px',
-          minWidth: '220px',
-          backgroundColor: 'white',
-          borderRight: '1px solid #E0E0E0',
-          overflowY: 'auto',
-          padding: '1rem 0.5rem',
-        }}>
+        <aside className={`app-sidebar${sidebarOpen ? ' is-open' : ''}`}>
           <nav className="menu">
             {NAV.map(group => (
               <Fragment key={group.label}>
-                <p style={{
-                  color: '#2AA5A5',
-                  fontSize: '0.68rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.09em',
-                  padding: '0.75rem 0.75rem 0.25rem',
-                  margin: 0,
-                }}>
-                  {group.label}
-                </p>
+                <p className="app-nav-group-label">{group.label}</p>
                 <ul className="menu-list">
                   {group.items.map(({ to, label, icon: Icon, end }) => (
                     <li key={to}>
@@ -156,10 +99,9 @@ export default function AppLayout() {
                         to={to}
                         end={end ?? false}
                         className={({ isActive }) => (isActive ? 'is-active' : '')}
-                        style={({ isActive }) => (isActive ? activeStyle : baseLinkStyle)}
                         onClick={() => setSidebarOpen(false)}
                       >
-                        <span className="icon is-small" style={{ marginRight: '0.4rem' }}>
+                        <span className="icon is-small">
                           <Icon size={14} />
                         </span>
                         {label}
@@ -172,24 +114,12 @@ export default function AppLayout() {
           </nav>
         </aside>
 
-        <main style={{
-          flex: 1,
-          backgroundColor: '#F5F5F5',
-          overflowY: 'auto',
-          padding: '1.5rem',
-        }}>
+        <main className="app-main">
           <Outlet />
         </main>
       </div>
 
-      <footer style={{
-        backgroundColor: '#0D6B6B',
-        padding: '0.4rem 1rem',
-        fontSize: '0.72rem',
-        color: 'rgba(255,255,255,0.6)',
-        flexShrink: 0,
-        textAlign: 'center',
-      }}>
+      <footer className="app-footer">
         © {new Date().getFullYear()} Finance Tracker
       </footer>
     </div>
