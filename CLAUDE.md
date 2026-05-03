@@ -39,6 +39,13 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Services:** All business logic lives in `app/services/`. A service may call repositories but never touches the DB directly.
 - **Repositories:** All DB queries live in `app/repositories/`. No raw DB calls outside this layer.
 
+## CSS Organization
+
+- **Global styles** (`app/app.css`): Bulma import + bare `html`/`body` rules only.
+- **Component styles**: co-located `.css` file with the same name as the component (e.g. `_app.tsx` → `_app.css`). Import it at the top of the component file.
+- **Shared styles**: `shared_<feature-name>.css` in the directory where the sharing components live.
+- **No inline styles** in `.tsx` files. Use CSS classes or Bulma helpers (`pt-0`, `mb-4`, `has-text-white`, etc.) instead.
+
 ## Reference
 
 - **Domain Specs:** `docs/domain.md` (Full Schema & Business Logic details).
