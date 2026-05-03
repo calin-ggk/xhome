@@ -1,0 +1,11 @@
+.account-form-page {
+  max-width: 560px;
+}
+
+.account-security-field {
+  display: block;
+}
+
+.account-security-field.is-hidden {
+  display: none;
+}

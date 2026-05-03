@@ -53,7 +53,7 @@
 
 ## Phase 5: Account Module
 
-- [ ] **Account Module**
+- [x] **Account Module**
   - Hierarchical list view (Path Strategy).
   - Create/Edit account pages (dedicated routes) with Zod validation.
   - Delete confirmation modal (modals are for confirmations only, not editing).
