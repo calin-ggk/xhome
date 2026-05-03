@@ -1,3 +1,4 @@
+import "./_app.css";
 import { Fragment, useState } from 'react';
 import { NavLink, Outlet, redirect, useLoaderData } from 'react-router';
 import type { LucideIcon } from 'lucide-react';

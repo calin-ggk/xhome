@@ -1,0 +1,48 @@
+.app-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: white;
+  align-items: center;
+}
+
+.app-overlay { display: none; }
+
+.app-sidebar .menu-list a {
+  min-height: 44px;
+}
+
+@media screen and (max-width: 768px) {
+  .app-net-worth { display: none; }
+
+  .app-hamburger { display: inline-flex; }
+
+  .app-content {
+    position: relative;
+  }
+
+  .app-sidebar {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 100;
+    transform: translateX(-220px);
+    transition: transform 200ms ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .app-overlay {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+  }
+}
