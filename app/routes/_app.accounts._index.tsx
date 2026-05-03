@@ -1,6 +1,7 @@
 import "./_app.accounts._index.css";
 import { useMemo, useState } from 'react';
-import { Link, redirect, useActionData, useLoaderData } from 'react-router';
+import { Link, redirect, useActionData, useLoaderData, useSubmit } from 'react-router';
+import { ConfirmModal } from '~/components/ConfirmModal';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
 import { getAccountsPageData, deleteAccount } from '~/services/account.service';
@@ -30,6 +31,7 @@ export default function AccountsIndex() {
   const { groups } = useLoaderData<typeof loader>();
   const actionData  = useActionData<typeof action>();
   const { t } = useTranslation();
+  const submit = useSubmit();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const [filter, setFilter] = useState('');
 
@@ -123,32 +125,19 @@ export default function AccountsIndex() {
 
       </div>
 
-      {deleteTarget && (
-        <div className="modal is-active">
-          <div className="modal-background" onClick={() => setDeleteTarget(null)} />
-          <div className="modal-card accounts-confirm-modal">
-            <header className="modal-card-head">
-              <p className="modal-card-title">{t('accounts.delete')}</p>
-              <button type="button" className="delete" onClick={() => setDeleteTarget(null)} />
-            </header>
-            <section className="modal-card-body">
-              <p>{t('accounts.confirmDelete', { name: deleteTarget.name })}</p>
-              <form id="delete-account-form" method="post">
-                <input type="hidden" name="_intent" value="delete" />
-                <input type="hidden" name="id" value={deleteTarget.id} />
-              </form>
-            </section>
-            <footer className="modal-card-foot">
-              <button type="submit" form="delete-account-form" className="button is-danger">
-                {t('accounts.delete')}
-              </button>
-              <button type="button" className="button" onClick={() => setDeleteTarget(null)}>
-                {t('accounts.cancel')}
-              </button>
-            </footer>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title={t('accounts.delete')}
+        message={t('accounts.confirmDelete', { name: deleteTarget?.name ?? '' })}
+        confirmLabel={t('accounts.delete')}
+        cancelLabel={t('accounts.cancel')}
+        confirmVariant="is-danger"
+        onConfirm={() => {
+          if (deleteTarget) submit({ _intent: 'delete', id: String(deleteTarget.id) }, { method: 'post' });
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
     </section>
   );

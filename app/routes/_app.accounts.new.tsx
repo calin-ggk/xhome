@@ -44,9 +44,10 @@ export default function NewAccountPage() {
         <div className="mb-4">
           <Link to="/accounts" className="is-size-7 has-text-grey">{t('accounts.backToAccounts')}</Link>
         </div>
+        <div className="account-form-page">
         <h1 className="title is-5">{t('accounts.newAccount')}</h1>
 
-        <form method="post" className="account-form-page">
+        <form method="post">
           <div className="field">
             <label className="label" htmlFor="name">{t('accounts.formName')}</label>
             <div className="control">
@@ -160,6 +161,7 @@ export default function NewAccountPage() {
             </div>
           </div>
         </form>
+        </div>
       </div>
     </section>
   );

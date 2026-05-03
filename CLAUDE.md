@@ -51,4 +51,5 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Domain Specs:** `docs/domain.md` (Full Schema & Business Logic details).
 - **Route Map:** `docs/routes.md` (file-to-URL mapping for all app routes).
 - **Dashboard:** `docs/dashboard.md` (data flow, layout pattern, date strategy).
+- **Accounts Module:** `docs/accounts.md` (entity shape, category paths, routes, delete constraint, ConfirmModal pattern).
 - **Plan:** `implementation_steps.md`

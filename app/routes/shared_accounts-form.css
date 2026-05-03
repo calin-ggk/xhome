@@ -1,5 +1,6 @@
 .account-form-page {
   max-width: 620px;
+  margin: 0 auto;
 }
 
 .account-form-page .field {

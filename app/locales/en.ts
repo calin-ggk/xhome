@@ -92,6 +92,7 @@ const en = {
     duplicateCategory:  'An account with this category path already exists.',
     notFound:           'Account not found.',
     filterPlaceholder:  'Filter by category…',
+    confirmSave:        'Save changes to this account?',
   },
 };
 

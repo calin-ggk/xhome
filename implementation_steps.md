@@ -54,9 +54,9 @@
 ## Phase 5: Account Module
 
 - [x] **Account Module**
-  - Hierarchical list view (Path Strategy).
-  - Create/Edit account pages (dedicated routes) with Zod validation.
-  - Delete confirmation modal (modals are for confirmations only, not editing).
+  - Hierarchical list view (Path Strategy) with category prefix filter.
+  - Create/Edit account pages (dedicated routes) with Zod validation; forms horizontally centered.
+  - Reusable `ConfirmModal` component (`app/components/ConfirmModal.tsx`) for delete and save confirmations.
 
 ## Phase 6: Transaction Engine
 

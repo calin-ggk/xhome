@@ -1,7 +1,8 @@
 import "./shared_accounts-form.css";
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, redirect, useActionData, useLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { ConfirmModal } from '~/components/ConfirmModal';
 import { db } from '~/db/client';
 import { getEditAccountFormData, updateAccount } from '~/services/account.service';
 import { accountFormSchema, ACCOUNT_TYPES, ACCOUNT_SUBTYPES } from '~/schemas/account.schema';
@@ -41,6 +42,8 @@ export default function EditAccountPage() {
   const actionData = useActionData<typeof action>();
   const { t } = useTranslation();
   const [accountType, setAccountType] = useState(account.accountType);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
     <section className="section pt-0">
@@ -48,9 +51,10 @@ export default function EditAccountPage() {
         <div className="mb-4">
           <Link to="/accounts" className="is-size-7 has-text-grey">{t('accounts.backToAccounts')}</Link>
         </div>
+        <div className="account-form-page">
         <h1 className="title is-5">{t('accounts.editAccount')}</h1>
 
-        <form method="post" className="account-form-page">
+        <form ref={formRef} method="post" onSubmit={e => { e.preventDefault(); setConfirmOpen(true); }}>
           <div className="field">
             <label className="label" htmlFor="name">{t('accounts.formName')}</label>
             <div className="control">
@@ -174,7 +178,19 @@ export default function EditAccountPage() {
             </div>
           </div>
         </form>
+        </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmOpen}
+        title={t('accounts.editAccount')}
+        message={t('accounts.confirmSave')}
+        confirmLabel={t('accounts.save')}
+        cancelLabel={t('accounts.cancel')}
+        confirmVariant="is-primary"
+        onConfirm={() => { setConfirmOpen(false); formRef.current?.submit(); }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </section>
   );
 }
