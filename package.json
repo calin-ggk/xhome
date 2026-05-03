@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "@react-router/dev": "7.14.0",
-    "@tailwindcss/vite": "^4.2.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22",
@@ -40,7 +39,6 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "happy-dom": "^20.9.0",
-    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
     "vitest": "^4.1.5"
