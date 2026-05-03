@@ -1,4 +1,4 @@
-import "./settings._index.css";
+import "./_app.settings._index.css";
 import { Link } from 'react-router';
 import { Briefcase, Globe, RefreshCw, Settings, Tag } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -17,7 +17,6 @@ export default function SettingsIndex() {
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
-        <h1 className="title is-5 mb-4">Settings</h1>
         <table className="table is-fullwidth is-hoverable">
           <tbody>
             {SETTINGS.map(({ to, label, icon: Icon, description }) => (

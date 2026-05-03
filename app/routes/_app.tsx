@@ -1,6 +1,6 @@
 import "./_app.css";
 import { Fragment, useState } from 'react';
-import { NavLink, Outlet, redirect, useLoaderData } from 'react-router';
+import { NavLink, Outlet, redirect, useLoaderData, useLocation } from 'react-router';
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart2,
@@ -62,6 +62,13 @@ function fmtNetWorth(cents: number): string {
 export default function AppLayout() {
   const { netWorth } = useLoaderData<typeof loader>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { pathname } = useLocation();
+  const activeItem = NAV.flatMap(g => g.items).find(item =>
+    item.end ? pathname === item.to : pathname.startsWith(item.to)
+  );
+  const headerTitle = activeItem
+    ? `Finance Tracker — ${activeItem.label}`
+    : 'Finance Tracker';
 
   return (
     <div className="app-wrapper">
@@ -69,7 +76,7 @@ export default function AppLayout() {
         <button type="button" className="app-hamburger" onClick={() => setSidebarOpen(o => !o)}>
           <Menu size={22} />
         </button>
-        <span className="app-title">Finance Tracker</span>
+        <span className="app-title">{headerTitle}</span>
         <span className="app-net-worth">
           Net Worth:{' '}
           <strong className="has-text-white">{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
