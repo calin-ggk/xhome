@@ -1,7 +1,7 @@
 import "./_app.settings._index.css";
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Briefcase, Globe, RefreshCw, Settings, Tag } from 'lucide-react';
+import { Briefcase, Calendar, Globe, RefreshCw, Settings, Tag } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 type SettingRow = { to: string; labelKey: string; icon: LucideIcon; descKey: string };
@@ -12,6 +12,7 @@ const SETTINGS: SettingRow[] = [
   { to: '/settings/securities',     labelKey: 'settings.securities',    icon: Briefcase,  descKey: 'settings.securitiesDesc' },
   { to: '/settings/tags',           labelKey: 'settings.tags',          icon: Tag,        descKey: 'settings.tagsDesc' },
   { to: '/settings/preferences',    labelKey: 'settings.preferences',   icon: Settings,   descKey: 'settings.preferencesDesc' },
+  { to: '/settings/snapshots',     labelKey: 'settings.snapshots',     icon: Calendar,   descKey: 'settings.snapshotsDesc' },
 ];
 
 export default function SettingsIndex() {

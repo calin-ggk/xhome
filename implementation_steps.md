@@ -67,7 +67,7 @@
 
 ## Phase 7: Reports (The Core Goal)
 
-- [ ] **Snapshot Strategy**
+- [x] **Snapshot Strategy**
   - Current (open) month is always computed on-the-fly from entries.
   - Closed months use pre-computed `account_monthly_snapshots` for performance.
   - "Generate missing snapshots" button in Settings: detects all months with transactions but no snapshot and backfills them all in one operation (handles skipped months automatically).
