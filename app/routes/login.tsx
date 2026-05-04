@@ -3,6 +3,7 @@ import { redirect, useActionData } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { env } from '../config';
 import { getSession, commitSession } from '../session.server';
+import { logger } from '../lib/logger';
 import type { Route } from './+types/login';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -20,8 +21,12 @@ export async function action({ request }: Route.ActionArgs) {
     username === env.AUTH_USERNAME &&
     (await bcrypt.compare(password, env.AUTH_PASSWORD_HASH));
 
-  if (!valid) return { errorKey: 'login.invalidCredentials' };
+  if (!valid) {
+    logger.warn({ event: 'auth.login', username, success: false });
+    return { errorKey: 'login.invalidCredentials' };
+  }
 
+  logger.info({ event: 'auth.login', username, success: true });
   const session = await getSession(request.headers.get('Cookie'));
   session.set('authenticated', true);
   return redirect('/', {

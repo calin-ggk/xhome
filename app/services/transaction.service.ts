@@ -3,6 +3,7 @@ import type * as schema from '~/db/schema';
 import type { Transaction } from '~/db/schema';
 import type { TransactionFormData } from '~/schemas/transaction.schema';
 import * as repo from '~/repositories/transaction.repository';
+import { logger } from '~/lib/logger';
 import type {
   TransactionListRow, TransactionDetail, AccountOption,
   ExchangeRateRow, TagOption, BaseCurrency,
@@ -79,6 +80,7 @@ export function createTransaction(
     data.tagIds,
   );
   saveNewRates(db, data, accountMap);
+  logger.info({ event: 'transaction.created', id: tx.id, date: data.date });
   return { ok: true, data: tx };
 }
 
@@ -103,6 +105,7 @@ export function updateTransaction(
   );
   if (!tx) return { ok: false, error: 'transactions.notFound' };
   saveNewRates(db, data, accountMap);
+  logger.info({ event: 'transaction.updated', id });
   return { ok: true, data: tx };
 }
 
@@ -111,6 +114,7 @@ export function deleteTransaction(
   id: number,
 ): ServiceResult<void> {
   repo.deleteTransaction(db, id);
+  logger.info({ event: 'transaction.deleted', id });
   return { ok: true, data: undefined };
 }
 

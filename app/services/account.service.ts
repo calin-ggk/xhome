@@ -4,6 +4,7 @@ import type { Account } from '~/db/schema';
 import type { AccountFormData } from '~/schemas/account.schema';
 import type { AccountListRow, AccountDetailRow } from '~/repositories/account.repository';
 import * as repo from '~/repositories/account.repository';
+import { logger } from '~/lib/logger';
 
 export type { AccountListRow, AccountDetailRow };
 
@@ -74,6 +75,7 @@ export function createAccount(
       isActive:    data.isActive ?? 1,
       securityId:  data.securityId ?? null,
     });
+    logger.info({ event: 'account.created', id: account.id, category: data.category });
     return { ok: true, data: account };
   } catch (e) {
     if (e instanceof Error && e.message.includes('UNIQUE constraint failed: accounts.category')) {
@@ -100,6 +102,7 @@ export function updateAccount(
       isActive:    data.isActive ?? 1,
       securityId:  data.securityId ?? null,
     });
+    logger.info({ event: 'account.updated', id });
     return { ok: true, data: account! };
   } catch (e) {
     if (e instanceof Error && e.message.includes('UNIQUE constraint failed: accounts.category')) {
@@ -117,5 +120,6 @@ export function deleteAccount(
     return { ok: false, error: 'accounts.cannotDelete' };
   }
   repo.deleteAccount(db, id);
+  logger.info({ event: 'account.deleted', id });
   return { ok: true, data: undefined };
 }
