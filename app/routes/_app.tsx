@@ -1,6 +1,6 @@
 import "./_app.css";
 import { Fragment, useState } from 'react';
-import { NavLink, Outlet, redirect, useLoaderData, useLocation } from 'react-router';
+import { Form, NavLink, Outlet, redirect, useLoaderData, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -98,9 +98,11 @@ export default function AppLayout() {
           <Plus size={14} />
           {t('header.addTransaction')}
         </NavLink>
-        <NavLink to="/logout" className="app-btn-logout">
-          <LogOut size={18} />
-        </NavLink>
+        <Form method="post" action="/logout">
+          <button type="submit" className="app-btn-logout">
+            <LogOut size={18} />
+          </button>
+        </Form>
       </header>
 
       <div className="app-content">
