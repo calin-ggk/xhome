@@ -54,7 +54,7 @@ function findRate(
     .filter(r => r.currencyId === currencyId && r.date <= date)
     .sort((a, b) => b.date.localeCompare(a.date));
   const found = candidates[0];
-  return found ? found.rate / Math.pow(10, found.decimalPlaces) : null;
+  return found ? found.rate / Math.pow(10, found.rateScale) : null;
 }
 
 function fmtCents(cents: number, decimalPlaces = 2): string {

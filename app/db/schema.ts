@@ -15,8 +15,9 @@ export const currencies = sqliteTable('currencies', {
 export const exchangeRates = sqliteTable('exchange_rates', {
   id:         integer('id').primaryKey(),
   currencyId: integer('currency_id').notNull().references(() => currencies.id),
-  // scaled integer; actual = rate / 10^currencies.decimal_places
+  // scaled integer; actual = rate / 10^rate_scale
   rate:       integer('rate').notNull(),
+  rateScale:  integer('rate_scale').notNull().default(4),
   date:       text('date').notNull(),
 }, t => [uniqueIndex('exchange_rates_currency_date').on(t.currencyId, t.date)]);
 

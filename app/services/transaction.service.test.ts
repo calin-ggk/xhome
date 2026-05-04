@@ -89,7 +89,8 @@ describe('createTransaction', () => {
       expect.anything(),
       2,          // EUR currency id
       '2024-01-15',
-      500,        // 5.00 × 10^2
+      50000,      // 5.00 × 10^4
+      4,
     );
   });
 

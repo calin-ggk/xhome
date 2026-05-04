@@ -172,7 +172,8 @@ function saveNewRates(
     if (repo.hasExchangeRate(db, account.currencyId, data.date)) continue;
 
     const rateDecimal = parseFloat(e.rateStr) || 1;
-    const storedRate  = Math.round(rateDecimal * Math.pow(10, account.currencyDecimalPlaces));
-    repo.insertExchangeRate(db, account.currencyId, data.date, storedRate);
+    const rateScale   = 4;
+    const storedRate  = Math.round(rateDecimal * Math.pow(10, rateScale));
+    repo.insertExchangeRate(db, account.currencyId, data.date, storedRate, rateScale);
   }
 }

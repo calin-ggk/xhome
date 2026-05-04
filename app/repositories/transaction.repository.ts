@@ -49,8 +49,8 @@ export type AccountOption = {
 export type ExchangeRateRow = {
   currencyId: number;
   rate: number;
+  rateScale: number;
   date: string;
-  decimalPlaces: number;
 };
 
 export type TagOption = { id: number; name: string };
@@ -239,13 +239,12 @@ export function getAllExchangeRates(
 ): ExchangeRateRow[] {
   return db
     .select({
-      currencyId:    exchangeRates.currencyId,
-      rate:          exchangeRates.rate,
-      date:          exchangeRates.date,
-      decimalPlaces: currencies.decimalPlaces,
+      currencyId: exchangeRates.currencyId,
+      rate:       exchangeRates.rate,
+      rateScale:  exchangeRates.rateScale,
+      date:       exchangeRates.date,
     })
     .from(exchangeRates)
-    .innerJoin(currencies, eq(exchangeRates.currencyId, currencies.id))
     .orderBy(asc(exchangeRates.currencyId), asc(exchangeRates.date))
     .all();
 }
@@ -288,9 +287,10 @@ export function insertExchangeRate(
   currencyId: number,
   date: string,
   rate: number,
+  rateScale: number,
 ): void {
   db.insert(exchangeRates)
-    .values({ currencyId, date, rate })
+    .values({ currencyId, date, rate, rateScale })
     .onConflictDoNothing()
     .run();
 }

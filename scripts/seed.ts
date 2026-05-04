@@ -23,11 +23,11 @@ const db = drizzle({ connection: { source: DATABASE_URL }, schema });
 
 /**
  * Converts foreign-currency cents to base-currency (RON) cents.
- * rate is a scaled integer: actual = rate / 10^decimal_places.
- * For USD (decimal_places=2): amount_base = usd_cents * rate / 100.
+ * rate is a scaled integer: actual = rate / 10^rate_scale.
+ * For rate_scale=4: amount_base = usd_cents * rate / 10_000.
  */
 function toBase(amountCents: number, rate: number): number {
-  return Math.round((amountCents * rate) / 100);
+  return Math.round((amountCents * rate) / 10_000);
 }
 
 type Side = 'debit' | 'credit';
@@ -95,17 +95,17 @@ async function seed() {
   console.log(`  RON id=${ron.id} (base)  USD id=${usd.id}`);
 
   // ── 2. Exchange rates (USD → RON) ───────────────────────────────────────────
-  // rate=450 means 1 USD = 4.50 RON  (scaled by 10^decimal_places = 100)
+  // rate=45000 means 1 USD = 4.5000 RON  (scaled by 10^rate_scale = 10_000)
   console.log('\n[2] Exchange rates (USD/RON)');
   const rates: Record<string, number> = {
-    '2026-01-01': 450,
-    '2026-02-01': 452,
-    '2026-03-01': 455,
-    '2026-04-01': 448,
+    '2026-01-01': 45000,
+    '2026-02-01': 45200,
+    '2026-03-01': 45500,
+    '2026-04-01': 44800,
   };
   for (const [date, rate] of Object.entries(rates)) {
-    await db.insert(exchangeRates).values({ currencyId: usd.id, rate, date });
-    console.log(`  ${date}: ${(rate / 100).toFixed(2)} RON/USD`);
+    await db.insert(exchangeRates).values({ currencyId: usd.id, rate, rateScale: 4, date });
+    console.log(`  ${date}: ${(rate / 10_000).toFixed(4)} RON/USD`);
   }
   const r_feb = rates['2026-02-01'];
   const r_mar = rates['2026-03-01'];

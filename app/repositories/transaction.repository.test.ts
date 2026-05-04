@@ -51,7 +51,8 @@ const DDL = `
   );
   CREATE TABLE exchange_rates (
     id INTEGER PRIMARY KEY, currency_id INTEGER NOT NULL,
-    rate INTEGER NOT NULL, date TEXT NOT NULL,
+    rate INTEGER NOT NULL, rate_scale INTEGER NOT NULL DEFAULT 4,
+    date TEXT NOT NULL,
     UNIQUE (currency_id, date)
   );
 `;
@@ -252,14 +253,14 @@ describe('hasExchangeRate / insertExchangeRate', () => {
 
   it('insertExchangeRate stores a rate and hasExchangeRate returns true', () => {
     const { db } = makeDb();
-    insertExchangeRate(db, 2, '2024-01-15', 500);
+    insertExchangeRate(db, 2, '2024-01-15', 50000, 4);
     expect(hasExchangeRate(db, 2, '2024-01-15')).toBe(true);
   });
 
   it('insertExchangeRate ignores duplicate (onConflictDoNothing)', () => {
     const { db } = makeDb();
-    insertExchangeRate(db, 2, '2024-01-15', 500);
-    expect(() => insertExchangeRate(db, 2, '2024-01-15', 510)).not.toThrow();
+    insertExchangeRate(db, 2, '2024-01-15', 50000, 4);
+    expect(() => insertExchangeRate(db, 2, '2024-01-15', 51000, 4)).not.toThrow();
   });
 });
 

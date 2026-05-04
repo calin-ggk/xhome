@@ -25,7 +25,8 @@ CREATE TABLE currencies (
 CREATE TABLE exchange_rates (
   id           INTEGER PRIMARY KEY,
   currency_id  INTEGER NOT NULL REFERENCES currencies(id),
-  rate         INTEGER NOT NULL, -- scaled integer; actual = rate / 10^currencies.decimal_places
+  rate         INTEGER NOT NULL, -- scaled integer; actual = rate / 10^rate_scale
+  rate_scale   INTEGER NOT NULL DEFAULT 4, -- decimal precision for the rate (default 4)
   date         TEXT    NOT NULL, -- YYYY-MM-DD
   UNIQUE (currency_id, date)
 );
