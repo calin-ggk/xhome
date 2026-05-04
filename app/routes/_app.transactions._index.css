@@ -1,0 +1,38 @@
+.tx-list-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tx-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tx-filter-q {
+  max-width: 180px;
+}
+
+.tx-list-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tx-list-amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-pagination-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.tx-pagination-info {
+  white-space: nowrap;
+}

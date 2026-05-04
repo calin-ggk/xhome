@@ -1,0 +1,83 @@
+.tx-form-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tx-form-page .field.is-grouped {
+  justify-content: center;
+}
+
+.tx-entries-wrapper {
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.tx-entries-table {
+  min-width: 860px;
+  font-size: 0.8rem;
+}
+
+.tx-entries-table th,
+.tx-entries-table td {
+  vertical-align: middle !important;
+  padding: 0.25rem 0.35rem !important;
+  white-space: nowrap;
+}
+
+.tx-entries-table .input,
+.tx-entries-table .select select {
+  font-size: 0.8rem;
+}
+
+.tx-col-account  { min-width: 200px; }
+.tx-col-side     { width: 80px; }
+.tx-col-amount   { width: 100px; }
+.tx-col-rate     { width: 90px; }
+.tx-col-base     { width: 100px; }
+.tx-col-memo     { min-width: 110px; }
+.tx-col-qty      { width: 80px; }
+.tx-col-int      { width: 70px; }
+.tx-col-mat      { width: 110px; }
+.tx-col-remove   { width: 36px; text-align: center; }
+
+.tx-side-buttons { display: flex; gap: 0; }
+.tx-side-buttons .button { font-size: 0.75rem; padding: 0 0.5rem; }
+
+.tx-entries-table input[type="number"] {
+  text-align: right;
+}
+
+.tx-balance-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.tx-tags-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.tx-tag-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #dbdbdb;
+  user-select: none;
+}
+
+.tx-tag-label:hover {
+  border-color: #b5b5b5;
+  background: #f5f5f5;
+}
+
+.tx-tag-label input {
+  cursor: pointer;
+}

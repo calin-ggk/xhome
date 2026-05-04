@@ -60,7 +60,7 @@
 
 ## Phase 6: Transaction Engine
 
-- [ ] **Transaction Engine**
+- [x] **Transaction Engine**
   - Double-entry form (Multi-leg support).
   - Server-side balance validation (Sum = 0).
   - Currency conversion at entry time: pre-fill exchange rate from `exchange_rates` table (closest rate on or before transaction date), shown as an editable field so the user can override before saving. `amount_base` is computed from the confirmed rate.

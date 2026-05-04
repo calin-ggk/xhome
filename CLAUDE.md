@@ -46,6 +46,15 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Shared styles**: `shared_<feature-name>.css` in the directory where the sharing components live.
 - **No inline styles** in `.tsx` files. Use CSS classes or Bulma helpers (`pt-0`, `mb-4`, `has-text-white`, etc.) instead.
 
+## Form Page Layout
+
+Create/Edit pages share a consistent layout pattern:
+
+- The **back link** (`← Feature`) sits outside the centered block, left-aligned inside `container is-fluid`.
+- Form content wraps in `.<feature>-form-page` with `max-width` + `margin: 0 auto` to center horizontally.
+- **Button group** (`field is-grouped`) uses `justify-content: center` so Save/Cancel sit at the horizontal center.
+- Numeric values in tables use `text-align: right` for readability.
+
 ## Reference
 
 - **Domain Specs:** `docs/domain.md` (Full Schema & Business Logic details).
