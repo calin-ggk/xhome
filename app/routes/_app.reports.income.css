@@ -1,0 +1,56 @@
+.is-filter {
+  margin-bottom: 1.25rem;
+}
+
+.is-section {
+  margin-bottom: 1.25rem;
+}
+
+.is-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.is-total-row td {
+  border-top: 2px solid #d1d5db;
+  font-weight: 700;
+}
+
+.is-net-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.is-net-card.is-loss {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.is-net-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.is-net-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #15803d;
+}
+
+.is-net-card.is-loss .is-net-value {
+  color: #dc2626;
+}
+
+.is-filter-apply {
+  align-self: flex-end;
+}

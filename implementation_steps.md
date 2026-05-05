@@ -73,7 +73,7 @@
   - "Generate missing snapshots" button in Settings: detects all months with transactions but no snapshot and backfills them all in one operation (handles skipped months automatically).
 - [x] **Security pricing at snapshot time:**
   - Fetch close price from an external API (e.g. Yahoo Finance) for each security account on the snapshot date. If the API is unavailable or returns no data, show a simple form to enter prices manually before saving the snapshot.
-- [ ] **Financial Statements**
+- [x] **Financial Statements**
   - Balance Sheet (Assets vs Liabilities).
   - Income Statement (Profit & Loss).
   - All reports use a configurable time-range filter; default range set in `/settings/preferences`.

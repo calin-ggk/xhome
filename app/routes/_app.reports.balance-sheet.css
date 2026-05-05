@@ -1,0 +1,58 @@
+.bs-filter {
+  margin-bottom: 1rem;
+}
+
+.bs-date-info {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 1.25rem;
+}
+
+.bs-section {
+  margin-bottom: 1.25rem;
+}
+
+.bs-section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.bs-total-row td {
+  border-top: 2px solid #d1d5db;
+  font-weight: 700;
+}
+
+.bs-net-worth-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.bs-net-worth-card.is-negative {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.bs-net-worth-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.bs-net-worth-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #15803d;
+}
+
+.bs-net-worth-card.is-negative .bs-net-worth-value {
+  color: #dc2626;
+}
