@@ -1,6 +1,6 @@
 import { and, eq, gte, like, lte, or, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { accountMonthlySnapshots, accounts, transactionEntries, transactions } from '~/db/schema';
+import { accountMonthlySnapshots, accounts, securities, transactionEntries, transactions } from '~/db/schema';
 import type * as schema from '~/db/schema';
 
 export type BalanceSheetRow = {
@@ -15,6 +15,20 @@ export type IncomeRow = {
   name: string;
   category: string;
   totalBase: number;
+};
+
+export type NetWorthPoint = {
+  date: string;
+  netWorthBase: number;
+};
+
+export type SecurityHistoryPoint = {
+  date: string;
+  accountId: number;
+  accountName: string;
+  ticker: string;
+  securityName: string;
+  balanceBase: number;
 };
 
 export function hasSnapshotForDate(
@@ -78,6 +92,45 @@ export function getBalanceSheetLive(
     ))
     .groupBy(accounts.id)
     .orderBy(accounts.category)
+    .all();
+}
+
+export function getNetWorthHistory(
+  db: BetterSQLite3Database<typeof schema>,
+): NetWorthPoint[] {
+  return db
+    .select({
+      date: accountMonthlySnapshots.date,
+      netWorthBase: sql<number>`SUM(${accountMonthlySnapshots.balanceBase})`,
+    })
+    .from(accountMonthlySnapshots)
+    .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
+    .where(or(
+      like(accounts.category, 'asset/%'),
+      like(accounts.category, 'liability/%'),
+    ))
+    .groupBy(accountMonthlySnapshots.date)
+    .orderBy(accountMonthlySnapshots.date)
+    .all();
+}
+
+export function getSecuritiesHistory(
+  db: BetterSQLite3Database<typeof schema>,
+): SecurityHistoryPoint[] {
+  return db
+    .select({
+      date: accountMonthlySnapshots.date,
+      accountId: accounts.id,
+      accountName: accounts.name,
+      ticker: securities.ticker,
+      securityName: securities.name,
+      balanceBase: accountMonthlySnapshots.balanceBase,
+    })
+    .from(accountMonthlySnapshots)
+    .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
+    .innerJoin(securities, eq(accounts.securityId, securities.id))
+    .where(eq(accounts.accountType, 'security'))
+    .orderBy(accountMonthlySnapshots.date, accounts.id)
     .all();
 }
 

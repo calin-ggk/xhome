@@ -12,6 +12,8 @@ const ro: TranslationSchema = {
     balanceSheet: 'Bilanț',
     income:       'Venituri',
     netWorth:     'Avere Netă',
+    spending:     'Cheltuieli',
+    securities:   'Titluri de Valoare',
   },
   header: {
     netWorth:       'Avere Netă',
@@ -206,6 +208,29 @@ const ro: TranslationSchema = {
       account:       'Cont',
       amount:        'Sumă ({{currency}})',
       noData:        'Nu există date pentru perioada selectată.',
+    },
+    netWorth: {
+      title:   'Istoricul Averii Nete',
+      noData:  'Nu există date de instantaneu. Generează instantanee mai întâi.',
+      latest:  'Avere Netă Curentă',
+      month:   'Lună',
+      amount:  'Avere Netă ({{currency}})',
+    },
+    spending: {
+      title:    'Cheltuieli',
+      from:     'De la',
+      to:       'Până la',
+      apply:    'Aplică',
+      total:    'Total Cheltuieli',
+      category: 'Categorie',
+      amount:   'Sumă ({{currency}})',
+      noData:   'Nu există cheltuieli pentru perioada selectată.',
+    },
+    securities: {
+      title:  'Istoricul Titlurilor de Valoare',
+      noData: 'Nu există date de instantaneu pentru titluri de valoare.',
+      month:  'Lună',
+      amount: 'Valoare ({{currency}})',
     },
   },
 };

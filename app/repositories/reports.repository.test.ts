@@ -7,6 +7,8 @@ import {
   getBalanceSheetFromSnapshots,
   getBalanceSheetLive,
   getIncomeStatementData,
+  getNetWorthHistory,
+  getSecuritiesHistory,
 } from './reports.repository';
 
 const DDL = `
@@ -14,6 +16,11 @@ const DDL = `
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
     decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE securities (
+    id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL, currency_id INTEGER NOT NULL,
+    type TEXT NOT NULL, quantity_scale INTEGER NOT NULL DEFAULT 6
   );
   CREATE TABLE accounts (
     id INTEGER PRIMARY KEY, name TEXT NOT NULL,
@@ -215,5 +222,92 @@ describe('getIncomeStatementData', () => {
     sqlite.exec(`INSERT INTO transaction_entries VALUES (1, 1, 1, 'debit', 100000, 100000, NULL, NULL, NULL, NULL)`);
     const rows = getIncomeStatementData(db, '2024-01-01', '2024-12-31');
     expect(rows.every(r => r.category.startsWith('income/') || r.category.startsWith('expense/'))).toBe(true);
+  });
+});
+
+describe('getNetWorthHistory', () => {
+  it('returns empty when no snapshots', () => {
+    const { db } = createTestDb();
+    expect(getNetWorthHistory(db)).toEqual([]);
+  });
+
+  it('sums asset and liability balances per snapshot date', () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000, 200000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -50000, -50000);
+    `);
+    const rows = getNetWorthHistory(db);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.date).toBe('2024-02-01');
+    expect(rows[0]?.netWorthBase).toBe(150000);
+  });
+
+  it('returns one point per snapshot date, ordered chronologically', () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-03-01', 300000, 300000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 1, '2024-02-01', 200000, 200000);
+    `);
+    const rows = getNetWorthHistory(db);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.date).toBe('2024-02-01');
+    expect(rows[1]?.date).toBe('2024-03-01');
+  });
+
+  it('excludes income and expense account snapshots', () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO account_monthly_snapshots VALUES (1, 4, '2024-02-01', 50000, 50000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 5, '2024-02-01', 20000, 20000);
+    `);
+    const rows = getNetWorthHistory(db);
+    expect(rows).toEqual([]);
+  });
+});
+
+describe('getSecuritiesHistory', () => {
+  function createSecurityTestDb() {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO securities VALUES (1, 'AAPL', 'Apple Inc', 1, 'stock', 6);
+      INSERT INTO accounts VALUES (6, 'My Apple', 'debit', 'security', 1, 'asset/brokerage/aapl', 1, 1);
+    `);
+    return { db, sqlite };
+  }
+
+  it('returns empty when no security snapshots', () => {
+    const { db } = createSecurityTestDb();
+    expect(getSecuritiesHistory(db)).toEqual([]);
+  });
+
+  it('returns security account snapshot data with ticker info', () => {
+    const { db, sqlite } = createSecurityTestDb();
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000)`);
+    const rows = getSecuritiesHistory(db);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.ticker).toBe('AAPL');
+    expect(rows[0]?.accountName).toBe('My Apple');
+    expect(rows[0]?.balanceBase).toBe(100000);
+    expect(rows[0]?.date).toBe('2024-02-01');
+  });
+
+  it('returns multiple points across dates, ordered by date', () => {
+    const { db, sqlite } = createSecurityTestDb();
+    sqlite.exec(`
+      INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-03-01', 120000, 120000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 6, '2024-02-01', 100000, 100000);
+    `);
+    const rows = getSecuritiesHistory(db);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.date).toBe('2024-02-01');
+    expect(rows[1]?.date).toBe('2024-03-01');
+  });
+
+  it('excludes non-security accounts', () => {
+    const { db, sqlite } = createSecurityTestDb();
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000, 200000)`);
+    const rows = getSecuritiesHistory(db);
+    expect(rows).toEqual([]);
   });
 });

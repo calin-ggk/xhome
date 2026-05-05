@@ -10,6 +10,8 @@ const en = {
     balanceSheet: 'Balance Sheet',
     income:       'Income',
     netWorth:     'Net Worth',
+    spending:     'Spending',
+    securities:   'Securities',
   },
   header: {
     netWorth:       'Net Worth',
@@ -204,6 +206,29 @@ const en = {
       account:       'Account',
       amount:        'Amount ({{currency}})',
       noData:        'No data for the selected period.',
+    },
+    netWorth: {
+      title:   'Net Worth History',
+      noData:  'No snapshot data available. Generate snapshots first.',
+      latest:  'Current Net Worth',
+      month:   'Month',
+      amount:  'Net Worth ({{currency}})',
+    },
+    spending: {
+      title:    'Spending',
+      from:     'From',
+      to:       'To',
+      apply:    'Apply',
+      total:    'Total Spending',
+      category: 'Category',
+      amount:   'Amount ({{currency}})',
+      noData:   'No spending data for the selected period.',
+    },
+    securities: {
+      title:  'Securities History',
+      noData: 'No security snapshot data available.',
+      month:  'Month',
+      amount: 'Value ({{currency}})',
     },
   },
 };

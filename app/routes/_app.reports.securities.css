@@ -1,0 +1,31 @@
+.sec-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sec-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sec-color-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.sec-color-0 { background-color: #2AA5A5; }
+.sec-color-1 { background-color: #F5821A; }
+.sec-color-2 { background-color: #6B7FD7; }
+.sec-color-3 { background-color: #E84545; }
+.sec-color-4 { background-color: #45B7D1; }
+.sec-color-5 { background-color: #FFC107; }
+.sec-color-6 { background-color: #8B5CF6; }
+.sec-color-7 { background-color: #27AE60; }

@@ -77,7 +77,7 @@
   - Balance Sheet (Assets vs Liabilities).
   - Income Statement (Profit & Loss).
   - All reports use a configurable time-range filter; default range set in `/settings/preferences`.
-- [ ] **Advanced Analytics**
+- [x] **Advanced Analytics**
   - Category spending tree (drill-down).
   - Net worth history chart.
   - All securities history chart (value per security over time from `account_monthly_snapshots`; filterable by security/date range).

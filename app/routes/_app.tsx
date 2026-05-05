@@ -4,6 +4,7 @@ import { Form, NavLink, Outlet, redirect, useLoaderData, useLocation } from 'rea
 import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Activity,
   BarChart2,
   Landmark,
   LayoutDashboard,
@@ -11,6 +12,7 @@ import {
   List,
   LogOut,
   Menu,
+  PieChart,
   Plus,
   Settings,
   TrendingUp,
@@ -49,6 +51,8 @@ const NAV: NavGroup[] = [
       { to: '/reports/balance-sheet', key: 'nav.balanceSheet', icon: BarChart2 },
       { to: '/reports/income',        key: 'nav.income',       icon: TrendingUp },
       { to: '/reports/net-worth',     key: 'nav.netWorth',     icon: LineChart },
+      { to: '/reports/spending',      key: 'nav.spending',     icon: PieChart },
+      { to: '/reports/securities',    key: 'nav.securities',   icon: Activity },
     ],
   },
   {

@@ -4,6 +4,8 @@ import {
   getBalanceSheetFromSnapshots,
   getBalanceSheetLive,
   getIncomeStatementData,
+  getNetWorthHistory,
+  getSecuritiesHistory,
   hasSnapshotForDate,
   type BalanceSheetRow,
   type IncomeRow,
@@ -37,6 +39,85 @@ export type IncomeStatementData = {
   expenses: ReportSection;
   netIncome: number;
 };
+
+export type NetWorthHistoryPoint = {
+  month: string;    // 'YYYY-MM' of the closing period
+  display: string;  // e.g. 'Apr 2024'
+  netWorthBase: number;
+};
+
+export type SpendingNode = {
+  label: string;
+  category: string;
+  accountId: number | null;
+  amount: number;
+  children: SpendingNode[];
+};
+
+export type SpendingTreeData = {
+  startDate: string;
+  endDate: string;
+  roots: SpendingNode[];
+  total: number;
+};
+
+export type SecurityLine = {
+  accountId: number;
+  accountName: string;
+  ticker: string;
+  securityName: string;
+  label: string;
+};
+
+export type SecuritiesHistoryData = {
+  securities: SecurityLine[];
+  // Pivoted: { date, display, [accountId]: balanceBase (cents) }[]
+  points: Array<Record<string, string | number>>;
+};
+
+// Convert a snapshot date (YYYY-MM-01, first of next month) to its closing period month
+function snapshotDateToDisplayMonth(snapshotDate: string): { month: string; display: string } {
+  const [yearStr, monthStr] = snapshotDate.split('-');
+  const year = parseInt(yearStr!, 10);
+  const month = parseInt(monthStr!, 10); // 1-indexed; month-2 as 0-indexed = previous month
+  const prevDate = new Date(Date.UTC(year, month - 2, 1));
+  const prevYear = prevDate.getUTCFullYear();
+  const prevMonth = prevDate.getUTCMonth() + 1;
+  const display = prevDate.toLocaleString('en', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return { month: `${prevYear}-${String(prevMonth).padStart(2, '0')}`, display };
+}
+
+function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
+  const expenseRows = rows.filter(r => r.category.startsWith('expense/') && r.totalBase > 0);
+  const nodes = new Map<string, SpendingNode>();
+
+  for (const row of expenseRows) {
+    const parts = row.category.split('/');
+    for (let i = 1; i < parts.length; i++) {
+      const path = parts.slice(0, i + 1).join('/');
+      if (!nodes.has(path)) {
+        nodes.set(path, { label: parts[i]!, category: path, accountId: null, amount: 0, children: [] });
+      }
+    }
+    const leaf = nodes.get(row.category);
+    if (leaf) { leaf.accountId = row.accountId; leaf.amount = row.totalBase; }
+  }
+
+  // Bottom-up: accumulate amounts and link children (deepest paths first)
+  const sorted = [...nodes.keys()].sort((a, b) => b.split('/').length - a.split('/').length);
+  for (const path of sorted) {
+    const node = nodes.get(path)!;
+    const parentPath = path.split('/').slice(0, -1).join('/');
+    const parent = nodes.get(parentPath);
+    if (parent) { parent.children.push(node); parent.amount += node.amount; }
+  }
+
+  for (const node of nodes.values()) node.children.sort((a, b) => b.amount - a.amount);
+
+  return [...nodes.values()]
+    .filter(n => n.category.split('/').length === 2)
+    .sort((a, b) => b.amount - a.amount);
+}
 
 // First day of the month AFTER ym (used as snapshot key)
 function nextMonthFirst(ym: string): string {
@@ -107,6 +188,58 @@ export function getBalanceSheet(
     equity,
     netWorth: assets.total - liabilities.total,
   };
+}
+
+export function getNetWorthHistoryData(
+  db: BetterSQLite3Database<typeof schema>,
+): NetWorthHistoryPoint[] {
+  return getNetWorthHistory(db).map(r => ({
+    ...snapshotDateToDisplayMonth(r.date),
+    netWorthBase: r.netWorthBase,
+  }));
+}
+
+export function getSpendingTreeData(
+  db: BetterSQLite3Database<typeof schema>,
+  startDate: string,
+  endDate: string,
+): SpendingTreeData {
+  const rows = getIncomeStatementData(db, startDate, endDate);
+  const roots = buildSpendingTree(rows);
+  return { startDate, endDate, roots, total: roots.reduce((s, n) => s + n.amount, 0) };
+}
+
+export function getSecuritiesHistoryData(
+  db: BetterSQLite3Database<typeof schema>,
+): SecuritiesHistoryData {
+  const rows = getSecuritiesHistory(db);
+  if (rows.length === 0) return { securities: [], points: [] };
+
+  const secMap = new Map<number, SecurityLine>();
+  for (const r of rows) {
+    if (!secMap.has(r.accountId)) {
+      secMap.set(r.accountId, {
+        accountId: r.accountId,
+        accountName: r.accountName,
+        ticker: r.ticker,
+        securityName: r.securityName,
+        label: `${r.ticker} (${r.accountName})`,
+      });
+    }
+  }
+
+  const dates = [...new Set(rows.map(r => r.date))].sort();
+  const points: Array<Record<string, string | number>> = dates.map(date => {
+    const { display } = snapshotDateToDisplayMonth(date);
+    const point: Record<string, string | number> = { date, display };
+    for (const [accountId] of secMap) {
+      const row = rows.find(r => r.date === date && r.accountId === accountId);
+      point[String(accountId)] = row?.balanceBase ?? 0;
+    }
+    return point;
+  });
+
+  return { securities: [...secMap.values()], points };
 }
 
 export function getIncomeStatement(
