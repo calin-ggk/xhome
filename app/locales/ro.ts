@@ -176,7 +176,22 @@ const ro: TranslationSchema = {
     nextPage:         'Următor →',
     paginationInfo:   'Afișare {{from}}–{{to}} din {{total}}',
   },
+  preferences: {
+    title:                  'Preferințe',
+    saved:                  'Preferințele au fost salvate.',
+    defaultReportRange:     'Interval implicit pentru rapoarte',
+    defaultReportRangeHelp: 'Intervalul de date inițial la deschiderea rapoartelor.',
+    save:                   'Salvează',
+    range_current_month:    'Luna curentă',
+    range_current_year:     'Anul curent (de la început)',
+    range_last_3_months:    'Ultimele 3 luni',
+    range_last_6_months:    'Ultimele 6 luni',
+    range_last_12_months:   'Ultimele 12 luni',
+    range_all:              'Tot timpul',
+  },
   reports: {
+    allTime:         'Tot timpul',
+    showingAllTime:  'Se afișează tot — introduce date mai sus pentru a filtra.',
     balanceSheet: {
       title:            'Bilanț',
       asOf:             'La data de',

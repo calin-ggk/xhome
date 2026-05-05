@@ -174,7 +174,22 @@ const en = {
     nextPage:         'Next →',
     paginationInfo:   'Showing {{from}}–{{to}} of {{total}}',
   },
+  preferences: {
+    title:                  'Preferences',
+    saved:                  'Preferences saved.',
+    defaultReportRange:     'Default Report Date Range',
+    defaultReportRangeHelp: 'Initial date range when opening reports.',
+    save:                   'Save',
+    range_current_month:    'Current Month',
+    range_current_year:     'Current Year (YTD)',
+    range_last_3_months:    'Last 3 Months',
+    range_last_6_months:    'Last 6 Months',
+    range_last_12_months:   'Last 12 Months',
+    range_all:              'All Time',
+  },
   reports: {
+    allTime:         'All Time',
+    showingAllTime:  'Showing all time — enter dates above to filter.',
     balanceSheet: {
       title:            'Balance Sheet',
       asOf:             'As of',

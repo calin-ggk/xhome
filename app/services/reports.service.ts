@@ -33,8 +33,8 @@ export type BalanceSheetData = {
 };
 
 export type IncomeStatementData = {
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   income: ReportSection;
   expenses: ReportSection;
   netIncome: number;
@@ -55,8 +55,8 @@ export type SpendingNode = {
 };
 
 export type SpendingTreeData = {
-  startDate: string;
-  endDate: string;
+  startDate: string | null;
+  endDate: string | null;
   roots: SpendingNode[];
   total: number;
 };
@@ -201,8 +201,8 @@ export function getNetWorthHistoryData(
 
 export function getSpendingTreeData(
   db: BetterSQLite3Database<typeof schema>,
-  startDate: string,
-  endDate: string,
+  startDate: string | null,
+  endDate: string | null,
 ): SpendingTreeData {
   const rows = getIncomeStatementData(db, startDate, endDate);
   const roots = buildSpendingTree(rows);
@@ -244,8 +244,8 @@ export function getSecuritiesHistoryData(
 
 export function getIncomeStatement(
   db: BetterSQLite3Database<typeof schema>,
-  startDate: string,
-  endDate: string,
+  startDate: string | null,
+  endDate: string | null,
 ): IncomeStatementData {
   const rows = getIncomeStatementData(db, startDate, endDate);
 

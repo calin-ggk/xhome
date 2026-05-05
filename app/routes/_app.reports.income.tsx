@@ -5,20 +5,27 @@ import { z } from 'zod';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
 import { getIncomeStatement, type ReportSection } from '~/services/reports.service';
+import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import type { Route } from './+types/_app.reports.income';
 
-const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional();
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const today = new Date().toISOString().slice(0, 10);
-  const defaultFrom = `${today.slice(0, 4)}-01-01`;
+  const url        = new URL(request.url);
+  const today      = new Date().toISOString().slice(0, 10);
+  const fromParam  = url.searchParams.get('from');
+  const toParam    = url.searchParams.get('to');
 
-  const fromParsed = dateSchema.safeParse(url.searchParams.get('from') ?? undefined);
-  const toParsed   = dateSchema.safeParse(url.searchParams.get('to')   ?? undefined);
+  // Both params explicitly empty → all time
+  if (fromParam === '' && toParam === '') {
+    return getIncomeStatement(db, null, null);
+  }
 
-  const startDate = fromParsed.success && fromParsed.data ? fromParsed.data : defaultFrom;
-  const endDate   = toParsed.success   && toParsed.data   ? toParsed.data   : today;
+  const prefs    = getPreferences(db);
+  const defaults = computeDateRange(prefs.defaultReportRange as ReportRange, today);
+
+  const startDate = dateSchema.safeParse(fromParam).success ? fromParam! : defaults.from;
+  const endDate   = dateSchema.safeParse(toParam).success   ? toParam!   : defaults.to;
 
   return getIncomeStatement(db, startDate, endDate);
 }
@@ -67,7 +74,8 @@ function SectionTable({
 export default function IncomeStatementPage() {
   const { startDate, endDate, income, expenses, netIncome } = useLoaderData<typeof loader>();
   const { t } = useTranslation();
-  const isLoss = netIncome < 0;
+  const isLoss  = netIncome < 0;
+  const isAllTime = startDate === null && endDate === null;
 
   return (
     <section className="section pt-0">
@@ -82,7 +90,7 @@ export default function IncomeStatementPage() {
                 className="input is-small"
                 type="date"
                 name="from"
-                defaultValue={startDate}
+                defaultValue={startDate ?? ''}
               />
             </div>
             <div className="control">
@@ -91,7 +99,7 @@ export default function IncomeStatementPage() {
                 className="input is-small"
                 type="date"
                 name="to"
-                defaultValue={endDate}
+                defaultValue={endDate ?? ''}
               />
             </div>
             <div className="control is-filter-apply">
@@ -99,7 +107,17 @@ export default function IncomeStatementPage() {
                 {t('reports.income.apply')}
               </button>
             </div>
+            {!isAllTime && (
+              <div className="control is-filter-alltime">
+                <a className="button is-small is-light" href="?from=&to=">
+                  {t('reports.allTime')}
+                </a>
+              </div>
+            )}
           </div>
+          {isAllTime && (
+            <p className="is-alltime-badge">{t('reports.showingAllTime')}</p>
+          )}
         </form>
 
         <div className="box is-section">

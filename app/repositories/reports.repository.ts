@@ -136,8 +136,8 @@ export function getSecuritiesHistory(
 
 export function getIncomeStatementData(
   db: BetterSQLite3Database<typeof schema>,
-  startDate: string,
-  endDate: string,
+  startDate: string | null,
+  endDate: string | null,
 ): IncomeRow[] {
   return db
     .select({
@@ -161,8 +161,8 @@ export function getIncomeStatementData(
         like(accounts.category, 'income/%'),
         like(accounts.category, 'expense/%'),
       ),
-      gte(transactions.date, startDate),
-      lte(transactions.date, endDate),
+      startDate ? gte(transactions.date, startDate) : undefined,
+      endDate   ? lte(transactions.date, endDate)   : undefined,
     ))
     .groupBy(accounts.id)
     .orderBy(accounts.category)

@@ -95,7 +95,16 @@ export const accountMonthlySnapshots = sqliteTable('account_monthly_snapshots', 
   balanceBase: integer('balance_base').notNull(),
 }, t => [uniqueIndex('snapshots_account_date').on(t.accountId, t.date)]);
 
+// 7. User Preferences
+
+export const userPreferences = sqliteTable('user_preferences', {
+  id:                 integer('id').primaryKey(),
+  defaultReportRange: text('default_report_range').notNull().default('current_year'),
+});
+
 // Inferred types
+export type UserPreferences       = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = typeof userPreferences.$inferInsert;
 export type Currency              = typeof currencies.$inferSelect;
 export type InsertCurrency        = typeof currencies.$inferInsert;
 export type ExchangeRate          = typeof exchangeRates.$inferSelect;

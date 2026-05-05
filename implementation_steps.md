@@ -86,7 +86,7 @@
 
 - [ ] **Currencies** — list, create, edit, delete; mark base currency.
 - [ ] **Tags** — list, create, edit, delete.
-- [ ] **Preferences** — default report date range and other UI preferences.
+- [x] **Preferences** — default report date range and other UI preferences.
 - [ ] **Snapshots** — "Generate missing snapshots" UI; manual snapshot management.
 
 > Exchange Rates and Securities settings screens are not required: rates and prices are fetched automatically from Yahoo Finance at snapshot time.

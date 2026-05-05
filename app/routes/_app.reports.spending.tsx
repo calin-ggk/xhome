@@ -7,20 +7,26 @@ import { z } from 'zod';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
 import { getSpendingTreeData, type SpendingNode } from '~/services/reports.service';
+import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import type { Route } from './+types/_app.reports.spending';
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const today = new Date().toISOString().slice(0, 10);
-  const firstOfMonth = today.slice(0, 7) + '-01';
+  const url       = new URL(request.url);
+  const today     = new Date().toISOString().slice(0, 10);
+  const fromParam = url.searchParams.get('from');
+  const toParam   = url.searchParams.get('to');
 
-  const fromRaw = url.searchParams.get('from') ?? '';
-  const toRaw   = url.searchParams.get('to')   ?? '';
+  if (fromParam === '' && toParam === '') {
+    return getSpendingTreeData(db, null, null);
+  }
 
-  const from = dateSchema.safeParse(fromRaw).success ? fromRaw : firstOfMonth;
-  const to   = dateSchema.safeParse(toRaw).success   ? toRaw   : today;
+  const prefs    = getPreferences(db);
+  const defaults = computeDateRange(prefs.defaultReportRange as ReportRange, today);
+
+  const from = dateSchema.safeParse(fromParam).success ? fromParam! : defaults.from;
+  const to   = dateSchema.safeParse(toParam).success   ? toParam!   : defaults.to;
 
   return getSpendingTreeData(db, from, to);
 }
@@ -62,6 +68,7 @@ function SpendingNodeRow({ node, depth }: { node: SpendingNode; depth: number })
 export default function SpendingPage() {
   const { startDate, endDate, roots, total } = useLoaderData<typeof loader>();
   const { t } = useTranslation();
+  const isAllTime = startDate === null && endDate === null;
 
   return (
     <section className="section pt-0">
@@ -72,18 +79,28 @@ export default function SpendingPage() {
           <div className="field is-grouped">
             <div className="control">
               <label className="label is-small">{t('reports.spending.from')}</label>
-              <input className="input is-small" type="date" name="from" defaultValue={startDate} />
+              <input className="input is-small" type="date" name="from" defaultValue={startDate ?? ''} />
             </div>
             <div className="control">
               <label className="label is-small">{t('reports.spending.to')}</label>
-              <input className="input is-small" type="date" name="to" defaultValue={endDate} />
+              <input className="input is-small" type="date" name="to" defaultValue={endDate ?? ''} />
             </div>
             <div className="control spending-filter-apply">
               <button className="button is-small is-info" type="submit">
                 {t('reports.spending.apply')}
               </button>
             </div>
+            {!isAllTime && (
+              <div className="control spending-filter-alltime">
+                <a className="button is-small is-light" href="?from=&to=">
+                  {t('reports.allTime')}
+                </a>
+              </div>
+            )}
           </div>
+          {isAllTime && (
+            <p className="spending-alltime-badge">{t('reports.showingAllTime')}</p>
+          )}
         </form>
 
         {roots.length === 0 ? (

@@ -54,3 +54,14 @@
 .is-filter-apply {
   align-self: flex-end;
 }
+
+.is-filter-alltime {
+  align-self: flex-end;
+  padding-bottom: 0.4rem;
+}
+
+.is-alltime-badge {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}

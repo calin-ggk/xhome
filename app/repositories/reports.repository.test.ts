@@ -223,6 +223,23 @@ describe('getIncomeStatementData', () => {
     const rows = getIncomeStatementData(db, '2024-01-01', '2024-12-31');
     expect(rows.every(r => r.category.startsWith('income/') || r.category.startsWith('expense/'))).toBe(true);
   });
+
+  it('returns all entries when both dates are null', () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO transaction_entries VALUES (1, 2, 4, 'credit', 50000, 50000, NULL, NULL, NULL, NULL);
+      INSERT INTO transaction_entries VALUES (2, 3, 5, 'debit',  20000, 20000, NULL, NULL, NULL, NULL);
+    `);
+    const rows = getIncomeStatementData(db, null, null);
+    expect(rows).toHaveLength(2);
+  });
+
+  it('applies only lower bound when startDate is provided and endDate is null', () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`INSERT INTO transaction_entries VALUES (1, 2, 4, 'credit', 50000, 50000, NULL, NULL, NULL, NULL)`);
+    expect(getIncomeStatementData(db, '2024-01-15', null)).toHaveLength(1);
+    expect(getIncomeStatementData(db, '2024-01-16', null)).toHaveLength(0);
+  });
 });
 
 describe('getNetWorthHistory', () => {
