@@ -71,7 +71,7 @@
   - Current (open) month is always computed on-the-fly from entries.
   - Closed months use pre-computed `account_monthly_snapshots` for performance.
   - "Generate missing snapshots" button in Settings: detects all months with transactions but no snapshot and backfills them all in one operation (handles skipped months automatically).
-- [ ] **Security pricing at snapshot time:**
+- [x] **Security pricing at snapshot time:**
   - Fetch close price from an external API (e.g. Yahoo Finance) for each security account on the snapshot date. If the API is unavailable or returns no data, show a simple form to enter prices manually before saving the snapshot.
 - [ ] **Financial Statements**
   - Balance Sheet (Assets vs Liabilities).

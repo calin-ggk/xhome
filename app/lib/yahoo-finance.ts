@@ -20,9 +20,17 @@ export async function fetchExchangeRate(
   if (fromCurrency === toCurrency) {
     return { rate: Math.pow(10, RATE_SCALE), rateScale: RATE_SCALE };
   }
+  return fetchYahooClosePrice(`${fromCurrency}${toCurrency}=X`, date);
+}
 
-  const symbol = `${fromCurrency}${toCurrency}=X`;
+export async function fetchSecurityPrice(
+  ticker: string,
+  date: string, // YYYY-MM-DD (snapshot date)
+): Promise<FetchedRate | null> {
+  return fetchYahooClosePrice(ticker, date);
+}
 
+async function fetchYahooClosePrice(symbol: string, date: string): Promise<FetchedRate | null> {
   // 7-day window ending on snapshot date to handle non-trading days (weekends/holidays)
   const endMs   = new Date(`${date}T12:00:00Z`).getTime();
   const startMs = endMs - 7 * 24 * 60 * 60 * 1000;
@@ -45,7 +53,7 @@ export async function fetchExchangeRate(
     const closes = result.indicators?.quote?.[0]?.close;
     if (!closes?.length) return null;
 
-    // Last non-null close price in the window (most recent trading day)
+    // Last non-null close in the window (most recent trading day)
     const closePrice = [...closes].reverse().find((c): c is number => c !== null && isFinite(c));
     if (closePrice === undefined) return null;
 

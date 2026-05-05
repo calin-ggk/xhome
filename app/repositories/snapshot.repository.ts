@@ -1,8 +1,8 @@
-import { and, eq, lt, sql } from 'drizzle-orm';
+import { and, eq, lt, ne, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   accountMonthlySnapshots, accounts, currencies,
-  exchangeRates, transactionEntries, transactions,
+  exchangeRates, securities, transactionEntries, transactions,
 } from '~/db/schema';
 import type { InsertAccountMonthlySnapshot } from '~/db/schema';
 import type * as schema from '~/db/schema';
@@ -14,6 +14,17 @@ export type AccountBalance = {
   currencyId:     number;
   isBaseCurrency: number;
   balance:        number;
+};
+
+export type SecurityAccountInfo = {
+  accountId:      number;
+  securityId:     number;
+  ticker:         string;
+  quantityScale:  number;
+  currencyId:     number;
+  decimalPlaces:  number;
+  isBaseCurrency: number;
+  netQuantity:    number;
 };
 
 export type RequiredRate = {
@@ -77,7 +88,36 @@ export function computeAccountBalancesAtDate(
     .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
     .innerJoin(accounts,     eq(transactionEntries.accountId, accounts.id))
     .innerJoin(currencies,   eq(accounts.currencyId, currencies.id))
-    .where(lt(transactions.date, snapshotDate))
+    .where(and(lt(transactions.date, snapshotDate), ne(accounts.accountType, 'security')))
+    .groupBy(transactionEntries.accountId)
+    .all();
+}
+
+/**
+ * Returns net quantity and pricing metadata for every security account that
+ * has any entry with transaction date < snapshotDate.
+ */
+export function getSecurityAccountQuantities(
+  db: BetterSQLite3Database<typeof schema>,
+  snapshotDate: string,
+): SecurityAccountInfo[] {
+  return db
+    .select({
+      accountId:      transactionEntries.accountId,
+      securityId:     securities.id,
+      ticker:         securities.ticker,
+      quantityScale:  securities.quantityScale,
+      currencyId:     accounts.currencyId,
+      decimalPlaces:  currencies.decimalPlaces,
+      isBaseCurrency: currencies.isBase,
+      netQuantity: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.quantity} ELSE -(${transactionEntries.quantity}) END)`,
+    })
+    .from(transactionEntries)
+    .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
+    .innerJoin(accounts,     eq(transactionEntries.accountId, accounts.id))
+    .innerJoin(securities,   eq(accounts.securityId, securities.id))
+    .innerJoin(currencies,   eq(accounts.currencyId, currencies.id))
+    .where(and(lt(transactions.date, snapshotDate), eq(accounts.accountType, 'security')))
     .groupBy(transactionEntries.accountId)
     .all();
 }

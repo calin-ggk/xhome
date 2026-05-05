@@ -5,6 +5,7 @@ import * as schema from '~/db/schema';
 import {
   getMissingSnapshotMonths,
   computeAccountBalancesAtDate,
+  getSecurityAccountQuantities,
   getRequiredRates,
   getExchangeRate,
   upsertExchangeRate,
@@ -18,6 +19,11 @@ const DDL = `
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
     decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+  );
+  CREATE TABLE securities (
+    id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL, currency_id INTEGER NOT NULL,
+    type TEXT NOT NULL, quantity_scale INTEGER NOT NULL DEFAULT 6
   );
   CREATE TABLE accounts (
     id INTEGER PRIMARY KEY, name TEXT NOT NULL,
@@ -267,5 +273,89 @@ describe('getBaseCurrencyCode', () => {
   it('returns the base currency code', () => {
     const { db } = makeDb();
     expect(getBaseCurrencyCode(db)).toBe('RON');
+  });
+});
+
+// ── getSecurityAccountQuantities ──────────────────────────────────────────────
+
+function makeSecurityDb() {
+  const sqlite = new Database(':memory:');
+  sqlite.exec(DDL);
+  sqlite.exec(`
+    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1);
+    INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2, 0);
+    INSERT INTO securities VALUES (1, 'AAPL', 'Apple Inc.', 2, 'stock', 6);
+    INSERT INTO accounts VALUES (1, 'Bank RON', 'debit', 'simple', 1, 'asset/bank-ron', 1, NULL);
+    INSERT INTO accounts VALUES (2, 'AAPL Portfolio', 'debit', 'security', 2, 'asset/security/aapl', 1, 1);
+    INSERT INTO accounts VALUES (3, 'Broker', 'credit', 'simple', 2, 'liability/broker', 1, NULL);
+  `);
+  return { db: drizzle(sqlite, { schema }), sqlite };
+}
+
+describe('getSecurityAccountQuantities', () => {
+  it('returns empty when no security accounts have entries', () => {
+    const { db } = makeSecurityDb();
+    expect(getSecurityAccountQuantities(db, '2024-05-01')).toEqual([]);
+  });
+
+  it('returns net quantity for a security account with a buy entry', () => {
+    const { db, sqlite } = makeSecurityDb();
+    // Buy 1.5 AAPL: quantity = 1500000 (1.5 × 10^6)
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (1,'2024-04-10',CURRENT_TIMESTAMP,'buy AAPL',NULL);
+      INSERT INTO transaction_entries VALUES (1,1,2,'debit',27000,135000,1500000,NULL,NULL,NULL);
+      INSERT INTO transaction_entries VALUES (2,1,3,'credit',27000,135000,NULL,NULL,NULL,NULL);
+    `);
+    const rows = getSecurityAccountQuantities(db, '2024-05-01');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.ticker).toBe('AAPL');
+    expect(rows[0]?.netQuantity).toBe(1500000);
+    expect(rows[0]?.quantityScale).toBe(6);
+    expect(rows[0]?.decimalPlaces).toBe(2);
+  });
+
+  it('computes net quantity correctly after a partial sell', () => {
+    const { db, sqlite } = makeSecurityDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (1,'2024-03-01',CURRENT_TIMESTAMP,'buy',NULL);
+      INSERT INTO transaction_entries VALUES (1,1,2,'debit',30000,150000,2000000,NULL,NULL,NULL);
+      INSERT INTO transactions VALUES (2,'2024-04-01',CURRENT_TIMESTAMP,'sell',NULL);
+      INSERT INTO transaction_entries VALUES (2,2,2,'credit',10000,50000,500000,NULL,NULL,NULL);
+    `);
+    const rows = getSecurityAccountQuantities(db, '2024-05-01');
+    expect(rows[0]?.netQuantity).toBe(1500000); // 2000000 - 500000
+  });
+
+  it('excludes non-security accounts', () => {
+    const { db, sqlite } = makeSecurityDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (1,'2024-04-10',CURRENT_TIMESTAMP,'salary',NULL);
+      INSERT INTO transaction_entries VALUES (1,1,1,'debit',50000,50000,NULL,NULL,NULL,NULL);
+      INSERT INTO transaction_entries VALUES (2,1,3,'credit',50000,50000,NULL,NULL,NULL,NULL);
+    `);
+    expect(getSecurityAccountQuantities(db, '2024-05-01')).toEqual([]);
+  });
+
+  it('excludes entries on or after snapshotDate', () => {
+    const { db, sqlite } = makeSecurityDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (1,'2024-05-01',CURRENT_TIMESTAMP,'buy',NULL);
+      INSERT INTO transaction_entries VALUES (1,1,2,'debit',27000,135000,1500000,NULL,NULL,NULL);
+    `);
+    expect(getSecurityAccountQuantities(db, '2024-05-01')).toEqual([]);
+  });
+});
+
+describe('computeAccountBalancesAtDate excludes security accounts', () => {
+  it('does not include security accounts in the balance result', () => {
+    const { db, sqlite } = makeSecurityDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (1,'2024-04-10',CURRENT_TIMESTAMP,'buy',NULL);
+      INSERT INTO transaction_entries VALUES (1,1,2,'debit',27000,135000,1500000,NULL,NULL,NULL);
+      INSERT INTO transaction_entries VALUES (2,1,3,'credit',27000,135000,NULL,NULL,NULL,NULL);
+    `);
+    const rows = computeAccountBalancesAtDate(db, '2024-05-01');
+    expect(rows.find(r => r.accountId === 2)).toBeUndefined(); // security account excluded
+    expect(rows.find(r => r.accountId === 3)).toBeDefined();   // non-security included
   });
 });

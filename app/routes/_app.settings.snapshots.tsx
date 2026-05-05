@@ -6,7 +6,7 @@ import {
   getSnapshotStatus,
   generateMissingSnapshots,
 } from '~/services/snapshot.service';
-import type { MissingRate, ManualRate } from '~/services/snapshot.service';
+import type { MissingRate, MissingSecurityPrice, ManualRate, ManualSecurityPrice } from '~/services/snapshot.service';
 import type { Route } from './+types/_app.settings.snapshots';
 
 export async function loader(_: Route.LoaderArgs) {
@@ -17,31 +17,49 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
 
   const manualRates: ManualRate[] = [];
+  const manualPrices: ManualSecurityPrice[] = [];
+
   for (const [key, value] of formData.entries()) {
-    const match = (key as string).match(/^rate_(\d+)_(.+)$/);
-    if (match) {
+    const rateMatch = (key as string).match(/^rate_(\d+)_(.+)$/);
+    if (rateMatch) {
       const rateDecimal = parseFloat(value as string);
       if (isFinite(rateDecimal) && rateDecimal > 0) {
         manualRates.push({
-          currencyId:   parseInt(match[1]!, 10),
-          snapshotDate: match[2]!,
+          currencyId:   parseInt(rateMatch[1]!, 10),
+          snapshotDate: rateMatch[2]!,
           rateDecimal,
+        });
+      }
+    }
+
+    const priceMatch = (key as string).match(/^price_(\d+)_(.+)$/);
+    if (priceMatch) {
+      const priceDecimal = parseFloat(value as string);
+      if (isFinite(priceDecimal) && priceDecimal > 0) {
+        manualPrices.push({
+          securityId:   parseInt(priceMatch[1]!, 10),
+          snapshotDate: priceMatch[2]!,
+          priceDecimal,
         });
       }
     }
   }
 
-  const result = await generateMissingSnapshots(db, manualRates);
+  const result = await generateMissingSnapshots(db, manualRates, manualPrices);
 
   if (!result.ok && 'missingRates' in result) {
-    return { status: 'needs_rates' as const, missingRates: result.missingRates };
+    return {
+      status:        'needs_manual' as const,
+      missingRates:  result.missingRates,
+      missingPrices: result.missingPrices,
+    };
   }
   if (!result.ok) {
     return { status: 'error' as const, error: result.error };
   }
   return {
-    status:          'success' as const,
-    monthsGenerated: result.monthsGenerated,
+    status:           'success' as const,
+    monthsGenerated:  result.monthsGenerated,
     snapshotsCreated: result.snapshotsCreated,
   };
 }
@@ -52,10 +70,13 @@ export default function SnapshotsPage() {
   const navigation  = useNavigation();
   const { t }       = useTranslation();
 
-  const isSubmitting = navigation.state === 'submitting';
-  const needsRates   = actionData?.status === 'needs_rates';
-  const isSuccess    = actionData?.status === 'success';
-  const isError      = actionData?.status === 'error';
+  const isSubmitting   = navigation.state === 'submitting';
+  const needsManual    = actionData?.status === 'needs_manual';
+  const isSuccess      = actionData?.status === 'success';
+  const isError        = actionData?.status === 'error';
+
+  const missingRates  = needsManual ? (actionData.missingRates  as MissingRate[])         : [];
+  const missingPrices = needsManual ? (actionData.missingPrices as MissingSecurityPrice[]) : [];
 
   return (
     <section className="section pt-0">
@@ -95,49 +116,87 @@ export default function SnapshotsPage() {
                 </ul>
               </div>
 
-              {needsRates && actionData && (
+              {needsManual && (
                 <div className="notification is-warning">
-                  <p className="mb-3">{t('snapshots.ratesFetchFailed')}</p>
                   <form method="post">
-                    <table className="table is-narrow mb-3">
-                      <thead>
-                        <tr>
-                          <th>{t('snapshots.currency')}</th>
-                          <th>{t('snapshots.snapshotMonth')}</th>
-                          <th>{t('snapshots.rate')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(actionData.missingRates as MissingRate[]).map(r => (
-                          <tr key={`${r.currencyId}-${r.snapshotDate}`}>
-                            <td>{r.currencyCode}</td>
-                            <td>{formatSnapshotMonth(r.snapshotDate)}</td>
-                            <td>
-                              <input
-                                className="input is-small snapshot-rate-input"
-                                type="number"
-                                step="0.0001"
-                                min="0.0001"
-                                name={`rate_${r.currencyId}_${r.snapshotDate}`}
-                                required
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    {missingRates.length > 0 && (
+                      <>
+                        <p className="mb-3">{t('snapshots.ratesFetchFailed')}</p>
+                        <table className="table is-narrow mb-4">
+                          <thead>
+                            <tr>
+                              <th>{t('snapshots.currency')}</th>
+                              <th>{t('snapshots.snapshotMonth')}</th>
+                              <th>{t('snapshots.rate')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {missingRates.map(r => (
+                              <tr key={`${r.currencyId}-${r.snapshotDate}`}>
+                                <td>{r.currencyCode}</td>
+                                <td>{formatSnapshotMonth(r.snapshotDate)}</td>
+                                <td>
+                                  <input
+                                    className="input is-small snapshot-rate-input"
+                                    type="number"
+                                    step="0.0001"
+                                    min="0.0001"
+                                    name={`rate_${r.currencyId}_${r.snapshotDate}`}
+                                    required
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
+
+                    {missingPrices.length > 0 && (
+                      <>
+                        <p className="mb-3">{t('snapshots.pricesFetchFailed')}</p>
+                        <table className="table is-narrow mb-4">
+                          <thead>
+                            <tr>
+                              <th>{t('snapshots.security')}</th>
+                              <th>{t('snapshots.snapshotMonth')}</th>
+                              <th>{t('snapshots.price')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {missingPrices.map(p => (
+                              <tr key={`${p.securityId}-${p.snapshotDate}`}>
+                                <td>{p.ticker}</td>
+                                <td>{formatSnapshotMonth(p.snapshotDate)}</td>
+                                <td>
+                                  <input
+                                    className="input is-small snapshot-rate-input"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    name={`price_${p.securityId}_${p.snapshotDate}`}
+                                    required
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
+
                     <button
                       type="submit"
                       className="button is-primary"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? t('snapshots.generating') : t('snapshots.generateWithRates')}
+                      {isSubmitting ? t('snapshots.generating') : t('snapshots.generateWithManual')}
                     </button>
                   </form>
                 </div>
               )}
 
-              {!needsRates && (
+              {!needsManual && (
                 <form method="post">
                   <button
                     type="submit"
