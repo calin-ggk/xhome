@@ -80,3 +80,13 @@
 - [ ] **Advanced Analytics**
   - Category spending tree (drill-down).
   - Net worth history chart.
+  - All securities history chart (value per security over time from `account_monthly_snapshots`; filterable by security/date range).
+
+## Phase 8: Settings
+
+- [ ] **Currencies** — list, create, edit, delete; mark base currency.
+- [ ] **Tags** — list, create, edit, delete.
+- [ ] **Preferences** — default report date range and other UI preferences.
+- [ ] **Snapshots** — "Generate missing snapshots" UI; manual snapshot management.
+
+> Exchange Rates and Securities settings screens are not required: rates and prices are fetched automatically from Yahoo Finance at snapshot time.
