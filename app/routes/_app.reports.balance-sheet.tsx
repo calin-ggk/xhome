@@ -1,6 +1,7 @@
 import "./_app.reports.balance-sheet.css";
 import { useLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { MonthPicker } from '~/components/MonthPicker';
 import { z } from 'zod';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
@@ -27,13 +28,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const ym = `${selectedYear}-${pad2(selectedMonthNum)}`;
 
-  const currentYear = today.getFullYear();
-  const years = Array.from({ length: 7 }, (_, i) => currentYear - 5 + i);
-
   return {
     selectedYear,
     selectedMonthNum,
-    years,
     ...getBalanceSheet(db, ym, todayStr),
   };
 }
@@ -79,46 +76,19 @@ function SectionTable({
   );
 }
 
-const MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December',
-];
-
 export default function BalanceSheetPage() {
-  const { selectedYear, selectedMonthNum, years, asOfDate, isSnapshot, assets, liabilities, equity, netWorth } =
+  const { selectedYear, selectedMonthNum, asOfDate, isSnapshot, assets, liabilities, equity, netWorth } =
     useLoaderData<typeof loader>();
   const { t } = useTranslation();
 
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
-        <h1 className="title is-5 mb-3">{t('reports.balanceSheet.title')}</h1>
-
-        <form method="get" className="bs-filter">
-          <div className="field has-addons">
-            <div className="control">
-              <div className="select is-small">
-                <select name="m" defaultValue={selectedMonthNum}>
-                  {MONTH_NAMES.map((name, i) => (
-                    <option key={i + 1} value={i + 1}>{name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="control">
-              <div className="select is-small">
-                <select name="year" defaultValue={selectedYear}>
-                  {years.map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="control">
-              <button className="button is-small is-info" type="submit">
-                {t('reports.balanceSheet.apply')}
-              </button>
-            </div>
-          </div>
-        </form>
+        <div className="bs-page">
+        <div className="bs-header">
+          <h1 className="title is-5 mb-0">{t('reports.balanceSheet.title')}</h1>
+          <MonthPicker selectedMonth={selectedMonthNum} selectedYear={selectedYear} />
+        </div>
 
         <p className="bs-date-info">
           {t('reports.balanceSheet.asOf')}: <strong>{asOfDate}</strong>
@@ -160,6 +130,7 @@ export default function BalanceSheetPage() {
           <span className="bs-net-worth-value">
             {fmt(netWorth)} {BASE_CURRENCY}
           </span>
+        </div>
         </div>
       </div>
     </section>

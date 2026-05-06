@@ -2,6 +2,11 @@ import type { TranslationSchema } from './en';
 
 const ro: TranslationSchema = {
   financeTracker: 'Gestionar Finanțe',
+  monthPicker: {
+    today:       'Astăzi',
+    monthsShort: ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    monthsLong:  ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie', 'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'],
+  },
   nav: {
     main:         'Principal',
     accounts:     'Conturi',

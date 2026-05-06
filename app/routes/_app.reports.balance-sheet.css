@@ -1,5 +1,13 @@
-.bs-filter {
-  margin-bottom: 1rem;
+.bs-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.bs-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .bs-date-info {

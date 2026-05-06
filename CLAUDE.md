@@ -51,15 +51,21 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Shared styles**: `shared_<feature-name>.css` in the directory where the sharing components live.
 - **No inline styles** in `.tsx` files. Use CSS classes or Bulma helpers (`pt-0`, `mb-4`, `has-text-white`, etc.) instead.
 
-## Form Page Layout
+## UX
 
-Create/Edit pages share a consistent layout pattern:
-
+**Forms (Create/Edit):**
 - The **back link** (`← Feature`) sits outside the centered block, left-aligned inside `container is-fluid`.
 - Form content wraps in `.<feature>-form-page` with `max-width` + `margin: 0 auto` to center horizontally.
 - **Button group** (`field is-grouped`) uses `justify-content: center` so Save/Cancel sit at the horizontal center.
-- Numeric values in tables use `text-align: right` for readability.
-- **Actions columns** in tables use `has-text-right` on both `<th>` and `<td>`.
+
+**Reports:**
+- Content is capped at `max-width: 860px` + `margin: 0 auto` — never stretches full viewport on large screens.
+- **Report header** places the title and the period selector (e.g. `MonthPicker`) inline on the same row, left-aligned, using flex with a `1rem` gap.
+- Use `app/components/MonthPicker.tsx` for any month-scoped report filter — it renders as a trigger button (`May 2026 ▾`) that opens a popover calendar on click.
+
+**Tables:**
+- Numeric values use `text-align: right` for readability.
+- **Actions columns** use `has-text-right` on both `<th>` and `<td>`.
 
 ## Reference
 

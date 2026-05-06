@@ -1,5 +1,10 @@
 const en = {
   financeTracker: 'Finance Tracker',
+  monthPicker: {
+    today:       'Today',
+    monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    monthsLong:  ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  },
   nav: {
     main:         'Main',
     accounts:     'Accounts',
