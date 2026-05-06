@@ -1,5 +1,5 @@
 import "./_app.settings.snapshots.css";
-import { useActionData, useLoaderData, useNavigation } from 'react-router';
+import { Link, useActionData, useLoaderData, useNavigation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
 import {
@@ -81,6 +81,9 @@ export default function SnapshotsPage() {
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
+        <div className="mb-4">
+          <Link to="/settings" className="is-size-7 has-text-grey">{t('settings.backToSettings')}</Link>
+        </div>
         <div className="snapshots-page">
           <h2 className="title is-4">{t('snapshots.title')}</h2>
 

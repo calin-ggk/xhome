@@ -1,5 +1,5 @@
 import "./_app.settings.preferences.css";
-import { useLoaderData, useActionData, useNavigation } from 'react-router';
+import { Link, useLoaderData, useActionData, useNavigation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
 import { getPreferences, updatePreferences } from '~/services/preferences.service';
@@ -34,6 +34,9 @@ export default function PreferencesPage() {
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
+        <div className="mb-4">
+          <Link to="/settings" className="is-size-7 has-text-grey">{t('settings.backToSettings')}</Link>
+        </div>
         <div className="preferences-page">
           <h2 className="title is-4">{t('preferences.title')}</h2>
 

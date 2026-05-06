@@ -48,6 +48,7 @@ const ro: TranslationSchema = {
     preferences:       'Preferințe',
     preferencesDesc:   'Preferințe aplicație',
     configure:         'Configurare →',
+    backToSettings:    '← Setări',
     snapshots:         'Instantanee',
     snapshotsDesc:     'Generează instantanee lunare de sold',
   },

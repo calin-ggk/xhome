@@ -46,6 +46,7 @@ const en = {
     preferences:      'Preferences',
     preferencesDesc:  'App preferences',
     configure:        'Configure →',
+    backToSettings:   '← Settings',
     snapshots:        'Snapshots',
     snapshotsDesc:    'Generate monthly balance snapshots',
   },

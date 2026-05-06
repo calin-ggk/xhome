@@ -44,6 +44,9 @@ export default function CurrenciesPage() {
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
+        <div className="mb-4">
+          <Link to="/settings" className="is-size-7 has-text-grey">{t('settings.backToSettings')}</Link>
+        </div>
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
           <h1 className="title is-5 mb-0">{t('currencies.title')}</h1>
           <Link to="/settings/currencies/new" className="button is-primary is-small">
