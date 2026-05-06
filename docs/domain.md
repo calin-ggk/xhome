@@ -93,7 +93,14 @@ CREATE TABLE transaction_tag_map (
   PRIMARY KEY (transaction_id, tag_id)
 );
 
--- 6. Reporting Snapshots
+-- 6. User Preferences
+CREATE TABLE user_preferences (
+  id                    INTEGER PRIMARY KEY,
+  default_report_range  TEXT    NOT NULL DEFAULT 'current_year'
+  -- valid values: 'current_month' | 'last_month' | 'current_year' | 'last_year' | 'all_time'
+);
+
+-- 7. Reporting Snapshots
 CREATE TABLE account_monthly_snapshots (
   id            INTEGER PRIMARY KEY,
   account_id    INTEGER NOT NULL REFERENCES accounts(id),

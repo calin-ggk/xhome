@@ -21,6 +21,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Transaction:** Header for a financial event. Has many `transaction_entries`.
 - **Entry:** A single leg linking an `account` to a `side` (debit/credit) and an `amount`.
 - **Tags:** Many-to-many relationship with `transactions` for cross-cutting tracking.
+- **UserPreferences:** Singleton row storing app-wide settings (e.g. `default_report_range`). Valid range values: `current_month`, `last_month`, `current_year`, `last_year`, `all_time`.
 - **Currency:** Defines `decimal_places` (scale for amounts) and which is the `is_base` currency for reporting.
 - **ExchangeRate:** One rate per currency per date; stored as a scaled integer (`rate / 10^rate_scale`, default scale 4).
 - **Security:** A tradeable instrument (stock/ETF/crypto) with its own `quantity_scale` (default 6).
