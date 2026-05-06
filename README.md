@@ -10,6 +10,7 @@ A double-entry accounting system for personal finance with multi-currency suppor
 - Hierarchical accounts (path strategy)
 - Balance sheet, income statement, and net worth reports
 - Monthly snapshot strategy for fast historical reporting
+- REST API (v1) with OpenAPI 3.1 spec and Swagger UI
 
 ## Stack
 
@@ -58,4 +59,8 @@ docs/
 
 ```
 DATABASE_URL=./var/finance.db
+AUTH_USERNAME=admin
+AUTH_PASSWORD_HASH=<bcrypt hash>
+SESSION_SECRET=<32+ char secret>
+API_KEY=<16+ char secret>   # enables REST API at /api/v1/*
 ```
