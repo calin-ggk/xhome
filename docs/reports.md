@@ -5,10 +5,9 @@
 | URL | File | Purpose |
 |---|---|---|
 | `/reports/balance-sheet` | `_app.reports.balance-sheet.tsx` | Assets vs Liabilities at a selected month-end |
-| `/reports/income` | `_app.reports.income.tsx` | Income vs Expenses for a date range |
+| `/reports/income` | `_app.reports.income.tsx` | Income vs Expenses for a preset range |
 | `/reports/net-worth` | `_app.reports.net-worth.tsx` | Net worth history chart from snapshots |
-| `/reports/spending` | `_app.reports.spending.tsx` | Hierarchical expense tree for a date range |
-| `/reports/securities` | `_app.reports.securities.tsx` | Per-security value history from snapshots |
+| `/reports/securities` | `_app.reports.securities.tsx` | Per-security value history and % return from snapshots |
 
 ## Snapshot Convention
 
@@ -21,7 +20,7 @@ The helper `snapshotDateToDisplayMonth('2024-05-01')` returns `{ month: '2024-04
 
 ## Balance Sheet (`/reports/balance-sheet`)
 
-- Filter: year + month dropdowns.
+- Filter: `MonthPicker` (year + month).
 - Sections: Assets, Liabilities, Equity — each backed by `ReportSection { accounts[], total }`.
 - Asset balances are positive; liability/equity balances are stored negative and flipped for display.
 - Net Worth = `assets.total − liabilities.total`.
@@ -29,29 +28,23 @@ The helper `snapshotDateToDisplayMonth('2024-05-01')` returns `{ month: '2024-04
 
 ## Income Statement (`/reports/income`)
 
-- Filter: `from` / `to` date inputs (default: year-to-date).
-- Sections: Income (credit net), Expenses (debit net).
-- Always live — reads directly from `transaction_entries`.
+- Filter: `RangePicker` (preset range, defaults to `defaultReportRange` preference).
+- Sections: Income (credit net), Expenses (debit net). Always live from `transaction_entries`.
+- Two views toggled by the user: table and pie chart with drill-down.
 
 ## Net Worth History (`/reports/net-worth`)
 
-- No filter — shows all available snapshot months.
-- Line chart (Recharts) + data table, newest-first.
-- Data: `SUM(balanceBase)` over `asset/*` and `liability/*` snapshots per date.
-
-## Spending Tree (`/reports/spending`)
-
-- Filter: `from` / `to` date inputs (default: current month).
-- Hierarchical tree built from `expense/*` account categories; top-level nodes expanded by default.
-- Amounts accumulate bottom-up: a parent node's total equals the sum of its children.
-- Clicking a node with children toggles expansion (client-side state).
+- Filter: `RangePicker`.
+- Two charts: absolute value per currency (line) + % change from period start (line).
+- Data: `SUM(balanceBase)` over `asset/*` and `liability/*` snapshots, pivoted by currency.
 
 ## Securities History (`/reports/securities`)
 
-- No filter — shows full snapshot history.
-- Multi-line chart; each line = one security account.
+- Filter: `RangePicker`.
+- Two charts: absolute market value per security (line) + % return from each security's first visible snapshot (line).
+- Securities that have no snapshot in the selected range are omitted from the % chart.
 - Checkbox list lets the user toggle individual securities on/off (client-side).
-- Data pivoted in service: `{ date, display, [accountId]: balanceBase }[]`.
+- Data pivoted in service: `{ date, display, [accountId]: balanceBase }[]` and `{ date, display, [accountId]: pct }[]`.
 
 ## Layering
 
@@ -67,6 +60,5 @@ Key service functions:
 |---|---|
 | `getBalanceSheet(db, month, today)` | `BalanceSheetData` |
 | `getIncomeStatement(db, start, end)` | `IncomeStatementData` |
-| `getNetWorthHistoryData(db)` | `NetWorthHistoryPoint[]` |
-| `getSpendingTreeData(db, start, end)` | `SpendingTreeData` |
-| `getSecuritiesHistoryData(db)` | `SecuritiesHistoryData` |
+| `getNetWorthByCurrencyData(db, fromMonth, toMonth)` | `NetWorthByCurrencyData` |
+| `getSecuritiesHistoryData(db, fromMonth, toMonth)` | `SecuritiesHistoryData` |
