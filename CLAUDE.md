@@ -59,6 +59,7 @@ Create/Edit pages share a consistent layout pattern:
 - Form content wraps in `.<feature>-form-page` with `max-width` + `margin: 0 auto` to center horizontally.
 - **Button group** (`field is-grouped`) uses `justify-content: center` so Save/Cancel sit at the horizontal center.
 - Numeric values in tables use `text-align: right` for readability.
+- **Actions columns** in tables use `has-text-right` on both `<th>` and `<td>`.
 
 ## Reference
 

@@ -61,14 +61,14 @@ export default function TagsPage() {
             <thead>
               <tr>
                 <th>{t('tags.name')}</th>
-                <th>{t('tags.actions')}</th>
+                <th className="has-text-right">{t('tags.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {tags.map(tag => (
                 <tr key={tag.id}>
                   <td>{tag.name}</td>
-                  <td>
+                  <td className="has-text-right">
                     <Link
                       to={`/settings/tags/${tag.id}/edit`}
                       className="button is-small is-light mr-1"

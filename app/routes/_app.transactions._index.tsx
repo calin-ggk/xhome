@@ -180,7 +180,7 @@ export default function TransactionsIndex() {
                   <th className="has-text-right">{t('transactions.entriesCount')}</th>
                   <th className="has-text-right">{t('transactions.totalBase', { code })}</th>
                   <th>{t('transactions.tags')}</th>
-                  <th>{t('transactions.actions')}</th>
+                  <th className="has-text-right">{t('transactions.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,7 +199,7 @@ export default function TransactionsIndex() {
                         ))}
                       </div>
                     </td>
-                    <td>
+                    <td className="has-text-right">
                       <Link to={`/transactions/${tx.id}`} className="button is-small is-light mr-1">
                         {t('transactions.edit')}
                       </Link>

@@ -71,7 +71,7 @@ export default function CurrenciesPage() {
                 <th>{t('currencies.symbol')}</th>
                 <th className="has-text-right">{t('currencies.decimalPlaces')}</th>
                 <th>{t('currencies.isBase')}</th>
-                <th>{t('currencies.actions')}</th>
+                <th className="has-text-right">{t('currencies.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -86,7 +86,7 @@ export default function CurrenciesPage() {
                       <span className="tag is-success is-small">{t('currencies.baseBadge')}</span>
                     ) : '—'}
                   </td>
-                  <td>
+                  <td className="has-text-right">
                     <Link
                       to={`/settings/currencies/${currency.id}/edit`}
                       className="button is-small is-light mr-1"

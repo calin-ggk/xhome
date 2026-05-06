@@ -91,7 +91,7 @@ export default function AccountsIndex() {
                     <th>{t('accounts.subtype')}</th>
                     <th>{t('accounts.currency')}</th>
                     <th>{t('accounts.active')}</th>
-                    <th>{t('accounts.actions')}</th>
+                    <th className="has-text-right">{t('accounts.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -103,7 +103,7 @@ export default function AccountsIndex() {
                       <td>{account.accountType}</td>
                       <td>{account.currencyCode}{account.securityTicker ? ` / ${account.securityTicker}` : ''}</td>
                       <td>{account.isActive ? '✓' : '—'}</td>
-                      <td>
+                      <td className="has-text-right">
                         <Link to={`/accounts/${account.id}`} className="button is-small is-light mr-1">
                           {t('accounts.edit')}
                         </Link>
