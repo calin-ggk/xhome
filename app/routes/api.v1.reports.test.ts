@@ -60,11 +60,11 @@ describe('GET /api/v1/reports/income', () => {
 
 describe('GET /api/v1/reports/net-worth', () => {
   it('returns net worth history', async () => {
-    vi.mocked(svc.getNetWorthHistoryData).mockReturnValue([{ month: '2025-01', display: 'Jan 2025', netWorthBase: 100000 }]);
+    vi.mocked(svc.getNetWorthByCurrencyData).mockReturnValue({ currencies: ['EUR'], points: [{ month: '2025-01', display: 'Jan 2025', total: 100000, EUR: 100000 }] });
     const req = makeReq('http://localhost/api/v1/reports/net-worth');
     const res = await nwLoader({ request: req, params: {}, context: {} } as never) as Response;
     const json = await res.json();
-    expect(json.data).toHaveLength(1);
+    expect(json.data.points).toHaveLength(1);
   });
 });
 

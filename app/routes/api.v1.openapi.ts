@@ -481,20 +481,30 @@ const spec = {
     },
     '/reports/net-worth': {
       get: {
-        summary: 'Net worth history (from snapshots)',
+        summary: 'Net worth history by currency (from snapshots)',
         operationId: 'getNetWorthHistory',
+        parameters: [
+          { name: 'from', in: 'query', schema: { type: 'string' }, description: 'Start month YYYY-MM (inclusive)' },
+          { name: 'to',   in: 'query', schema: { type: 'string' }, description: 'End month YYYY-MM (inclusive)' },
+        ],
         responses: {
           '200': { description: 'OK' },
+          '400': { description: 'Invalid month format' },
           '401': { description: 'Unauthorized' },
         },
       },
     },
     '/reports/securities': {
       get: {
-        summary: 'Securities performance history (from snapshots)',
+        summary: 'Securities value history and % return (from snapshots)',
         operationId: 'getSecurities',
+        parameters: [
+          { name: 'from', in: 'query', schema: { type: 'string' }, description: 'Start month YYYY-MM (inclusive)' },
+          { name: 'to',   in: 'query', schema: { type: 'string' }, description: 'End month YYYY-MM (inclusive)' },
+        ],
         responses: {
           '200': { description: 'OK' },
+          '400': { description: 'Invalid month format' },
           '401': { description: 'Unauthorized' },
         },
       },

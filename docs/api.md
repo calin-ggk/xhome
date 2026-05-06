@@ -299,39 +299,28 @@ Income statement for a date range.
 **Responses:** `200`, `400`
 
 ### `GET /api/v1/reports/net-worth`
-Historical net worth by month from snapshots.
+Historical net worth by currency from snapshots.
 
-**Response `data`:** `{ month: "YYYY-MM", display: "Jan 2025", netWorthBase: 400000 }[]`
-
-**Responses:** `200`
-
-### `GET /api/v1/reports/spending`
-Hierarchical expense tree for a date range.
-
-**Query params:** `from` (`YYYY-MM-DD`), `to` (`YYYY-MM-DD`) — both optional
+**Query params:** `from` (`YYYY-MM`), `to` (`YYYY-MM`) — both optional
 
 **Response `data`:**
 ```json
 {
-  "startDate": "2025-01-01",
-  "endDate":   "2025-12-31",
-  "total": 300000,
-  "roots": [
-    {
-      "label": "food", "category": "expense/food",
-      "accountId": null, "amount": 150000,
-      "children": [
-        { "label": "groceries", "category": "expense/food/groceries", "accountId": 7, "amount": 150000, "children": [] }
-      ]
-    }
+  "currencies": ["EUR", "USD"],
+  "points": [
+    { "month": "2025-01", "display": "Jan 2025", "total": 400000, "EUR": 300000, "USD": 100000 }
   ]
 }
 ```
 
-**Responses:** `200`, `400`
+Point keys other than `month`, `display`, and `total` are currency codes. All amounts are base-currency cents.
+
+**Responses:** `200`, `400` (invalid month format)
 
 ### `GET /api/v1/reports/securities`
-Historical value of each security account by month from snapshots.
+Historical market value and % return for each security account from snapshots.
+
+**Query params:** `from` (`YYYY-MM`), `to` (`YYYY-MM`) — both optional
 
 **Response `data`:**
 ```json
@@ -341,13 +330,17 @@ Historical value of each security account by month from snapshots.
   ],
   "points": [
     { "date": "2025-02-01", "display": "Jan 2025", "4": 250000 }
+  ],
+  "pctPoints": [
+    { "date": "2025-02-01", "display": "Jan 2025", "4": 0 },
+    { "date": "2025-03-01", "display": "Feb 2025", "4": 4.23 }
   ]
 }
 ```
 
-Point keys other than `date` and `display` are account IDs (as strings).
+`points` keys (other than `date`/`display`) are account IDs; values are base-currency cents. `pctPoints` values are % change from each security's first visible snapshot (key absent when the security was not yet held).
 
-**Responses:** `200`
+**Responses:** `200`, `400` (invalid month format)
 
 ---
 

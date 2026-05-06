@@ -74,5 +74,5 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Route Map:** `docs/routes.md` (file-to-URL mapping for all app routes).
 - **Dashboard:** `docs/dashboard.md` (data flow, layout pattern, date strategy).
 - **Accounts Module:** `docs/accounts.md` (entity shape, category paths, routes, delete constraint, ConfirmModal pattern).
-- **REST API:** `docs/api.md` (endpoints, auth, request/response shapes, error reference).
+- **REST API:** `docs/api.md` (endpoints, auth, request/response shapes, error reference). The web app is the source of truth — the REST API is a read-only projection of it. Whenever a service or data shape changes, update the API route and `docs/api.md` to match.
 - **Plan:** `implementation_steps.md`
