@@ -84,7 +84,7 @@
 
 ## Phase 8: Settings
 
-- [ ] **Currencies** — list, create, edit, delete; mark base currency.
+- [x] **Currencies** — list, create, edit, delete; mark base currency.
 - [ ] **Tags** — list, create, edit, delete.
 - [x] **Preferences** — default report date range and other UI preferences.
 - [ ] **Snapshots** — "Generate missing snapshots" UI; manual snapshot management.
