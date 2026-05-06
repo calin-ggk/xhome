@@ -5,6 +5,7 @@ import {
   getBalanceSheetLive,
   getIncomeStatementData,
   getNetWorthHistory,
+  getNetWorthHistoryByCurrency,
   getSecuritiesHistory,
   hasSnapshotForDate,
   type BalanceSheetRow,
@@ -46,6 +47,18 @@ export type NetWorthHistoryPoint = {
   month: string;    // 'YYYY-MM' of the closing period
   display: string;  // e.g. 'Apr 2024'
   netWorthBase: number;
+};
+
+// Pivoted chart point: { month, display, total, [currencyCode]: number }
+export type NetWorthChartPoint = Record<string, string | number> & {
+  month: string;
+  display: string;
+  total: number;
+};
+
+export type NetWorthByCurrencyData = {
+  currencies: string[];
+  points: NetWorthChartPoint[];
 };
 
 export type SpendingNode = {
@@ -202,6 +215,48 @@ export function getNetWorthHistoryData(
     ...snapshotDateToDisplayMonth(r.date),
     netWorthBase: r.netWorthBase,
   }));
+}
+
+export function getNetWorthByCurrencyData(
+  db: BetterSQLite3Database<typeof schema>,
+  fromMonth: string | null,
+  toMonth: string | null,
+): NetWorthByCurrencyData {
+  const rows = getNetWorthHistoryByCurrency(db).filter(r => {
+    const { month } = snapshotDateToDisplayMonth(r.date);
+    return (!fromMonth || month >= fromMonth) && (!toMonth || month <= toMonth);
+  });
+
+  const currencySet = new Set<string>();
+  const displayByMonth = new Map<string, string>();
+  const valuesByMonth = new Map<string, Map<string, number>>();
+
+  for (const r of rows) {
+    const { month, display } = snapshotDateToDisplayMonth(r.date);
+    currencySet.add(r.currencyCode);
+    displayByMonth.set(month, display);
+    if (!valuesByMonth.has(month)) valuesByMonth.set(month, new Map());
+    valuesByMonth.get(month)!.set(r.currencyCode, r.netWorthBase);
+  }
+
+  const sortedCurrencies = [...currencySet].sort();
+  const points: NetWorthChartPoint[] = [];
+
+  for (const month of [...displayByMonth.keys()].sort()) {
+    const display = displayByMonth.get(month)!;
+    const byCode  = valuesByMonth.get(month)!;
+    let total = 0;
+    const point: NetWorthChartPoint = { month, display, total: 0 };
+    for (const code of sortedCurrencies) {
+      const v = byCode.get(code) ?? 0;
+      point[code] = v;
+      total += v;
+    }
+    point.total = total;
+    points.push(point);
+  }
+
+  return { currencies: sortedCurrencies, points };
 }
 
 export function getSpendingTreeData(

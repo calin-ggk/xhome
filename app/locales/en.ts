@@ -280,11 +280,12 @@ const en = {
       drillBack:     '← Back',
     },
     netWorth: {
-      title:   'Net Worth History',
-      noData:  'No snapshot data available. Generate snapshots first.',
-      latest:  'Current Net Worth',
-      month:   'Month',
-      amount:  'Net Worth ({{currency}})',
+      title:         'Net Worth History',
+      noData:        'No snapshot data available. Generate snapshots first.',
+      latest:        'Current Net Worth',
+      total:         'Total',
+      chartAbsolute: 'Absolute ({{currency}})',
+      chartPct:      '% Change',
     },
     spending: {
       title:    'Spending',

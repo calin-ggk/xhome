@@ -1,6 +1,6 @@
 import { and, eq, gte, like, lte, or, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { accountMonthlySnapshots, accounts, securities, transactionEntries, transactions } from '~/db/schema';
+import { accountMonthlySnapshots, accounts, currencies, securities, transactionEntries, transactions } from '~/db/schema';
 import type * as schema from '~/db/schema';
 
 export type BalanceSheetRow = {
@@ -19,6 +19,12 @@ export type IncomeRow = {
 
 export type NetWorthPoint = {
   date: string;
+  netWorthBase: number;
+};
+
+export type NetWorthPointByCurrency = {
+  date: string;
+  currencyCode: string;
   netWorthBase: number;
 };
 
@@ -111,6 +117,27 @@ export function getNetWorthHistory(
     ))
     .groupBy(accountMonthlySnapshots.date)
     .orderBy(accountMonthlySnapshots.date)
+    .all();
+}
+
+export function getNetWorthHistoryByCurrency(
+  db: BetterSQLite3Database<typeof schema>,
+): NetWorthPointByCurrency[] {
+  return db
+    .select({
+      date: accountMonthlySnapshots.date,
+      currencyCode: currencies.code,
+      netWorthBase: sql<number>`SUM(${accountMonthlySnapshots.balanceBase})`,
+    })
+    .from(accountMonthlySnapshots)
+    .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
+    .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .where(or(
+      like(accounts.category, 'asset/%'),
+      like(accounts.category, 'liability/%'),
+    ))
+    .groupBy(accountMonthlySnapshots.date, currencies.code)
+    .orderBy(accountMonthlySnapshots.date, currencies.code)
     .all();
 }
 

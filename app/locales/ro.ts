@@ -282,11 +282,12 @@ const ro: TranslationSchema = {
       drillBack:     '← Înapoi',
     },
     netWorth: {
-      title:   'Istoricul Averii Nete',
-      noData:  'Nu există date de instantaneu. Generează instantanee mai întâi.',
-      latest:  'Avere Netă Curentă',
-      month:   'Lună',
-      amount:  'Avere Netă ({{currency}})',
+      title:         'Istoricul Averii Nete',
+      noData:        'Nu există date de instantaneu. Generează instantanee mai întâi.',
+      latest:        'Avere Netă Curentă',
+      total:         'Total',
+      chartAbsolute: 'Valori absolute ({{currency}})',
+      chartPct:      '% Variație',
     },
     spending: {
       title:    'Cheltuieli',
