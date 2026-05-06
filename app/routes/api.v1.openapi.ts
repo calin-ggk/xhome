@@ -489,21 +489,6 @@ const spec = {
         },
       },
     },
-    '/reports/spending': {
-      get: {
-        summary: 'Spending tree (hierarchical expense breakdown)',
-        operationId: 'getSpending',
-        parameters: [
-          { name: 'from', in: 'query', schema: { type: 'string' }, description: 'Start date YYYY-MM-DD' },
-          { name: 'to',   in: 'query', schema: { type: 'string' }, description: 'End date YYYY-MM-DD' },
-        ],
-        responses: {
-          '200': { description: 'OK' },
-          '400': { description: 'Invalid date format' },
-          '401': { description: 'Unauthorized' },
-        },
-      },
-    },
     '/reports/securities': {
       get: {
         summary: 'Securities performance history (from snapshots)',

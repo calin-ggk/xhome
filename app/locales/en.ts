@@ -13,9 +13,8 @@ const en = {
     dashboard:    'Dashboard',
     transactions: 'Transactions',
     balanceSheet: 'Balance Sheet',
-    income:       'Income',
+    income:       'Income & Expenses',
     netWorth:     'Net Worth',
-    spending:     'Spending',
     securities:   'Securities',
   },
   header: {
@@ -262,7 +261,7 @@ const en = {
       noData:           'No data for the selected period.',
     },
     income: {
-      title:         'Income Statement',
+      title:         'Income & Expenses',
       from:          'From',
       to:            'To',
       apply:         'Apply',
@@ -286,16 +285,6 @@ const en = {
       total:         'Total',
       chartAbsolute: 'Absolute ({{currency}})',
       chartPct:      '% Change',
-    },
-    spending: {
-      title:    'Spending',
-      from:     'From',
-      to:       'To',
-      apply:    'Apply',
-      total:    'Total Spending',
-      category: 'Category',
-      amount:   'Amount ({{currency}})',
-      noData:   'No spending data for the selected period.',
     },
     securities: {
       title:  'Securities History',

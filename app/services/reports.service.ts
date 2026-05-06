@@ -69,13 +69,6 @@ export type SpendingNode = {
   children: SpendingNode[];
 };
 
-export type SpendingTreeData = {
-  startDate: string | null;
-  endDate: string | null;
-  roots: SpendingNode[];
-  total: number;
-};
-
 export type SecurityLine = {
   accountId: number;
   accountName: string;
@@ -131,10 +124,6 @@ function buildCategoryTree(rows: IncomeRow[], prefix: string): SpendingNode[] {
   return [...nodes.values()]
     .filter(n => n.category.split('/').length === 2)
     .sort((a, b) => b.amount - a.amount);
-}
-
-function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
-  return buildCategoryTree(rows, 'expense/');
 }
 
 // First day of the month AFTER ym (used as snapshot key)
@@ -257,16 +246,6 @@ export function getNetWorthByCurrencyData(
   }
 
   return { currencies: sortedCurrencies, points };
-}
-
-export function getSpendingTreeData(
-  db: BetterSQLite3Database<typeof schema>,
-  startDate: string | null,
-  endDate: string | null,
-): SpendingTreeData {
-  const rows = getIncomeStatementData(db, startDate, endDate);
-  const roots = buildSpendingTree(rows);
-  return { startDate, endDate, roots, total: roots.reduce((s, n) => s + n.amount, 0) };
 }
 
 export function getSecuritiesHistoryData(

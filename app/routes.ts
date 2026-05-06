@@ -21,7 +21,6 @@ export default [
     route("reports/balance-sheet",    "routes/_app.reports.balance-sheet.tsx"),
     route("reports/income",           "routes/_app.reports.income.tsx"),
     route("reports/net-worth",        "routes/_app.reports.net-worth.tsx"),
-    route("reports/spending",         "routes/_app.reports.spending.tsx"),
     route("reports/securities",       "routes/_app.reports.securities.tsx"),
   ]),
   route("login",  "routes/login.tsx"),
@@ -40,6 +39,5 @@ export default [
   route("api/v1/reports/balance-sheet",      "routes/api.v1.reports.balance-sheet.ts"),
   route("api/v1/reports/income",             "routes/api.v1.reports.income.ts"),
   route("api/v1/reports/net-worth",          "routes/api.v1.reports.net-worth.ts"),
-  route("api/v1/reports/spending",           "routes/api.v1.reports.spending.ts"),
   route("api/v1/reports/securities",         "routes/api.v1.reports.securities.ts"),
 ] satisfies RouteConfig;

@@ -3,7 +3,6 @@ import * as svc from '~/services/reports.service';
 import { loader as bsLoader }         from './api.v1.reports.balance-sheet';
 import { loader as incomeLoader }     from './api.v1.reports.income';
 import { loader as nwLoader }         from './api.v1.reports.net-worth';
-import { loader as spendingLoader }   from './api.v1.reports.spending';
 import { loader as securitiesLoader } from './api.v1.reports.securities';
 
 vi.mock('~/db/client', () => ({ db: {} }));
@@ -66,16 +65,6 @@ describe('GET /api/v1/reports/net-worth', () => {
     const res = await nwLoader({ request: req, params: {}, context: {} } as never) as Response;
     const json = await res.json();
     expect(json.data).toHaveLength(1);
-  });
-});
-
-describe('GET /api/v1/reports/spending', () => {
-  it('returns spending tree', async () => {
-    vi.mocked(svc.getSpendingTreeData).mockReturnValue({ startDate: null, endDate: null, roots: [], total: 0 });
-    const req = makeReq('http://localhost/api/v1/reports/spending');
-    const res = await spendingLoader({ request: req, params: {}, context: {} } as never) as Response;
-    const json = await res.json();
-    expect(json.data.total).toBe(0);
   });
 });
 

@@ -15,9 +15,8 @@ const ro: TranslationSchema = {
     dashboard:    'Panou',
     transactions: 'Tranzacții',
     balanceSheet: 'Bilanț',
-    income:       'Venituri',
+    income:       'Venituri & Cheltuieli',
     netWorth:     'Avere Netă',
-    spending:     'Cheltuieli',
     securities:   'Titluri de Valoare',
   },
   header: {
@@ -264,7 +263,7 @@ const ro: TranslationSchema = {
       noData:           'Nu există date pentru perioada selectată.',
     },
     income: {
-      title:         'Cont de Profit și Pierdere',
+      title:         'Venituri & Cheltuieli',
       from:          'De la',
       to:            'Până la',
       apply:         'Aplică',
@@ -288,16 +287,6 @@ const ro: TranslationSchema = {
       total:         'Total',
       chartAbsolute: 'Valori absolute ({{currency}})',
       chartPct:      '% Variație',
-    },
-    spending: {
-      title:    'Cheltuieli',
-      from:     'De la',
-      to:       'Până la',
-      apply:    'Aplică',
-      total:    'Total Cheltuieli',
-      category: 'Categorie',
-      amount:   'Sumă ({{currency}})',
-      noData:   'Nu există cheltuieli pentru perioada selectată.',
     },
     securities: {
       title:  'Istoricul Titlurilor de Valoare',

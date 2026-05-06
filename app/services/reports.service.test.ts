@@ -6,7 +6,6 @@ import {
   getBalanceSheet,
   getIncomeStatement,
   getNetWorthHistoryData,
-  getSpendingTreeData,
   getSecuritiesHistoryData,
 } from './reports.service';
 
@@ -196,58 +195,6 @@ describe('getNetWorthHistoryData', () => {
     sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-01-01', 100000, 100000)`);
     const points = getNetWorthHistoryData(db);
     expect(points[0]?.month).toBe('2023-12');
-  });
-});
-
-describe('getSpendingTreeData', () => {
-  it('returns empty roots when no expense entries', () => {
-    const { db } = createTestDb();
-    const result = getSpendingTreeData(db, '2024-01-01', '2024-01-31');
-    expect(result.roots).toEqual([]);
-    expect(result.total).toBe(0);
-  });
-
-  it('builds a flat tree for single-level expense categories', () => {
-    const { db, sqlite } = createTestDb();
-    sqlite.exec(`INSERT INTO transaction_entries VALUES (1, 3, 5, 'debit', 20000, 20000, NULL, NULL, NULL, NULL)`);
-    const result = getSpendingTreeData(db, '2024-01-01', '2024-01-31');
-    expect(result.roots).toHaveLength(1);
-    expect(result.roots[0]?.label).toBe('food');
-    expect(result.roots[0]?.amount).toBe(20000);
-    expect(result.total).toBe(20000);
-  });
-
-  it('builds a nested tree for multi-level expense categories', () => {
-    const { db, sqlite } = createTestDb();
-    // Add a deeper expense account
-    sqlite.exec(`INSERT INTO accounts VALUES (6, 'Groceries', 'debit', 'simple', 1, 'expense/food/groceries', 1, NULL)`);
-    sqlite.exec(`INSERT INTO transaction_entries VALUES (1, 3, 6, 'debit', 30000, 30000, NULL, NULL, NULL, NULL)`);
-    const result = getSpendingTreeData(db, '2024-01-01', '2024-01-31');
-    expect(result.roots).toHaveLength(1);
-    const foodNode = result.roots[0]!;
-    expect(foodNode.label).toBe('food');
-    expect(foodNode.children).toHaveLength(1);
-    expect(foodNode.children[0]?.label).toBe('groceries');
-    expect(foodNode.amount).toBe(30000);
-  });
-
-  it('sorts roots by amount descending', () => {
-    const { db, sqlite } = createTestDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (6, 'Transport', 'debit', 'simple', 1, 'expense/transport', 1, NULL)`);
-    sqlite.exec(`
-      INSERT INTO transaction_entries VALUES (1, 3, 5, 'debit',  5000,  5000, NULL, NULL, NULL, NULL);
-      INSERT INTO transaction_entries VALUES (2, 3, 6, 'debit', 20000, 20000, NULL, NULL, NULL, NULL);
-    `);
-    const result = getSpendingTreeData(db, '2024-01-01', '2024-01-31');
-    expect(result.roots[0]?.label).toBe('transport');
-    expect(result.roots[1]?.label).toBe('food');
-  });
-
-  it('passes startDate and endDate through', () => {
-    const { db } = createTestDb();
-    const result = getSpendingTreeData(db, '2024-03-01', '2024-03-31');
-    expect(result.startDate).toBe('2024-03-01');
-    expect(result.endDate).toBe('2024-03-31');
   });
 });
 
