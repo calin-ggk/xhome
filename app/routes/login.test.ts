@@ -17,7 +17,7 @@ const mockSession = {
 };
 
 const makeArgs = (method = 'GET', body?: FormData) => ({
-  request: new Request('http://localhost/login', { method, body }),
+  request: new Request('http://localhost/login', { method, body: body ?? null }),
   params: {},
   context: {},
 });
