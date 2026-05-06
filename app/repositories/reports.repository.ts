@@ -37,6 +37,7 @@ export type SecurityHistoryPoint = {
   balanceBase: number;
 };
 
+
 export function hasSnapshotForDate(
   db: BetterSQLite3Database<typeof schema>,
   snapshotDate: string,

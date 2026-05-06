@@ -1,3 +1,15 @@
+.sec-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.sec-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
 .sec-checkboxes {
   display: flex;
   flex-wrap: wrap;

@@ -70,7 +70,7 @@ describe('GET /api/v1/reports/net-worth', () => {
 
 describe('GET /api/v1/reports/securities', () => {
   it('returns securities history', async () => {
-    vi.mocked(svc.getSecuritiesHistoryData).mockReturnValue({ securities: [], points: [] });
+    vi.mocked(svc.getSecuritiesHistoryData).mockReturnValue({ securities: [], points: [], pctPoints: [] });
     const req = makeReq('http://localhost/api/v1/reports/securities');
     const res = await securitiesLoader({ request: req, params: {}, context: {} } as never) as Response;
     const json = await res.json();

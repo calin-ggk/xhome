@@ -289,10 +289,9 @@ const ro: TranslationSchema = {
       chartPct:      '% Variație',
     },
     securities: {
-      title:  'Istoricul Titlurilor de Valoare',
-      noData: 'Nu există date de instantaneu pentru titluri de valoare.',
-      month:  'Lună',
-      amount: 'Valoare ({{currency}})',
+      title:   'Istoricul Titlurilor de Valoare',
+      noData:  'Nu există date de instantaneu pentru titluri de valoare.',
+      chartPct: '% variație față de începutul perioadei',
     },
   },
 };

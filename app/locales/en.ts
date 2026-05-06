@@ -287,10 +287,9 @@ const en = {
       chartPct:      '% Change',
     },
     securities: {
-      title:  'Securities History',
-      noData: 'No security snapshot data available.',
-      month:  'Month',
-      amount: 'Value ({{currency}})',
+      title:   'Securities History',
+      noData:  'No security snapshot data available.',
+      chartPct: '% change from period start',
     },
   },
 };

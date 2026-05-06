@@ -81,6 +81,8 @@ export type SecuritiesHistoryData = {
   securities: SecurityLine[];
   // Pivoted: { date, display, [accountId]: balanceBase (cents) }[]
   points: Array<Record<string, string | number>>;
+  // Pivoted: { date, display, [accountId]: pct_return (%) }[]
+  pctPoints: Array<Record<string, string | number>>;
 };
 
 // Convert a snapshot date (YYYY-MM-01, first of next month) to its closing period month
@@ -250,9 +252,14 @@ export function getNetWorthByCurrencyData(
 
 export function getSecuritiesHistoryData(
   db: BetterSQLite3Database<typeof schema>,
+  fromMonth: string | null = null,
+  toMonth: string | null = null,
 ): SecuritiesHistoryData {
-  const rows = getSecuritiesHistory(db);
-  if (rows.length === 0) return { securities: [], points: [] };
+  const rows = getSecuritiesHistory(db).filter(r => {
+    const { month } = snapshotDateToDisplayMonth(r.date);
+    return (!fromMonth || month >= fromMonth) && (!toMonth || month <= toMonth);
+  });
+  if (rows.length === 0) return { securities: [], points: [], pctPoints: [] };
 
   const secMap = new Map<number, SecurityLine>();
   for (const r of rows) {
@@ -278,7 +285,27 @@ export function getSecuritiesHistoryData(
     return point;
   });
 
-  return { securities: [...secMap.values()], points };
+  const firstNonZeroIdx = new Map<number, number>();
+  for (const [accountId] of secMap) {
+    const key = String(accountId);
+    const idx = points.findIndex(p => (p[key] as number) > 0);
+    if (idx !== -1) firstNonZeroIdx.set(accountId, idx);
+  }
+
+  const pctPoints: Array<Record<string, string | number>> = points.map((p, i) => {
+    const out: Record<string, string | number> = { date: p['date']!, display: p['display']! };
+    for (const [accountId] of secMap) {
+      const key      = String(accountId);
+      const firstIdx = firstNonZeroIdx.get(accountId);
+      if (firstIdx === undefined || i < firstIdx) continue;
+      const first = points[firstIdx]![key] as number;
+      const cur   = p[key] as number;
+      out[key] = +((cur - first) / Math.abs(first) * 100).toFixed(2);
+    }
+    return out;
+  });
+
+  return { securities: [...secMap.values()], points, pctPoints };
 }
 
 export function getIncomeStatement(
