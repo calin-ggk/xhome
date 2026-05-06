@@ -275,6 +275,9 @@ const en = {
       account:       'Account',
       amount:        'Amount ({{currency}})',
       noData:        'No data for the selected period.',
+      viewTable:     'Table',
+      viewChart:     'Chart',
+      drillBack:     '← Back',
     },
     netWorth: {
       title:   'Net Worth History',

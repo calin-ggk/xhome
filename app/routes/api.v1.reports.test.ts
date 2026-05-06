@@ -50,7 +50,7 @@ describe('GET /api/v1/reports/income', () => {
   });
 
   it('returns income statement', async () => {
-    const mockData = { startDate: null, endDate: null, income: { accounts: [], total: 0 }, expenses: { accounts: [], total: 0 }, netIncome: 0 };
+    const mockData = { startDate: null, endDate: null, income: { accounts: [], total: 0 }, expenses: { accounts: [], total: 0 }, netIncome: 0, incomeTree: [], expensesTree: [] };
     vi.mocked(svc.getIncomeStatement).mockReturnValue(mockData);
     const req = makeReq('http://localhost/api/v1/reports/income');
     const res = await incomeLoader({ request: req, params: {}, context: {} } as never) as Response;

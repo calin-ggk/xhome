@@ -60,8 +60,9 @@ A double-entry accounting system for multi-currency tracking and security perfor
 
 **Reports:**
 - Content is capped at `max-width: 860px` + `margin: 0 auto` — never stretches full viewport on large screens.
-- **Report header** places the title and the period selector (e.g. `MonthPicker`) inline on the same row, left-aligned, using flex with a `1rem` gap.
+- **Report header** places the title and the period selector (e.g. `MonthPicker`, `RangePicker`) inline on the same row, left-aligned, using flex with a `1rem` gap.
 - Use `app/components/MonthPicker.tsx` for any month-scoped report filter — it renders as a trigger button (`May 2026 ▾`) that opens a popover calendar on click.
+- Use `app/components/RangePicker.tsx` for any preset-range report filter — it renders as a trigger button (`Last 3 Months ▾`) that opens a popover list; options are sorted at runtime by approximate span so `current_year` appears in the right position relative to the fixed-month ranges.
 
 **Tables:**
 - Numeric values use `text-align: right` for readability.

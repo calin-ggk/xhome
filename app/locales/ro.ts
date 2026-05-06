@@ -277,6 +277,9 @@ const ro: TranslationSchema = {
       account:       'Cont',
       amount:        'Sumă ({{currency}})',
       noData:        'Nu există date pentru perioada selectată.',
+      viewTable:     'Tabel',
+      viewChart:     'Grafic',
+      drillBack:     '← Înapoi',
     },
     netWorth: {
       title:   'Istoricul Averii Nete',

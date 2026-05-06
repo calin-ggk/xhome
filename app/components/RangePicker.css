@@ -1,0 +1,77 @@
+.range-picker-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.range-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.range-picker-trigger:hover,
+.range-picker-trigger.is-open {
+  border-color: #0D6B6B;
+  box-shadow: 0 0 0 2px rgba(13, 107, 107, 0.12);
+}
+
+.range-picker-caret {
+  font-size: 0.65rem;
+  color: #6b7280;
+  transition: transform 0.15s;
+}
+
+.range-picker-trigger.is-open .range-picker-caret {
+  transform: rotate(180deg);
+}
+
+.range-picker-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13);
+  min-width: 180px;
+  overflow: hidden;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.range-picker-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.range-picker-option:hover {
+  background: #2AA5A5;
+  color: white;
+}
+
+.range-picker-option.is-selected {
+  background: #F5821A;
+  color: white;
+  font-weight: 600;
+}

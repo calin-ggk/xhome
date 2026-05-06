@@ -38,6 +38,8 @@ export type IncomeStatementData = {
   income: ReportSection;
   expenses: ReportSection;
   netIncome: number;
+  incomeTree: SpendingNode[];
+  expensesTree: SpendingNode[];
 };
 
 export type NetWorthHistoryPoint = {
@@ -87,11 +89,11 @@ function snapshotDateToDisplayMonth(snapshotDate: string): { month: string; disp
   return { month: `${prevYear}-${String(prevMonth).padStart(2, '0')}`, display };
 }
 
-function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
-  const expenseRows = rows.filter(r => r.category.startsWith('expense/') && r.totalBase > 0);
+function buildCategoryTree(rows: IncomeRow[], prefix: string): SpendingNode[] {
+  const filtered = rows.filter(r => r.category.startsWith(prefix) && r.totalBase > 0);
   const nodes = new Map<string, SpendingNode>();
 
-  for (const row of expenseRows) {
+  for (const row of filtered) {
     const parts = row.category.split('/');
     for (let i = 1; i < parts.length; i++) {
       const path = parts.slice(0, i + 1).join('/');
@@ -103,7 +105,6 @@ function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
     if (leaf) { leaf.accountId = row.accountId; leaf.amount = row.totalBase; }
   }
 
-  // Bottom-up: accumulate amounts and link children (deepest paths first)
   const sorted = [...nodes.keys()].sort((a, b) => b.split('/').length - a.split('/').length);
   for (const path of sorted) {
     const node = nodes.get(path)!;
@@ -117,6 +118,10 @@ function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
   return [...nodes.values()]
     .filter(n => n.category.split('/').length === 2)
     .sort((a, b) => b.amount - a.amount);
+}
+
+function buildSpendingTree(rows: IncomeRow[]): SpendingNode[] {
+  return buildCategoryTree(rows, 'expense/');
 }
 
 // First day of the month AFTER ym (used as snapshot key)
@@ -252,5 +257,13 @@ export function getIncomeStatement(
   const income   = isSection(rows.filter(r => r.category.startsWith('income/')));
   const expenses = isSection(rows.filter(r => r.category.startsWith('expense/')));
 
-  return { startDate, endDate, income, expenses, netIncome: income.total - expenses.total };
+  return {
+    startDate,
+    endDate,
+    income,
+    expenses,
+    netIncome: income.total - expenses.total,
+    incomeTree:   buildCategoryTree(rows, 'income/'),
+    expensesTree: buildCategoryTree(rows, 'expense/'),
+  };
 }

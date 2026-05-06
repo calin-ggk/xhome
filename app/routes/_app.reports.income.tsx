@@ -1,46 +1,35 @@
 import "./_app.reports.income.css";
-import { useLoaderData } from 'react-router';
+import { useState } from 'react';
+import { useLoaderData, useSearchParams, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
+// eslint-disable-next-line @typescript-eslint/no-deprecated
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
-import { getIncomeStatement, type ReportSection } from '~/services/reports.service';
+import { getIncomeStatement, type ReportSection, type SpendingNode } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
+import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
+import { RangePicker } from '~/components/RangePicker';
 import type { Route } from './+types/_app.reports.income';
 
-const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-
 export async function loader({ request }: Route.LoaderArgs) {
-  const url        = new URL(request.url);
-  const today      = new Date().toISOString().slice(0, 10);
-  const fromParam  = url.searchParams.get('from');
-  const toParam    = url.searchParams.get('to');
-
-  // Both params explicitly empty → all time
-  if (fromParam === '' && toParam === '') {
-    return getIncomeStatement(db, null, null);
-  }
-
-  const prefs    = getPreferences(db);
-  const defaults = computeDateRange(prefs.defaultReportRange as ReportRange, today);
-
-  const startDate = dateSchema.safeParse(fromParam).success ? fromParam! : defaults.from;
-  const endDate   = dateSchema.safeParse(toParam).success   ? toParam!   : defaults.to;
-
-  return getIncomeStatement(db, startDate, endDate);
+  const url      = new URL(request.url);
+  const today    = new Date().toISOString().slice(0, 10);
+  const rawRange = url.searchParams.get('range') ?? '';
+  const range: ReportRange = (REPORT_RANGE_OPTIONS as readonly string[]).includes(rawRange)
+    ? rawRange as ReportRange
+    : getPreferences(db).defaultReportRange as ReportRange;
+  const { from, to } = computeDateRange(range, today);
+  return { ...getIncomeStatement(db, from, to), range };
 }
 
 function fmt(cents: number): string {
   return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function SectionTable({
-  section,
-  totalLabel,
-}: {
-  section: ReportSection;
-  totalLabel: string;
-}) {
+// ── Table view ───────────────────────────────────────────────────────────────
+
+function SectionTable({ section, totalLabel }: { section: ReportSection; totalLabel: string }) {
   const { t } = useTranslation();
   if (section.accounts.length === 0) {
     return <p className="has-text-grey is-size-7">{t('reports.income.noData')}</p>;
@@ -71,78 +60,224 @@ function SectionTable({
   );
 }
 
-export default function IncomeStatementPage() {
-  const { startDate, endDate, income, expenses, netIncome } = useLoaderData<typeof loader>();
+function TableView({ income, expenses }: { income: ReportSection; expenses: ReportSection }) {
   const { t } = useTranslation();
-  const isLoss  = netIncome < 0;
-  const isAllTime = startDate === null && endDate === null;
+  return (
+    <>
+      <div className="box is-section">
+        <p className="is-section-title">{t('reports.income.income')}</p>
+        <SectionTable section={income} totalLabel={t('reports.income.totalIncome')} />
+      </div>
+      <div className="box is-section">
+        <p className="is-section-title">{t('reports.income.expenses')}</p>
+        <SectionTable section={expenses} totalLabel={t('reports.income.totalExpenses')} />
+      </div>
+    </>
+  );
+}
+
+// ── Chart view ───────────────────────────────────────────────────────────────
+
+const CHART_FILLS = [
+  '#0D6B6B', '#2AA5A5', '#F5821A', '#3b82f6', '#8b5cf6',
+  '#ec4899', '#14b8a6', '#f59e0b', '#84cc16', '#6366f1',
+];
+
+type PieSlice = {
+  name:     string;
+  value:    number;
+  fill:     string;
+  dotClass: string;
+  nodes?:   SpendingNode[];
+};
+
+type DrillItem =
+  | { kind: 'top' }
+  | { kind: 'drilled'; label: string; nodes: SpendingNode[] };
+
+function nodesToSlices(nodes: SpendingNode[]): PieSlice[] {
+  return nodes.map((n, i) => {
+    const slice: PieSlice = {
+      name:     n.label,
+      value:    n.amount,
+      fill:     CHART_FILLS[i % CHART_FILLS.length]!,
+      dotClass: `is-dot-${i % CHART_FILLS.length}`,
+    };
+    if (n.children.length > 0) slice.nodes = n.children;
+    return slice;
+  });
+}
+
+function ChartView({
+  income, expenses, incomeTree, expensesTree,
+}: {
+  income: ReportSection;
+  expenses: ReportSection;
+  incomeTree: SpendingNode[];
+  expensesTree: SpendingNode[];
+}) {
+  const { t } = useTranslation();
+  const [drillStack, setDrillStack] = useState<DrillItem[]>([{ kind: 'top' }]);
+  const current = drillStack[drillStack.length - 1]!;
+
+  const topSlices = (): PieSlice[] => {
+    const income_s: PieSlice  = { name: t('reports.income.income'),   value: income.total,   fill: '#22c55e', dotClass: 'is-dot-income'   };
+    const expense_s: PieSlice = { name: t('reports.income.expenses'), value: expenses.total, fill: '#ef4444', dotClass: 'is-dot-expenses' };
+    if (incomeTree.length   > 0) income_s.nodes  = incomeTree;
+    if (expensesTree.length > 0) expense_s.nodes = expensesTree;
+    return [income_s, expense_s];
+  };
+
+  const slices: PieSlice[] = current.kind === 'top' ? topSlices() : nodesToSlices(current.nodes);
+
+  function drillInto(index: number) {
+    const slice = slices[index];
+    if (!slice?.nodes) return;
+    setDrillStack(s => [...s, { kind: 'drilled', label: slice.name, nodes: slice.nodes! }]);
+  }
+
+  if (income.total === 0 && expenses.total === 0) {
+    return <p className="has-text-grey is-section">{t('reports.income.noData')}</p>;
+  }
+
+  return (
+    <div className="is-chart-view">
+      <div className="is-chart-breadcrumb">
+        {drillStack.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="is-chart-back"
+              onClick={() => setDrillStack(s => s.slice(0, -1))}
+            >
+              {t('reports.income.drillBack')}
+            </button>
+            <span className="is-chart-path">
+              {drillStack.slice(1).map(d => d.kind === 'drilled' ? d.label : '').join(' › ')}
+            </span>
+          </>
+        )}
+      </div>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={slices}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={70}
+            outerRadius={120}
+            paddingAngle={2}
+            onClick={(_: unknown, index: number) => drillInto(index)}
+          >
+            {slices.map((s, i) => (
+              // eslint-disable-next-line @typescript-eslint/no-deprecated
+              <Cell
+                key={i}
+                fill={s.fill}
+                className={s.nodes ? 'is-chart-drillable' : 'is-chart-leaf'}
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value: unknown) =>
+              typeof value === 'number' ? [`${fmt(value)} ${BASE_CURRENCY}`, ''] : ''
+            }
+          />
+        </PieChart>
+      </ResponsiveContainer>
+
+      <div className="is-chart-legend">
+        {slices.map((s, i) =>
+          s.nodes ? (
+            <button
+              key={i}
+              type="button"
+              className="is-legend-item is-legend-drillable"
+              onClick={() => drillInto(i)}
+            >
+              <span className={`is-legend-dot ${s.dotClass}`} />
+              <span className="is-legend-name">{s.name}</span>
+              <span className="is-legend-value">{fmt(s.value)}</span>
+              <span className="is-legend-arrow">›</span>
+            </button>
+          ) : (
+            <div key={i} className="is-legend-item">
+              <span className={`is-legend-dot ${s.dotClass}`} />
+              <span className="is-legend-name">{s.name}</span>
+              <span className="is-legend-value">{fmt(s.value)}</span>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export default function IncomeStatementPage() {
+  const { income, expenses, netIncome, incomeTree, expensesTree, range } =
+    useLoaderData<typeof loader>();
+  const { t }      = useTranslation();
+  const navigate   = useNavigate();
+  const [searchParams] = useSearchParams();
+  const view  = searchParams.get('view') === 'chart' ? 'chart' : 'table';
+  const isLoss = netIncome < 0;
 
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
-        <h1 className="title is-5 mb-3">{t('reports.income.title')}</h1>
+        <div className="is-page">
 
-        <form method="get" className="is-filter">
-          <div className="field is-grouped">
-            <div className="control">
-              <label className="label is-small">{t('reports.income.from')}</label>
-              <input
-                className="input is-small"
-                type="date"
-                name="from"
-                defaultValue={startDate ?? ''}
+          <div className="is-header">
+            <h1 className="title is-5 mb-0">{t('reports.income.title')}</h1>
+            <div className="is-header-controls">
+              <RangePicker
+                value={range as ReportRange}
+                onChange={r => navigate(`?range=${r}&view=${view}`)}
               />
-            </div>
-            <div className="control">
-              <label className="label is-small">{t('reports.income.to')}</label>
-              <input
-                className="input is-small"
-                type="date"
-                name="to"
-                defaultValue={endDate ?? ''}
-              />
-            </div>
-            <div className="control is-filter-apply">
-              <button className="button is-small is-info" type="submit">
-                {t('reports.income.apply')}
-              </button>
-            </div>
-            {!isAllTime && (
-              <div className="control is-filter-alltime">
-                <a className="button is-small is-light" href="?from=&to=">
-                  {t('reports.allTime')}
-                </a>
+              <div className="is-view-toggle">
+                <button
+                  type="button"
+                  className={`is-view-btn${view === 'table' ? ' is-active' : ''}`}
+                  onClick={() => navigate(`?range=${range}&view=table`)}
+                >
+                  {t('reports.income.viewTable')}
+                </button>
+                <button
+                  type="button"
+                  className={`is-view-btn${view === 'chart' ? ' is-active' : ''}`}
+                  onClick={() => navigate(`?range=${range}&view=chart`)}
+                >
+                  {t('reports.income.viewChart')}
+                </button>
               </div>
-            )}
+            </div>
           </div>
-          {isAllTime && (
-            <p className="is-alltime-badge">{t('reports.showingAllTime')}</p>
+
+          {view === 'table' ? (
+            <TableView income={income} expenses={expenses} />
+          ) : (
+            <ChartView
+              income={income}
+              expenses={expenses}
+              incomeTree={incomeTree}
+              expensesTree={expensesTree}
+            />
           )}
-        </form>
 
-        <div className="box is-section">
-          <p className="is-section-title">{t('reports.income.income')}</p>
-          <SectionTable
-            section={income}
-            totalLabel={t('reports.income.totalIncome')}
-          />
-        </div>
+          <div className={`is-net-card${isLoss ? ' is-loss' : ''}`}>
+            <span className="is-net-label">
+              {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
+            </span>
+            <span className="is-net-value">
+              {fmt(Math.abs(netIncome))} {BASE_CURRENCY}
+            </span>
+          </div>
 
-        <div className="box is-section">
-          <p className="is-section-title">{t('reports.income.expenses')}</p>
-          <SectionTable
-            section={expenses}
-            totalLabel={t('reports.income.totalExpenses')}
-          />
-        </div>
-
-        <div className={`is-net-card${isLoss ? ' is-loss' : ''}`}>
-          <span className="is-net-label">
-            {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
-          </span>
-          <span className="is-net-value">
-            {fmt(Math.abs(netIncome))} {BASE_CURRENCY}
-          </span>
         </div>
       </div>
     </section>

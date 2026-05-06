@@ -1,7 +1,56 @@
-.is-filter {
-  margin-bottom: 1.25rem;
+.is-page {
+  max-width: 860px;
+  margin: 0 auto;
 }
 
+.is-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.is-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* View toggle */
+.is-view-toggle {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.is-view-btn {
+  background: none;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.is-view-btn + .is-view-btn {
+  border-left: 1px solid #d1d5db;
+}
+
+.is-view-btn.is-active {
+  background: #0D6B6B;
+  color: white;
+}
+
+.is-view-btn:not(.is-active):hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Table sections */
 .is-section {
   margin-bottom: 1.25rem;
 }
@@ -20,6 +69,7 @@
   font-weight: 700;
 }
 
+/* Net income card */
 .is-net-card {
   display: flex;
   justify-content: space-between;
@@ -51,17 +101,112 @@
   color: #dc2626;
 }
 
-.is-filter-apply {
-  align-self: flex-end;
+/* Chart view */
+.is-chart-view {
+  margin-bottom: 1.25rem;
 }
 
-.is-filter-alltime {
-  align-self: flex-end;
-  padding-bottom: 0.4rem;
+.is-chart-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+  margin-bottom: 0.25rem;
 }
 
-.is-alltime-badge {
-  font-size: 0.82rem;
+.is-chart-back {
+  background: none;
+  border: none;
+  color: #0D6B6B;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0;
+}
+
+.is-chart-back:hover {
+  text-decoration: underline;
+}
+
+.is-chart-path {
+  font-size: 0.85rem;
   color: #6b7280;
-  margin-bottom: 0.75rem;
 }
+
+.is-chart-drillable {
+  cursor: pointer;
+}
+
+.is-chart-leaf {
+  cursor: default;
+}
+
+/* Legend */
+.is-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 400px;
+  margin: 0.5rem auto 0;
+}
+
+.is-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.is-legend-drillable {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.is-legend-drillable:hover {
+  background: #f3f4f6;
+}
+
+.is-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.is-legend-name {
+  flex: 1;
+  color: #374151;
+  text-transform: capitalize;
+}
+
+.is-legend-value {
+  font-weight: 600;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+
+.is-legend-arrow {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* Legend dot colors — top-level */
+.is-dot-income   { background: #22c55e; }
+.is-dot-expenses { background: #ef4444; }
+
+/* Legend dot colors — drilled (mirrors CHART_FILLS) */
+.is-dot-0 { background: #0D6B6B; }
+.is-dot-1 { background: #2AA5A5; }
+.is-dot-2 { background: #F5821A; }
+.is-dot-3 { background: #3b82f6; }
+.is-dot-4 { background: #8b5cf6; }
+.is-dot-5 { background: #ec4899; }
+.is-dot-6 { background: #14b8a6; }
+.is-dot-7 { background: #f59e0b; }
+.is-dot-8 { background: #84cc16; }
+.is-dot-9 { background: #6366f1; }
