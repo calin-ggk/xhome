@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
-import { getNetWorthByCurrencyData } from '~/services/reports.service';
+import { getNetWorthByCurrencyData, type ManualLiveRate, type ManualLivePrice } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
 import { RangePicker } from '~/components/RangePicker';
@@ -35,7 +35,22 @@ export async function loader({ request }: Route.LoaderArgs) {
   const fromMonth = from ? from.slice(0, 7) : null;
   const toMonth   = to   ? to.slice(0, 7)   : null;
 
-  return { ...getNetWorthByCurrencyData(db, fromMonth, toMonth), range };
+  const manualRates: ManualLiveRate[] = [];
+  const manualPrices: ManualLivePrice[] = [];
+  for (const [key, value] of url.searchParams.entries()) {
+    const rm = key.match(/^rate_(\d+)$/);
+    if (rm) {
+      const rateDecimal = parseFloat(value);
+      if (isFinite(rateDecimal) && rateDecimal > 0) manualRates.push({ currencyId: parseInt(rm[1]!, 10), rateDecimal });
+    }
+    const pm = key.match(/^price_(\d+)$/);
+    if (pm) {
+      const priceDecimal = parseFloat(value);
+      if (isFinite(priceDecimal) && priceDecimal > 0) manualPrices.push({ securityId: parseInt(pm[1]!, 10), priceDecimal });
+    }
+  }
+
+  return { ...(await getNetWorthByCurrencyData(db, fromMonth, toMonth, today, manualRates, manualPrices)), range };
 }
 
 function yTickFmt(v: number): string {
@@ -50,7 +65,7 @@ function pctTickFmt(v: number): string {
 }
 
 export default function NetWorthHistoryPage() {
-  const { currencies, points, range } = useLoaderData<typeof loader>();
+  const { currencies, points, liveStatus, range } = useLoaderData<typeof loader>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
   const { fmtAmount, fmtMonth, locale } = useFormat();
@@ -103,6 +118,36 @@ export default function NetWorthHistoryPage() {
               onChange={r => navigate(`?range=${r}`)}
             />
           </div>
+
+          {liveStatus.state === 'missing' && (
+            <div className="notification is-warning mt-4 mb-4">
+              <p className="mb-3">{t('reports.live.fetchFailed')}</p>
+              <form method="get">
+                <input type="hidden" name="range" value={range} />
+                {liveStatus.missingRates.map(r => (
+                  <div key={r.currencyId} className="field is-horizontal mb-2">
+                    <div className="field-label is-small" style={{ flexBasis: '12rem', flexGrow: 0 }}>
+                      <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: BASE_CURRENCY })}</label>
+                    </div>
+                    <div className="field-body">
+                      <input className="input is-small" style={{ maxWidth: '10rem' }} type="number" step="0.0001" min="0.0001" name={`rate_${r.currencyId}`} required />
+                    </div>
+                  </div>
+                ))}
+                {liveStatus.missingPrices.map(p => (
+                  <div key={p.securityId} className="field is-horizontal mb-2">
+                    <div className="field-label is-small" style={{ flexBasis: '12rem', flexGrow: 0 }}>
+                      <label className="label">{t('reports.live.priceLabel', { ticker: p.ticker })}</label>
+                    </div>
+                    <div className="field-body">
+                      <input className="input is-small" style={{ maxWidth: '10rem' }} type="number" step="0.01" min="0.01" name={`price_${p.securityId}`} required />
+                    </div>
+                  </div>
+                ))}
+                <button type="submit" className="button is-small is-primary mt-2">{t('reports.live.apply')}</button>
+              </form>
+            </div>
+          )}
 
           {points.length === 0 ? (
             <p className="has-text-grey">{t('reports.netWorth.noData')}</p>

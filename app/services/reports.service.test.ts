@@ -1,13 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '~/db/schema';
+import * as yahoo from '~/lib/yahoo-finance';
 import {
   getBalanceSheet,
   getIncomeStatement,
   getNetWorthHistoryData,
+  getNetWorthByCurrencyData,
   getSecuritiesHistoryData,
 } from './reports.service';
+
+vi.mock('~/lib/yahoo-finance');
 
 const DDL = `
   CREATE TABLE currencies (
@@ -62,6 +66,8 @@ function createTestDb() {
   `);
   return { db: drizzle(sqlite, { schema }), sqlite };
 }
+
+beforeEach(() => { vi.mocked(yahoo.fetchCurrentPrices).mockResolvedValue(new Map()); });
 
 describe('getBalanceSheet', () => {
   it('uses live computation when no snapshot exists', () => {
@@ -123,7 +129,7 @@ describe('getBalanceSheet', () => {
   });
 
   it('uses last day of month as asOfDate for past months without snapshot', () => {
-    const { db, sqlite } = createTestDb();
+    const { db } = createTestDb();
     // Entry on 2024-01-01 (January), querying for December 2023 — should find nothing
     const result = getBalanceSheet(db, '2023-12', '2024-01-31');
     expect(result.asOfDate).toBe('2023-12-31');
@@ -198,6 +204,80 @@ describe('getNetWorthHistoryData', () => {
   });
 });
 
+describe('getNetWorthByCurrencyData (live current-month fallback)', () => {
+  it('returns ok status with no points when no data at all', async () => {
+    const { db } = createTestDb();
+    vi.mocked(yahoo.fetchCurrentPrices).mockResolvedValue(new Map());
+    const result = await getNetWorthByCurrencyData(db, null, null, '2026-05-07');
+    expect(result.points).toHaveLength(0);
+    expect(result.liveStatus.state).toBe('ok');
+  });
+
+  it('appends live current-month point from transactions when no snapshot exists', async () => {
+    const { db, sqlite } = createTestDb();
+    // RON is base currency — no Yahoo Finance call needed
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Test', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 1, 'debit',  50000, 50000, NULL, NULL, NULL, NULL);
+      INSERT INTO transaction_entries VALUES (11, 10, 2, 'credit', 20000, 20000, NULL, NULL, NULL, NULL);
+    `);
+    const result = await getNetWorthByCurrencyData(db, null, null, '2026-05-07');
+    expect(result.points).toHaveLength(1);
+    expect(result.points[0]?.month).toBe('2026-05');
+    // asset +50000, liability -20000 (debit-positive sum) = 30000
+    expect(result.points[0]?.total).toBe(30000);
+    expect(result.liveStatus.state).toBe('ok');
+  });
+
+  it('does not add live point when snapshot already covers current month', async () => {
+    const { db, sqlite } = createTestDb();
+    // Snapshot for 2026-05 is stored as 2026-06-01
+    sqlite.exec(`
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2026-06-01', 80000, 80000);
+    `);
+    const result = await getNetWorthByCurrencyData(db, null, null, '2026-05-07');
+    expect(result.points).toHaveLength(1);
+    expect(result.points[0]?.month).toBe('2026-05');
+    expect(result.points[0]?.total).toBe(80000);
+    expect(result.liveStatus.state).toBe('ok');
+  });
+
+  it('returns missing status when Yahoo Finance fails for a non-base currency', async () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2, 0);
+      INSERT INTO accounts VALUES (6, 'EUR Bank', 'debit', 'simple', 2, 'asset/bank/eur', 1, NULL);
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Test', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 10000, 46000, NULL, NULL, NULL, NULL);
+    `);
+    vi.mocked(yahoo.fetchCurrentPrices).mockResolvedValue(new Map()); // nothing fetched
+    const result = await getNetWorthByCurrencyData(db, null, null, '2026-05-07');
+    expect(result.liveStatus.state).toBe('missing');
+    if (result.liveStatus.state === 'missing') {
+      expect(result.liveStatus.missingRates).toHaveLength(1);
+      expect(result.liveStatus.missingRates[0]?.currencyCode).toBe('EUR');
+    }
+  });
+
+  it('uses manual rate when provided', async () => {
+    const { db, sqlite } = createTestDb();
+    sqlite.exec(`
+      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2, 0);
+      INSERT INTO accounts VALUES (6, 'EUR Bank', 'debit', 'simple', 2, 'asset/bank/eur', 1, NULL);
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Test', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 10000, 46000, NULL, NULL, NULL, NULL);
+    `);
+    const result = await getNetWorthByCurrencyData(
+      db, null, null, '2026-05-07',
+      [{ currencyId: 2, rateDecimal: 4.6 }], // 1 EUR = 4.6 RON
+    );
+    expect(result.liveStatus.state).toBe('ok');
+    expect(result.points).toHaveLength(1);
+    // 10000 EUR cents * 4.6 = 46000 RON cents
+    expect(result.points[0]?.total).toBe(46000);
+  });
+});
+
 describe('getSecuritiesHistoryData', () => {
   function createSecurityTestDb() {
     const { db, sqlite } = createTestDb();
@@ -208,17 +288,17 @@ describe('getSecuritiesHistoryData', () => {
     return { db, sqlite };
   }
 
-  it('returns empty when no security snapshots', () => {
+  it('returns empty when no security snapshots', async () => {
     const { db } = createSecurityTestDb();
-    const result = getSecuritiesHistoryData(db);
+    const result = await getSecuritiesHistoryData(db);
     expect(result.securities).toEqual([]);
     expect(result.points).toEqual([]);
   });
 
-  it('returns one security line and pivoted points', () => {
+  it('returns one security line and pivoted points', async () => {
     const { db, sqlite } = createSecurityTestDb();
     sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000)`);
-    const result = getSecuritiesHistoryData(db);
+    const result = await getSecuritiesHistoryData(db);
     expect(result.securities).toHaveLength(1);
     expect(result.securities[0]?.ticker).toBe('AAPL');
     expect(result.securities[0]?.label).toBe('AAPL (My Apple)');
@@ -227,7 +307,7 @@ describe('getSecuritiesHistoryData', () => {
     expect(result.points[0]?.display).toMatch(/Jan.*2024|2024.*Jan/);
   });
 
-  it('pivots multiple securities onto the same date row', () => {
+  it('pivots multiple securities onto the same date row', async () => {
     const { db, sqlite } = createSecurityTestDb();
     sqlite.exec(`
       INSERT INTO securities VALUES (2, 'GOOGL', 'Alphabet', 1, 'stock', 6);
@@ -235,10 +315,55 @@ describe('getSecuritiesHistoryData', () => {
       INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000);
       INSERT INTO account_monthly_snapshots VALUES (2, 7, '2024-02-01',  80000,  80000);
     `);
-    const result = getSecuritiesHistoryData(db);
+    const result = await getSecuritiesHistoryData(db);
     expect(result.securities).toHaveLength(2);
     expect(result.points).toHaveLength(1);
     expect(result.points[0]?.['6']).toBe(100000);
     expect(result.points[0]?.['7']).toBe(80000);
+  });
+
+  it('appends live current-month point using Yahoo Finance price', async () => {
+    const { db, sqlite } = createSecurityTestDb();
+    // Buy 1 AAPL (quantity stored as 1000000 with quantityScale=6)
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Buy AAPL', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 17500, 17500, 1000000, NULL, NULL, NULL);
+    `);
+    vi.mocked(yahoo.fetchCurrentPrices).mockResolvedValue(new Map([['AAPL', 175.00]]));
+    const result = await getSecuritiesHistoryData(db, null, null, '2026-05-07');
+    expect(result.points).toHaveLength(1);
+    expect(result.points[0]?.month).toBe('2026-05');
+    // 1 share * 175.00 * 100 (cent scale) = 17500 RON cents
+    expect(result.points[0]?.['6']).toBe(17500);
+    expect(result.liveStatus.state).toBe('ok');
+  });
+
+  it('returns missing status when Yahoo Finance fails for a security', async () => {
+    const { db, sqlite } = createSecurityTestDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Buy AAPL', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 17500, 17500, 1000000, NULL, NULL, NULL);
+    `);
+    vi.mocked(yahoo.fetchCurrentPrices).mockResolvedValue(new Map());
+    const result = await getSecuritiesHistoryData(db, null, null, '2026-05-07');
+    expect(result.liveStatus.state).toBe('missing');
+    if (result.liveStatus.state === 'missing') {
+      expect(result.liveStatus.missingPrices[0]?.ticker).toBe('AAPL');
+    }
+  });
+
+  it('uses manual price when provided', async () => {
+    const { db, sqlite } = createSecurityTestDb();
+    sqlite.exec(`
+      INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Buy AAPL', NULL);
+      INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 17500, 17500, 1000000, NULL, NULL, NULL);
+    `);
+    const result = await getSecuritiesHistoryData(
+      db, null, null, '2026-05-07',
+      [],
+      [{ securityId: 1, priceDecimal: 175.00 }],
+    );
+    expect(result.liveStatus.state).toBe('ok');
+    expect(result.points[0]?.['6']).toBe(17500);
   });
 });

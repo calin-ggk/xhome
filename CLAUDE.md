@@ -40,7 +40,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Rounding:** Perform all calculations in cents. Format to decimal ONLY in the UI layer.
 - **Database:** Use `better-sqlite3` or the React Router 7 recommended SQLite adapter.
 - **Layering:** Routes only handle validation, a single service call, and redirect/response. No business logic or DB access in loaders/actions.
-- **Logging:** Use `app/lib/logger.ts` (pino + pino-roll). Log level controlled by `LOG_LEVEL` env var (default `info`). Emit structured JSON events with an `event` field (e.g. `transaction.created`, `auth.login`). Services log `info` on mutations, `error` on failures. All HTTP requests logged at `info` in `entry.server.tsx`. No logging in repositories.
+- **Logging:** Use `app/lib/logger.ts` (pino + pino-roll). Log level controlled by `LOG_LEVEL` env var (default `info`). Emit structured JSON events with an `event` field (e.g. `transaction.created`, `auth.login`). Services log `info` on mutations, `error` on failures, `warn` when external data is unavailable. External-fetch helpers (`app/lib/`) log `warn` on HTTP/network failures including status code and response body. All HTTP requests logged at `info` in `entry.server.tsx`. No logging in repositories.
 - **Services:** All business logic lives in `app/services/`. A service may call repositories but never touches the DB directly.
 - **Repositories:** All DB queries live in `app/repositories/`. No raw DB calls outside this layer.
 
@@ -59,6 +59,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Button group** (`field is-grouped`) uses `justify-content: center` so Save/Cancel sit at the horizontal center.
 
 **Reports:**
+- **Data sourcing:** Past months use snapshots; current month uses live Yahoo Finance prices (batch fetch). See `docs/data_sourcing.md`.
 - Content is capped at `max-width: 860px` + `margin: 0 auto` — never stretches full viewport on large screens.
 - **Report header** places the title and the period selector (e.g. `MonthPicker`, `RangePicker`) inline on the same row, left-aligned, using flex with a `1rem` gap.
 - Use `app/components/MonthPicker.tsx` for any month-scoped report filter — it renders as a trigger button (`May 2026 ▾`) that opens a popover calendar on click.

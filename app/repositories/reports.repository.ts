@@ -1,4 +1,4 @@
-import { and, eq, gte, like, lte, or, sql } from 'drizzle-orm';
+import { and, eq, gte, like, lte, ne, or, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { accountMonthlySnapshots, accounts, currencies, securities, transactionEntries, transactions } from '~/db/schema';
 import type * as schema from '~/db/schema';
@@ -160,6 +160,103 @@ export function getSecuritiesHistory(
     .where(eq(accounts.accountType, 'security'))
     .orderBy(accountMonthlySnapshots.date, accounts.id)
     .all();
+}
+
+export type LiveRegularBalance = {
+  accountId:      number;
+  accountName:    string;
+  category:       string;
+  currencyId:     number;
+  currencyCode:   string;
+  isBaseCurrency: number;
+  balance:        number;
+};
+
+export type LiveSecurityQuantity = {
+  accountId:      number;
+  accountName:    string;
+  securityId:     number;
+  ticker:         string;
+  securityName:   string;
+  quantityScale:  number;
+  currencyId:     number;
+  currencyCode:   string;
+  decimalPlaces:  number;
+  isBaseCurrency: number;
+  netQuantity:    number;
+};
+
+// Running balance for asset/liability (non-security) accounts up to asOfDate inclusive.
+export function getLiveRegularBalances(
+  db: BetterSQLite3Database<typeof schema>,
+  asOfDate: string,
+): LiveRegularBalance[] {
+  return db
+    .select({
+      accountId:      accounts.id,
+      accountName:    accounts.name,
+      category:       accounts.category,
+      currencyId:     accounts.currencyId,
+      currencyCode:   currencies.code,
+      isBaseCurrency: currencies.isBase,
+      balance: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.amount} ELSE -(${transactionEntries.amount}) END)`,
+    })
+    .from(transactionEntries)
+    .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
+    .innerJoin(accounts, eq(transactionEntries.accountId, accounts.id))
+    .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .where(and(
+      lte(transactions.date, asOfDate),
+      ne(accounts.accountType, 'security'),
+      or(
+        like(accounts.category, 'asset/%'),
+        like(accounts.category, 'liability/%'),
+      ),
+    ))
+    .groupBy(accounts.id)
+    .all();
+}
+
+// Net quantity and pricing metadata for security accounts up to asOfDate inclusive.
+export function getLiveSecurityQuantities(
+  db: BetterSQLite3Database<typeof schema>,
+  asOfDate: string,
+): LiveSecurityQuantity[] {
+  return db
+    .select({
+      accountId:      accounts.id,
+      accountName:    accounts.name,
+      securityId:     securities.id,
+      ticker:         securities.ticker,
+      securityName:   securities.name,
+      quantityScale:  securities.quantityScale,
+      currencyId:     accounts.currencyId,
+      currencyCode:   currencies.code,
+      decimalPlaces:  currencies.decimalPlaces,
+      isBaseCurrency: currencies.isBase,
+      netQuantity: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.quantity} ELSE -(${transactionEntries.quantity}) END)`,
+    })
+    .from(transactionEntries)
+    .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
+    .innerJoin(accounts, eq(transactionEntries.accountId, accounts.id))
+    .innerJoin(securities, eq(accounts.securityId, securities.id))
+    .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .where(and(
+      lte(transactions.date, asOfDate),
+      eq(accounts.accountType, 'security'),
+    ))
+    .groupBy(accounts.id)
+    .all();
+}
+
+export function getBaseCurrencyCode(
+  db: BetterSQLite3Database<typeof schema>,
+): string {
+  return db
+    .select({ code: currencies.code })
+    .from(currencies)
+    .where(eq(currencies.isBase, 1))
+    .get()?.code ?? '';
 }
 
 export function getIncomeStatementData(

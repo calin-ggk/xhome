@@ -287,6 +287,12 @@ const en = {
       noData:  'No security snapshot data available.',
       chartPct: '% change from period start',
     },
+    live: {
+      fetchFailed: 'Could not fetch current rates/prices automatically. Please enter them below.',
+      rateLabel:   '1 {{code}} = ? {{base}}',
+      priceLabel:  '{{ticker}} current price',
+      apply:       'Apply',
+    },
   },
 };
 

@@ -18,5 +18,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return Response.json({ error: 'to must be YYYY-MM' }, { status: 400 });
   }
 
-  return Response.json({ data: getNetWorthByCurrencyData(db, from, to) });
+  return Response.json({ data: await getNetWorthByCurrencyData(db, from, to) });
 }

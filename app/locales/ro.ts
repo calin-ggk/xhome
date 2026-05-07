@@ -289,6 +289,12 @@ const ro: TranslationSchema = {
       noData:  'Nu există date de instantaneu pentru titluri de valoare.',
       chartPct: '% variație față de începutul perioadei',
     },
+    live: {
+      fetchFailed: 'Nu s-au putut obține cursurile/prețurile automat. Te rugăm să le introduci mai jos.',
+      rateLabel:   '1 {{code}} = ? {{base}}',
+      priceLabel:  'Prețul curent {{ticker}}',
+      apply:       'Aplică',
+    },
   },
 };
 

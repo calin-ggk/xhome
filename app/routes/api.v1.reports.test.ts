@@ -60,7 +60,7 @@ describe('GET /api/v1/reports/income', () => {
 
 describe('GET /api/v1/reports/net-worth', () => {
   it('returns net worth history', async () => {
-    vi.mocked(svc.getNetWorthByCurrencyData).mockReturnValue({ currencies: ['EUR'], points: [{ month: '2025-01', display: 'Jan 2025', total: 100000, EUR: 100000 }] });
+    vi.mocked(svc.getNetWorthByCurrencyData).mockResolvedValue({ currencies: ['EUR'], points: [{ month: '2025-01', display: 'Jan 2025', total: 100000, EUR: 100000 }], liveStatus: { state: 'ok' } });
     const req = makeReq('http://localhost/api/v1/reports/net-worth');
     const res = await nwLoader({ request: req, params: {}, context: {} } as never) as Response;
     const json = await res.json();
@@ -70,7 +70,7 @@ describe('GET /api/v1/reports/net-worth', () => {
 
 describe('GET /api/v1/reports/securities', () => {
   it('returns securities history', async () => {
-    vi.mocked(svc.getSecuritiesHistoryData).mockReturnValue({ securities: [], points: [], pctPoints: [] });
+    vi.mocked(svc.getSecuritiesHistoryData).mockResolvedValue({ securities: [], points: [], pctPoints: [], liveStatus: { state: 'ok' } });
     const req = makeReq('http://localhost/api/v1/reports/securities');
     const res = await securitiesLoader({ request: req, params: {}, context: {} } as never) as Response;
     const json = await res.json();

@@ -1,3 +1,5 @@
+import { logger } from '~/lib/logger';
+
 const RATE_SCALE = 4;
 const YAHOO_URL = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
@@ -11,6 +13,28 @@ type YahooChart = {
 };
 
 export type FetchedRate = { rate: number; rateScale: number };
+
+// Fetches current market prices for multiple symbols in parallel using the chart endpoint.
+// Keys in the returned map match the requested symbol strings.
+// Symbols not found or erroring are absent from the map.
+export async function fetchCurrentPrices(symbols: string[]): Promise<Map<string, number>> {
+  if (symbols.length === 0) return new Map();
+  const today = new Date().toISOString().slice(0, 10);
+  const results = await Promise.all(
+    symbols.map(async s => [s, await fetchYahooClosePrice(s, today)] as const),
+  );
+  const map = new Map<string, number>();
+  for (const [symbol, r] of results) {
+    if (r !== null) {
+      map.set(symbol, r.rate / Math.pow(10, r.rateScale));
+    }
+  }
+  const missing = symbols.filter(s => !map.has(s));
+  if (missing.length > 0) {
+    logger.warn({ event: 'yahoo_finance.symbols_missing', missing });
+  }
+  return map;
+}
 
 export async function fetchExchangeRate(
   fromCurrency: string,
@@ -44,7 +68,11 @@ async function fetchYahooClosePrice(symbol: string, date: string): Promise<Fetch
       headers: { 'User-Agent': 'Mozilla/5.0' },
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      logger.warn({ event: 'yahoo_finance.fetch_failed', status: res.status, body, symbol, date });
+      return null;
+    }
 
     const json = await res.json() as YahooChart;
     const result = json?.chart?.result?.[0];
@@ -55,13 +83,17 @@ async function fetchYahooClosePrice(symbol: string, date: string): Promise<Fetch
 
     // Last non-null close in the window (most recent trading day)
     const closePrice = [...closes].reverse().find((c): c is number => c !== null && isFinite(c));
-    if (closePrice === undefined) return null;
+    if (closePrice === undefined) {
+      logger.warn({ event: 'yahoo_finance.no_close_price', symbol, date });
+      return null;
+    }
 
     return {
       rate:      Math.round(closePrice * Math.pow(10, RATE_SCALE)),
       rateScale: RATE_SCALE,
     };
-  } catch {
+  } catch (err) {
+    logger.warn({ event: 'yahoo_finance.fetch_error', error: String(err), symbol, date });
     return null;
   }
 }
