@@ -5,27 +5,20 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } fro
 import { BASE_CURRENCY } from '~/constants';
 import { db } from '~/db/client';
 import { getDashboardData } from '~/services/dashboard.service';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app._index';
 
 export async function loader(_: Route.LoaderArgs) {
   return getDashboardData(db);
 }
 
-function fmt(cents: number): string {
-  return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function shortMonth(yearMonth: string): string {
-  const [y, m] = yearMonth.split('-');
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleString('en', { month: 'short' });
-}
-
 export default function Dashboard() {
   const { netWorth, currentMonth, recentTransactions, cashFlow } = useLoaderData<typeof loader>();
   const { t } = useTranslation();
+  const { fmtAmount, fmtShortMonth, fmtDate, locale } = useFormat();
 
   const chartData = cashFlow.map(({ month, income, expenses }) => ({
-    month: shortMonth(month),
+    month: fmtShortMonth(month),
     income: +(income / 100).toFixed(2),
     expenses: +(expenses / 100).toFixed(2),
   }));
@@ -38,26 +31,26 @@ export default function Dashboard() {
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.netWorth')}</p>
-              <p className="dash-card-value dash-card-value--teal">{fmt(netWorth)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--teal">{fmtAmount(netWorth)} {BASE_CURRENCY}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.incomeThisMonth')}</p>
-              <p className="dash-card-value dash-card-value--green">{fmt(currentMonth.income)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--green">{fmtAmount(currentMonth.income)} {BASE_CURRENCY}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.expensesThisMonth')}</p>
-              <p className="dash-card-value dash-card-value--orange">{fmt(currentMonth.expenses)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--orange">{fmtAmount(currentMonth.expenses)} {BASE_CURRENCY}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.netThisMonth')}</p>
               <p className={`dash-card-value ${currentMonth.net >= 0 ? 'dash-card-value--green' : 'dash-card-value--red'}`}>
-                {fmt(currentMonth.net)} {BASE_CURRENCY}
+                {fmtAmount(currentMonth.net)} {BASE_CURRENCY}
               </p>
             </div>
           </div>
@@ -81,9 +74,9 @@ export default function Dashboard() {
                   <tbody>
                     {recentTransactions.map(tx => (
                       <tr key={tx.id}>
-                        <td className="dash-tx-date">{tx.date}</td>
+                        <td className="dash-tx-date">{fmtDate(tx.date)}</td>
                         <td>{tx.description ?? <span className="has-text-grey">—</span>}</td>
-                        <td className="has-text-right">{fmt(tx.totalBase)}</td>
+                        <td className="has-text-right">{fmtAmount(tx.totalBase)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -102,7 +95,7 @@ export default function Dashboard() {
                   <Tooltip
                     formatter={(value) =>
                       typeof value === 'number'
-                        ? `${value.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
+                        ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
                         : ''
                     }
                   />

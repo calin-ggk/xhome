@@ -7,6 +7,7 @@ import {
   generateMissingSnapshots,
 } from '~/services/snapshot.service';
 import type { MissingRate, MissingSecurityPrice, ManualRate, ManualSecurityPrice } from '~/services/snapshot.service';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.settings.snapshots';
 
 export async function loader(_: Route.LoaderArgs) {
@@ -69,6 +70,7 @@ export default function SnapshotsPage() {
   const actionData  = useActionData<typeof action>();
   const navigation  = useNavigation();
   const { t }       = useTranslation();
+  const { fmtMonthLong } = useFormat();
 
   const isSubmitting   = navigation.state === 'submitting';
   const needsManual    = actionData?.status === 'needs_manual';
@@ -114,7 +116,7 @@ export default function SnapshotsPage() {
                 <p className="snapshot-section-label">{t('snapshots.missingMonths')}</p>
                 <ul className="snapshot-month-list">
                   {missingMonths.map(sd => (
-                    <li key={sd}>{formatSnapshotMonth(sd)}</li>
+                    <li key={sd}>{fmtMonthLong(snapshotToMonthKey(sd))}</li>
                   ))}
                 </ul>
               </div>
@@ -137,7 +139,7 @@ export default function SnapshotsPage() {
                             {missingRates.map(r => (
                               <tr key={`${r.currencyId}-${r.snapshotDate}`}>
                                 <td>{r.currencyCode}</td>
-                                <td>{formatSnapshotMonth(r.snapshotDate)}</td>
+                                <td>{fmtMonthLong(snapshotToMonthKey(r.snapshotDate))}</td>
                                 <td>
                                   <input
                                     className="input is-small snapshot-rate-input"
@@ -170,7 +172,7 @@ export default function SnapshotsPage() {
                             {missingPrices.map(p => (
                               <tr key={`${p.securityId}-${p.snapshotDate}`}>
                                 <td>{p.ticker}</td>
-                                <td>{formatSnapshotMonth(p.snapshotDate)}</td>
+                                <td>{fmtMonthLong(snapshotToMonthKey(p.snapshotDate))}</td>
                                 <td>
                                   <input
                                     className="input is-small snapshot-rate-input"
@@ -218,9 +220,9 @@ export default function SnapshotsPage() {
   );
 }
 
-function formatSnapshotMonth(snapshotDate: string): string {
-  // snapshotDate = YYYY-MM-01 (first of next month); displayed month is one month before
-  const [yearStr, monthStr] = snapshotDate.split('-');
-  const d = new Date(Date.UTC(parseInt(yearStr!, 10), parseInt(monthStr!, 10) - 2, 1));
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+// snapshotDate = YYYY-MM-01 (first of next month); displayed month is one month before
+function snapshotToMonthKey(snapshotDate: string): string {
+  const [y, m] = snapshotDate.split('-').map(Number);
+  const d = new Date(Date.UTC(y!, m! - 2, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 }

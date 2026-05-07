@@ -3,7 +3,7 @@
 ## Project Overview
 
 A double-entry accounting system for multi-currency tracking and security performance.
-**Stack:** React Router 7 (Framework Mode), SQLite, Zod, TypeScript.
+**Stack:** React Router 7 (Framework Mode), SQLite, Drizzle ORM, Zod, TypeScript.
 
 ## Core Business Rules (Immutable)
 
@@ -68,11 +68,14 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - Numeric values use `text-align: right` for readability.
 - **Actions columns** use `has-text-right` on both `<th>` and `<td>`.
 
+**Localisation:** Use `useFormat()` for all displayed amounts, dates, and month labels — never hardcode a locale string. See `docs/localization.md`.
+
 ## Reference
 
 - **Domain Specs:** `docs/domain.md` (Full Schema & Business Logic details).
 - **Route Map:** `docs/routes.md` (file-to-URL mapping for all app routes).
 - **Dashboard:** `docs/dashboard.md` (data flow, layout pattern, date strategy).
 - **Accounts Module:** `docs/accounts.md` (entity shape, category paths, routes, delete constraint, ConfirmModal pattern).
+- **Localisation:** `docs/localization.md` (useFormat hook, pure helpers, form-input caveat).
 - **REST API:** `docs/api.md` (endpoints, auth, request/response shapes, error reference). The web app is the source of truth — the REST API is a read-only projection of it. Whenever a service or data shape changes, update the API route and `docs/api.md` to match.
 - **Plan:** `implementation_steps.md`

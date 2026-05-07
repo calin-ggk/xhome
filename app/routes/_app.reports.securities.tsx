@@ -12,6 +12,7 @@ import { getSecuritiesHistoryData } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
 import { RangePicker } from '~/components/RangePicker';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reports.securities';
 
 const CHART_COLORS = [
@@ -47,19 +48,25 @@ export default function SecuritiesHistoryPage() {
   const { securities, points, pctPoints, range } = useLoaderData<typeof loader>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
+  const { fmtMonth, locale } = useFormat();
 
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(securities.map(s => s.accountId)),
   );
 
   const chartData = points.map(p => {
-    const row: Record<string, string | number> = { display: p['display'] as string };
+    const row: Record<string, string | number> = { display: fmtMonth(p['month'] as string) };
     for (const sec of securities) {
       const cents = p[String(sec.accountId)];
       row[String(sec.accountId)] = typeof cents === 'number' ? +(cents / 100).toFixed(2) : 0;
     }
     return row;
   });
+
+  const pctChartData = pctPoints.map(p => ({
+    ...p,
+    display: fmtMonth(p['month'] as string),
+  }));
 
   function toggleSecurity(id: number) {
     setSelected(prev => {
@@ -109,7 +116,7 @@ export default function SecuritiesHistoryPage() {
                   <Tooltip
                     formatter={(value, name) =>
                       typeof value === 'number'
-                        ? [`${value.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`, name as string]
+                        ? [`${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`, name as string]
                         : ['', name as string]
                     }
                   />
@@ -141,7 +148,7 @@ export default function SecuritiesHistoryPage() {
                 {t('reports.securities.chartPct')}
               </p>
               <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={pctPoints} margin={{ top: 8, right: 16, bottom: 4, left: 16 }}>
+                <LineChart data={pctChartData} margin={{ top: 8, right: 16, bottom: 4, left: 16 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="display" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={60} tickFormatter={pctTickFmt} />

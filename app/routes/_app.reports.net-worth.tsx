@@ -10,6 +10,7 @@ import { getNetWorthByCurrencyData } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
 import { RangePicker } from '~/components/RangePicker';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reports.net-worth';
 
 const LINE_COLORS = [
@@ -37,10 +38,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { ...getNetWorthByCurrencyData(db, fromMonth, toMonth), range };
 }
 
-function fmt(cents: number): string {
-  return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function yTickFmt(v: number): string {
   const abs = Math.abs(v);
   if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -56,12 +53,13 @@ export default function NetWorthHistoryPage() {
   const { currencies, points, range } = useLoaderData<typeof loader>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
+  const { fmtAmount, fmtMonth, locale } = useFormat();
 
   const latest = points[points.length - 1];
 
   // Absolute chart: values in base currency (cents → units)
   const absData = points.map(p => {
-    const out: Record<string, string | number> = { month: p.display };
+    const out: Record<string, string | number> = { month: fmtMonth(p.month) };
     for (const code of currencies) out[code] = +((p[code] as number) / 100).toFixed(2);
     out.total = +(p.total / 100).toFixed(2);
     return out;
@@ -70,7 +68,7 @@ export default function NetWorthHistoryPage() {
   // % chart: each series normalised to its first data point
   const firstPt = points[0];
   const pctData = points.map(p => {
-    const out: Record<string, string | number> = { month: p.display };
+    const out: Record<string, string | number> = { month: fmtMonth(p.month) };
     for (const code of currencies) {
       const first = firstPt ? (firstPt[code] as number) : 0;
       const cur   = p[code] as number;
@@ -87,7 +85,7 @@ export default function NetWorthHistoryPage() {
 
   const tooltipFmtAbs = (value: unknown) =>
     typeof value === 'number'
-      ? `${value.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
+      ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
       : '';
 
   const tooltipFmtPct = (value: unknown) =>
@@ -164,7 +162,7 @@ export default function NetWorthHistoryPage() {
                 <div className={`nw-summary-box${latest.total < 0 ? ' nw-summary-box--negative' : ''}`}>
                   <span className="nw-summary-label">{t('reports.netWorth.latest')}</span>
                   <span className="nw-summary-value">
-                    {fmt(latest.total)} {BASE_CURRENCY}
+                    {fmtAmount(latest.total)} {BASE_CURRENCY}
                   </span>
                 </div>
               )}

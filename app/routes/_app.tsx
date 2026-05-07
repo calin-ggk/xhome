@@ -22,6 +22,7 @@ import { BASE_CURRENCY } from '~/constants';
 import { getSession } from '~/session.server';
 import { getNetWorth } from '~/services/dashboard.service';
 import { LANG_KEY } from '~/i18n';
+import { useFormat } from '~/hooks/useFormat';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get('Cookie'));
@@ -59,15 +60,12 @@ const NAV: NavGroup[] = [
   },
 ];
 
-function fmtNetWorth(cents: number): string {
-  return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 export default function AppLayout() {
   const { netWorth } = useLoaderData<typeof loader>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
+  const { fmtAmount } = useFormat();
 
   const activeItem = NAV.flatMap(g => g.items).find(item =>
     item.end ? pathname === item.to : pathname.startsWith(item.to)
@@ -91,7 +89,7 @@ export default function AppLayout() {
         <span className="app-title">{headerTitle}</span>
         <span className="app-net-worth">
           {t('header.netWorth')}:{' '}
-          <strong className="has-text-white">{fmtNetWorth(netWorth)} {BASE_CURRENCY}</strong>
+          <strong className="has-text-white">{fmtAmount(netWorth)} {BASE_CURRENCY}</strong>
         </span>
         <button type="button" className="app-btn-lang" onClick={toggleLang}>
           {i18n.language.startsWith('ro') ? 'EN' : 'RO'}

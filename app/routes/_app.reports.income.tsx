@@ -10,6 +10,7 @@ import { getIncomeStatement, type ReportSection, type SpendingNode } from '~/ser
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
 import { RangePicker } from '~/components/RangePicker';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reports.income';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -23,14 +24,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { ...getIncomeStatement(db, from, to), range };
 }
 
-function fmt(cents: number): string {
-  return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 // ── Table view ───────────────────────────────────────────────────────────────
 
 function SectionTable({ section, totalLabel }: { section: ReportSection; totalLabel: string }) {
   const { t } = useTranslation();
+  const { fmtAmount } = useFormat();
   if (section.accounts.length === 0) {
     return <p className="has-text-grey is-size-7">{t('reports.income.noData')}</p>;
   }
@@ -46,14 +44,14 @@ function SectionTable({ section, totalLabel }: { section: ReportSection; totalLa
         {section.accounts.map(a => (
           <tr key={a.id}>
             <td>{a.name} <span className="has-text-grey is-size-7">({a.category})</span></td>
-            <td className="has-text-right">{fmt(a.balanceBase)}</td>
+            <td className="has-text-right">{fmtAmount(a.balanceBase)}</td>
           </tr>
         ))}
       </tbody>
       <tfoot>
         <tr className="is-total-row">
           <td><strong>{totalLabel}</strong></td>
-          <td className="has-text-right"><strong>{fmt(section.total)}</strong></td>
+          <td className="has-text-right"><strong>{fmtAmount(section.total)}</strong></td>
         </tr>
       </tfoot>
     </table>
@@ -117,6 +115,7 @@ function ChartView({
   expensesTree: SpendingNode[];
 }) {
   const { t } = useTranslation();
+  const { fmtAmount } = useFormat();
   const [drillStack, setDrillStack] = useState<DrillItem[]>([{ kind: 'top' }]);
   const current = drillStack[drillStack.length - 1]!;
 
@@ -183,7 +182,7 @@ function ChartView({
           </Pie>
           <Tooltip
             formatter={(value: unknown) =>
-              typeof value === 'number' ? [`${fmt(value)} ${BASE_CURRENCY}`, ''] : ''
+              typeof value === 'number' ? [`${fmtAmount(value)} ${BASE_CURRENCY}`, ''] : ''
             }
           />
         </PieChart>
@@ -200,14 +199,14 @@ function ChartView({
             >
               <span className={`is-legend-dot ${s.dotClass}`} />
               <span className="is-legend-name">{s.name}</span>
-              <span className="is-legend-value">{fmt(s.value)}</span>
+              <span className="is-legend-value">{fmtAmount(s.value)}</span>
               <span className="is-legend-arrow">›</span>
             </button>
           ) : (
             <div key={i} className="is-legend-item">
               <span className={`is-legend-dot ${s.dotClass}`} />
               <span className="is-legend-name">{s.name}</span>
-              <span className="is-legend-value">{fmt(s.value)}</span>
+              <span className="is-legend-value">{fmtAmount(s.value)}</span>
             </div>
           )
         )}
@@ -223,6 +222,7 @@ export default function IncomeStatementPage() {
     useLoaderData<typeof loader>();
   const { t }      = useTranslation();
   const navigate   = useNavigate();
+  const { fmtAmount } = useFormat();
   const [searchParams] = useSearchParams();
   const view  = searchParams.get('view') === 'chart' ? 'chart' : 'table';
   const isLoss = netIncome < 0;
@@ -274,7 +274,7 @@ export default function IncomeStatementPage() {
               {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
             </span>
             <span className="is-net-value">
-              {fmt(Math.abs(netIncome))} {BASE_CURRENCY}
+              {fmtAmount(Math.abs(netIncome))} {BASE_CURRENCY}
             </span>
           </div>
 

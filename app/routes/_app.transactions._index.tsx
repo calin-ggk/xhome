@@ -9,6 +9,7 @@ import { getTransactionsPageData, deleteTransaction } from '~/services/transacti
 import { computeDateRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS, type ReportRange } from '~/schemas/preferences.schema';
 import { deleteTransactionSchema } from '~/schemas/transaction.schema';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.transactions._index';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -66,6 +67,7 @@ export default function TransactionsIndex() {
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const { t } = useTranslation();
+  const { fmtAmount, fmtDate } = useFormat();
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; description: string | null } | null>(null);
@@ -171,11 +173,11 @@ export default function TransactionsIndex() {
               <tbody>
                 {rows.map(tx => (
                   <tr key={tx.id}>
-                    <td>{tx.date}</td>
+                    <td>{fmtDate(tx.date)}</td>
                     <td>{tx.description ?? <span className="has-text-grey">—</span>}</td>
                     <td className="has-text-right tx-list-amount">{tx.entryCount}</td>
                     <td className="has-text-right tx-list-amount">
-                      {(tx.debitBase / Math.pow(10, dp)).toFixed(dp)} {code}
+                      {fmtAmount(tx.debitBase, dp)} {code}
                     </td>
                     <td>
                       <div className="tx-list-tags">

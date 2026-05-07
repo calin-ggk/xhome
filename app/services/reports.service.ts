@@ -276,8 +276,8 @@ export function getSecuritiesHistoryData(
 
   const dates = [...new Set(rows.map(r => r.date))].sort();
   const points: Array<Record<string, string | number>> = dates.map(date => {
-    const { display } = snapshotDateToDisplayMonth(date);
-    const point: Record<string, string | number> = { date, display };
+    const { month, display } = snapshotDateToDisplayMonth(date);
+    const point: Record<string, string | number> = { date, month, display };
     for (const [accountId] of secMap) {
       const row = rows.find(r => r.date === date && r.accountId === accountId);
       point[String(accountId)] = row?.balanceBase ?? 0;
@@ -293,7 +293,7 @@ export function getSecuritiesHistoryData(
   }
 
   const pctPoints: Array<Record<string, string | number>> = points.map((p, i) => {
-    const out: Record<string, string | number> = { date: p['date']!, display: p['display']! };
+    const out: Record<string, string | number> = { date: p['date']!, month: p['month']!, display: p['display']! };
     for (const [accountId] of secMap) {
       const key      = String(accountId);
       const firstIdx = firstNonZeroIdx.get(accountId);

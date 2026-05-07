@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { db } from '~/db/client';
 import { BASE_CURRENCY } from '~/constants';
 import { getBalanceSheet, type ReportSection } from '~/services/reports.service';
+import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reports.balance-sheet';
 
 const yearSchema  = z.coerce.number().int().min(2000).max(2100).optional();
@@ -35,10 +36,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
-function fmt(cents: number): string {
-  return (cents / 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function SectionTable({
   section,
   totalLabel,
@@ -47,6 +44,7 @@ function SectionTable({
   totalLabel: string;
 }) {
   const { t } = useTranslation();
+  const { fmtAmount } = useFormat();
   if (section.accounts.length === 0) {
     return <p className="has-text-grey is-size-7">{t('reports.balanceSheet.noData')}</p>;
   }
@@ -62,14 +60,14 @@ function SectionTable({
         {section.accounts.map(a => (
           <tr key={a.id}>
             <td>{a.name} <span className="has-text-grey is-size-7">({a.category})</span></td>
-            <td className="has-text-right">{fmt(a.balanceBase)}</td>
+            <td className="has-text-right">{fmtAmount(a.balanceBase)}</td>
           </tr>
         ))}
       </tbody>
       <tfoot>
         <tr className="bs-total-row">
           <td><strong>{totalLabel}</strong></td>
-          <td className="has-text-right"><strong>{fmt(section.total)}</strong></td>
+          <td className="has-text-right"><strong>{fmtAmount(section.total)}</strong></td>
         </tr>
       </tfoot>
     </table>
@@ -80,6 +78,7 @@ export default function BalanceSheetPage() {
   const { selectedYear, selectedMonthNum, asOfDate, isSnapshot, assets, liabilities, equity, netWorth } =
     useLoaderData<typeof loader>();
   const { t } = useTranslation();
+  const { fmtAmount } = useFormat();
 
   return (
     <section className="section pt-0">
@@ -128,7 +127,7 @@ export default function BalanceSheetPage() {
         <div className={`bs-net-worth-card${netWorth < 0 ? ' is-negative' : ''}`}>
           <span className="bs-net-worth-label">{t('reports.balanceSheet.netWorth')}</span>
           <span className="bs-net-worth-value">
-            {fmt(netWorth)} {BASE_CURRENCY}
+            {fmtAmount(netWorth)} {BASE_CURRENCY}
           </span>
         </div>
         </div>
