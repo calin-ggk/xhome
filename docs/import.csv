@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CSV Import — docs/import.csv
+# Run:  npm run import -- --dry-run docs/import.csv
+#       npm run import -- --env=.env docs/import.csv
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ── CURRENCIES ────────────────────────────────────────────────────────────────
+# entity    , code , name             , symbol , decimal_places , is_base
+currency,RON,Romanian Leu,lei,2,true
+currency,USD,US Dollar,$,2,false
+currency,EUR,Euro,€,2,false
+
+# ── EXCHANGE RATES ────────────────────────────────────────────────────────────
+# entity        , currency_code , date       , rate  (decimal: 1 USD = 4.75 RON)
+exchange_rate,USD,2026-01-01,4.75
+exchange_rate,EUR,2026-01-01,5.12
+
+# ── SECURITIES ───────────────────────────────────────────────────────────────
+# entity   , ticker , name       , currency_code , type  , quantity_scale
+security,AAPL,Apple Inc.,USD,stock,4
+
+# ── ACCOUNTS ─────────────────────────────────────────────────────────────────
+# entity  , name                , type   , account_type , currency_code , category              , is_active , security_ticker
+account,ING Bank RON,debit,simple,RON,asset/bank/ron,true
+account,Revolut USD,debit,simple,USD,asset/bank/usd,true
+account,Revolut EUR,debit,simple,EUR,asset/bank/eur,true
+account,RON Deposit,debit,deposit,RON,asset/deposit/ron,true
+account,AAPL Shares,debit,security,USD,asset/shares/aapl,true,AAPL
+account,Salary,credit,simple,RON,income/salary,true
+account,Interest Income,credit,simple,RON,income/interest,true
+account,Food & Groceries,debit,simple,RON,expense/food,true
+account,Utilities,debit,simple,RON,expense/utilities,true
+account,Opening Balance,credit,simple,RON,equity/opening,true
+
+# ── TAGS ─────────────────────────────────────────────────────────────────────
+# entity , name
+tag,salary
+tag,groceries
+tag,investment
+
+# ── TRANSACTIONS ─────────────────────────────────────────────────────────────
+# transaction , date       , description                   , tags (pipe-separated)
+# entry       , account    , side   , amount  , rate , memo , quantity , interest_rate_pct , maturity_date
+
+# Opening balance
+transaction,2026-01-01,Opening balance
+entry,ING Bank RON,debit,30000.00,1
+entry,Opening Balance,credit,30000.00,1
+
+# FX — buy $3 000 (3000 × 4.75 = 14 250 RON)
+transaction,2026-01-05,FX buy $3000
+entry,Revolut USD,debit,3000.00,4.75
+entry,ING Bank RON,credit,14250.00,1
+
+# Salary
+transaction,2026-01-31,January Salary,salary
+entry,ING Bank RON,debit,7000.00,1
+entry,Salary,credit,7000.00,1
+
+# Groceries
+transaction,2026-01-10,Groceries,groceries
+entry,Food & Groceries,debit,620.00,1
+entry,ING Bank RON,credit,620.00,1
+
+# Utilities
+transaction,2026-01-15,Utilities
+entry,Utilities,debit,380.00,1
+entry,ING Bank RON,credit,380.00,1
+
+# Buy 5 AAPL @ $225 — entry cols: account,side,amount,rate,memo,quantity
+transaction,2026-01-12,Buy 5 AAPL @ $225.00,investment
+entry,AAPL Shares,debit,1125.00,4.75,5 shares @ $225.00,5.0000
+entry,Revolut USD,credit,1125.00,4.75
+
+# Open RON deposit 10 000 @ 4.5% — entry cols: ...,memo,quantity,interest_rate_pct,maturity_date
+transaction,2026-01-20,Open RON deposit 10000 @ 4.5%
+entry,RON Deposit,debit,10000.00,1,,,4.5,2026-07-20
+entry,ING Bank RON,credit,10000.00,1
+
+# Deposit interest (10000 × 4.5% / 12 ≈ 37.50 RON)
+transaction,2026-01-31,Deposit interest
+entry,RON Deposit,debit,37.50,1
+entry,Interest Income,credit,37.50,1

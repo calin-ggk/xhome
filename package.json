@@ -9,7 +9,7 @@
     "typecheck": "react-router typegen && tsc",
     "db:push": "drizzle-kit push",
     "db:push:test": "node --env-file=.env.test ./node_modules/.bin/drizzle-kit push",
-    "seed": "node --experimental-strip-types --env-file=.env.test scripts/seed.ts",
+    "import": "node --experimental-strip-types scripts/import.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
