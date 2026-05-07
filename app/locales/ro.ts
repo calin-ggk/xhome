@@ -1,7 +1,7 @@
 import type { TranslationSchema } from './en';
 
 const ro: TranslationSchema = {
-  financeTracker: 'Gestionar Finanțe',
+  financeTracker: 'X-Home',
   monthPicker: {
     today:       'Astăzi',
     monthsShort: ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -24,7 +24,7 @@ const ro: TranslationSchema = {
     addTransaction: 'Tranzacție',
   },
   footer: {
-    copyright: '© {{year}} Gestionar Finanțe',
+    copyright: '© {{year}} X-Home',
   },
   dashboard: {
     netWorth:           'Avere Netă',

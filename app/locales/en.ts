@@ -1,5 +1,5 @@
 const en = {
-  financeTracker: 'Finance Tracker',
+  financeTracker: 'X-Home',
   monthPicker: {
     today:       'Today',
     monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -22,7 +22,7 @@ const en = {
     addTransaction: 'Transaction',
   },
   footer: {
-    copyright: '© {{year}} Finance Tracker',
+    copyright: '© {{year}} X-Home',
   },
   dashboard: {
     netWorth:          'Net Worth',
