@@ -41,10 +41,6 @@ const en = {
   settings: {
     currencies:       'Currencies',
     currenciesDesc:   'Manage supported currencies',
-    exchangeRates:    'Exchange Rates',
-    exchangeRatesDesc: 'Update FX rates',
-    securities:       'Securities',
-    securitiesDesc:   'Stocks and funds',
     tags:             'Tags',
     tagsDesc:         'Transaction labels',
     preferences:      'Preferences',

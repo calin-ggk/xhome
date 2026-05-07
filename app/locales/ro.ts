@@ -43,10 +43,6 @@ const ro: TranslationSchema = {
   settings: {
     currencies:        'Valute',
     currenciesDesc:    'Gestionează valutele suportate',
-    exchangeRates:     'Cursuri de Schimb',
-    exchangeRatesDesc: 'Actualizează ratele de schimb',
-    securities:        'Titluri de Valoare',
-    securitiesDesc:    'Acțiuni și fonduri',
     tags:              'Etichete',
     tagsDesc:          'Etichete pentru tranzacții',
     preferences:       'Preferințe',

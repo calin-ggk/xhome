@@ -88,5 +88,3 @@
 - [x] **Tags** — list, create, edit, delete.
 - [x] **Preferences** — default report date range and other UI preferences.
 - [x] **Snapshots** — "Generate missing snapshots" UI; manual snapshot management.
-
-> Exchange Rates and Securities settings screens are not required: rates and prices are fetched automatically from Yahoo Finance at snapshot time.
