@@ -3,39 +3,31 @@ import { useState } from 'react';
 import { Link, redirect, useActionData, useLoaderData, useSearchParams, useSubmit } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from '~/components/ConfirmModal';
+import { RangePicker } from '~/components/RangePicker';
 import { db } from '~/db/client';
 import { getTransactionsPageData, deleteTransaction } from '~/services/transaction.service';
+import { computeDateRange } from '~/services/preferences.service';
+import { REPORT_RANGE_OPTIONS, type ReportRange } from '~/schemas/preferences.schema';
 import { deleteTransactionSchema } from '~/schemas/transaction.schema';
 import type { Route } from './+types/_app.transactions._index';
 
-function periodDateFrom(period: string): string | undefined {
-  if (period === '1m') {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  }
-  if (period === '3m') {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 3);
-    return d.toISOString().slice(0, 10);
-  }
-  return undefined;
-}
-
 export async function loader({ request }: Route.LoaderArgs) {
-  const sp     = new URL(request.url).searchParams;
-  const q      = sp.get('q')      || undefined;
-  const period = sp.get('period') || '';
-  const tagRaw = sp.get('tagId');
-  const today  = new Date().toISOString().slice(0, 10);
-  const dateFrom = periodDateFrom(period);
+  const sp      = new URL(request.url).searchParams;
+  const q       = sp.get('q') || undefined;
+  const rawRange = sp.get('range') ?? 'all';
+  const range: ReportRange = (REPORT_RANGE_OPTIONS as readonly string[]).includes(rawRange)
+    ? (rawRange as ReportRange)
+    : 'all';
+  const tagRaw  = sp.get('tagId');
+  const today   = new Date().toISOString().slice(0, 10);
+  const { from, to } = computeDateRange(range, today);
 
   return getTransactionsPageData(
     db,
     {
-      ...(q        ? { q }                              : {}),
-      ...(dateFrom ? { dateFrom, dateTo: today }        : {}),
-      ...(tagRaw   ? { tagId: Number(tagRaw) }          : {}),
+      ...(q    ? { q }                          : {}),
+      ...(from ? { dateFrom: from, dateTo: to! } : {}),
+      ...(tagRaw ? { tagId: Number(tagRaw) }    : {}),
     },
     Math.max(1, parseInt(sp.get('page') ?? '1')),
   );
@@ -83,7 +75,7 @@ export default function TransactionsIndex() {
   const dp   = baseCurrency?.decimalPlaces ?? 2;
   const code = baseCurrency?.code ?? '';
 
-  const hasFilters = ['q', 'period', 'tagId'].some(k => searchParams.has(k));
+  const hasFilters = ['q', 'range', 'tagId'].some(k => searchParams.has(k));
 
   const setFilter = (key: string, value: string) => {
     setSearchParams(prev => {
@@ -114,50 +106,43 @@ export default function TransactionsIndex() {
       <div className="container is-fluid">
 
         {/* Header */}
-        <div className="is-flex is-justify-content-space-between is-align-items-center mb-4">
-          <div className="tx-list-header-left">
-            <h1 className="title is-5 mb-0">{t('transactions.title')}</h1>
-            <div className="tx-filter-row">
-              <input
-                type="text"
-                className="input is-small tx-filter-q"
-                value={qInput}
-                onChange={e => setQInput(e.target.value)}
-                onBlur={applyQ}
-                onKeyDown={e => e.key === 'Enter' && applyQ()}
-                placeholder={t('transactions.filterDesc')}
-              />
+        <div className="mb-4">
+          <h1 className="title is-5 mb-2">{t('transactions.title')}</h1>
+          <div className="tx-filter-row">
+            <input
+              type="text"
+              className="input is-small tx-filter-q"
+              value={qInput}
+              onChange={e => setQInput(e.target.value)}
+              onBlur={applyQ}
+              onKeyDown={e => e.key === 'Enter' && applyQ()}
+              placeholder={t('transactions.filterDesc')}
+            />
+            <RangePicker
+              value={
+                (REPORT_RANGE_OPTIONS as readonly string[]).includes(searchParams.get('range') ?? '')
+                  ? (searchParams.get('range') as ReportRange)
+                  : 'all'
+              }
+              onChange={r => setFilter('range', r === 'all' ? '' : r)}
+            />
+            {filterTags.length > 0 && (
               <div className="select is-small">
                 <select
-                  value={searchParams.get('period') ?? ''}
-                  onChange={e => setFilter('period', e.target.value)}
+                  value={searchParams.get('tagId') ?? ''}
+                  onChange={e => setFilter('tagId', e.target.value)}
                 >
-                  <option value="">{t('transactions.periodAll')}</option>
-                  <option value="1m">{t('transactions.period1m')}</option>
-                  <option value="3m">{t('transactions.period3m')}</option>
+                  <option value="">{t('transactions.allTags')}</option>
+                  {filterTags.map(tag => (
+                    <option key={tag.id} value={tag.id}>{tag.name}</option>
+                  ))}
                 </select>
               </div>
-              {filterTags.length > 0 && (
-                <div className="select is-small">
-                  <select
-                    value={searchParams.get('tagId') ?? ''}
-                    onChange={e => setFilter('tagId', e.target.value)}
-                  >
-                    <option value="">{t('transactions.allTags')}</option>
-                    {filterTags.map(tag => (
-                      <option key={tag.id} value={tag.id}>{tag.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {hasFilters && (
-                <button type="button" className="delete is-small" onClick={clearFilters} />
-              )}
-            </div>
+            )}
+            {hasFilters && (
+              <button type="button" className="delete is-small" onClick={clearFilters} />
+            )}
           </div>
-          <Link to="/transactions/new" className="button is-primary is-small">
-            {t('transactions.newTransaction')}
-          </Link>
         </div>
 
         {actionData?.error && (
