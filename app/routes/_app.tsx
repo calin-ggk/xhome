@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   BarChart2,
+  Calendar,
   Landmark,
   LayoutDashboard,
   LineChart,
@@ -13,6 +14,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  Scale,
   Settings,
   TrendingUp,
 } from 'lucide-react';
@@ -52,6 +54,13 @@ const NAV: NavGroup[] = [
       { to: '/reports/income',        key: 'nav.income',       icon: TrendingUp },
       { to: '/reports/net-worth',     key: 'nav.netWorth',     icon: LineChart },
       { to: '/reports/securities',    key: 'nav.securities',   icon: Activity },
+    ],
+  },
+  {
+    key: 'nav.monthEnd',
+    items: [
+      { to: '/reconcile', key: 'nav.reconcile', icon: Scale },
+      { to: '/snapshots', key: 'nav.snapshots', icon: Calendar },
     ],
   },
   {

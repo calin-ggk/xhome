@@ -7,11 +7,14 @@ const en = {
   },
   nav: {
     main:         'Main',
+    monthEnd:     'Month End',
     accounts:     'Accounts',
     analytics:    'Analytics',
     settings:     'Settings',
     dashboard:    'Dashboard',
     transactions: 'Transactions',
+    reconcile:    'Reconcile',
+    snapshots:    'Snapshots',
     balanceSheet: 'Balance Sheet',
     income:       'Income & Expenses',
     netWorth:     'Net Worth',
@@ -49,8 +52,6 @@ const en = {
     preferencesDesc:  'App preferences',
     configure:        'Configure →',
     backToSettings:   '← Settings',
-    snapshots:        'Snapshots',
-    snapshotsDesc:    'Generate monthly balance snapshots',
   },
   snapshots: {
     title:            'Monthly Snapshots',

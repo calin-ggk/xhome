@@ -91,7 +91,7 @@
 
 ## Phase 9: Month End
 
-- [ ] **Navigation** — Add a **Month End** sidebar group; move Snapshots from `/settings/snapshots` to `/snapshots` and remove it from Settings nav.
+- [x] **Navigation** — Add a **Month End** sidebar group; move Snapshots from `/settings/snapshots` to `/snapshots` and remove it from Settings nav.
 - [ ] **Reconciliation** — `/reconcile` page; see `docs/reconciliation.md` for full spec.
   - Account dropdown + book balance display + real-balance input.
   - Transaction builder: 1 fixed entry (auto-directed, read-only) + N user-added entries (account + amount each, add/remove rows) + 1 auto Reconciliation Account entry filling the remaining gap.

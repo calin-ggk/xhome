@@ -84,4 +84,4 @@ instead of mocking `Date`.
 
 | URL | File | Purpose |
 |---|---|---|
-| `/settings/snapshots` | `_app.settings.snapshots.tsx` | Status, generate button, manual rate form |
+| `/snapshots` | `_app.snapshots.tsx` | Status, generate button, manual rate form |

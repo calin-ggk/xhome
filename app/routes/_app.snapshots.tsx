@@ -1,5 +1,5 @@
-import "./_app.settings.snapshots.css";
-import { Link, useActionData, useLoaderData, useNavigation } from 'react-router';
+import "./_app.snapshots.css";
+import { useActionData, useLoaderData, useNavigation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
 import {
@@ -8,7 +8,7 @@ import {
 } from '~/services/snapshot.service';
 import type { MissingRate, MissingSecurityPrice, ManualRate, ManualSecurityPrice } from '~/services/snapshot.service';
 import { useFormat } from '~/hooks/useFormat';
-import type { Route } from './+types/_app.settings.snapshots';
+import type { Route } from './+types/_app.snapshots';
 
 export async function loader(_: Route.LoaderArgs) {
   return getSnapshotStatus(db);
@@ -83,9 +83,6 @@ export default function SnapshotsPage() {
   return (
     <section className="section pt-0">
       <div className="container is-fluid">
-        <div className="mb-4">
-          <Link to="/settings" className="is-size-7 has-text-grey">{t('settings.backToSettings')}</Link>
-        </div>
         <div className="snapshots-page">
           <h2 className="title is-4">{t('snapshots.title')}</h2>
 

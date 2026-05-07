@@ -9,11 +9,14 @@ const ro: TranslationSchema = {
   },
   nav: {
     main:         'Principal',
+    monthEnd:     'Sfârșit de Lună',
     accounts:     'Conturi',
     analytics:    'Analiză',
     settings:     'Setări',
     dashboard:    'Panou',
     transactions: 'Tranzacții',
+    reconcile:    'Reconciliere',
+    snapshots:    'Instantanee',
     balanceSheet: 'Bilanț',
     income:       'Venituri & Cheltuieli',
     netWorth:     'Avere Netă',
@@ -51,8 +54,6 @@ const ro: TranslationSchema = {
     preferencesDesc:   'Preferințe aplicație',
     configure:         'Configurare →',
     backToSettings:    '← Setări',
-    snapshots:         'Instantanee',
-    snapshotsDesc:     'Generează instantanee lunare de sold',
   },
   snapshots: {
     title:             'Instantanee Lunare',
