@@ -149,9 +149,6 @@ export default function ReconcilePage() {
     setUserEntries(prev => prev.map((e, i) => i === idx ? { ...e, [field]: value } : e));
   }, []);
 
-  const formatBalance = (cents: number, dp: number) =>
-    fmtAmount(cents / Math.pow(10, dp), dp);
-
   const dp = account?.decimalPlaces ?? 2;
 
   return (
@@ -216,7 +213,7 @@ export default function ReconcilePage() {
                     <div>
                       <div className="reconcile-balance-label">{t('reconcile.bookBalance')}</div>
                       <div className="reconcile-balance-value">
-                        {formatBalance(bookBalance, dp)} {account.currencyCode}
+                        {fmtAmount(bookBalance, dp)} {account.currencyCode}
                       </div>
                     </div>
                     <div>
@@ -234,7 +231,7 @@ export default function ReconcilePage() {
                       <div className={`reconcile-balance-value ${diff === null ? '' : diff > 0 ? 'reconcile-diff-positive' : diff < 0 ? 'reconcile-diff-negative' : ''}`}>
                         {diff === null ? '—' : diff === 0
                           ? t('reconcile.noDiff')
-                          : `${diff > 0 ? '+' : ''}${formatBalance(diff, dp)} ${account.currencyCode}`
+                          : `${diff > 0 ? '+' : ''}${fmtAmount(diff, dp)} ${account.currencyCode}`
                         }
                       </div>
                     </div>
@@ -282,7 +279,7 @@ export default function ReconcilePage() {
                               </span>
                             </td>
                             <td className="reconcile-entry-amount">
-                              {formatBalance(Math.abs(diff), dp)} {account.currencyCode}
+                              {fmtAmount(Math.abs(diff), dp)} {account.currencyCode}
                             </td>
                             <td></td>
                           </tr>
@@ -352,7 +349,7 @@ export default function ReconcilePage() {
                                 )}
                               </td>
                               <td className="reconcile-entry-amount">
-                                {formatBalance(autoAmountAbs, dp)} {account.currencyCode}
+                                {fmtAmount(autoAmountAbs, dp)} {account.currencyCode}
                               </td>
                               <td></td>
                             </tr>
