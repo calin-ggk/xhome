@@ -71,9 +71,8 @@ Reconciliation applies to the **monetary value** of the account (balance in acco
 
 | URL | File | Purpose |
 |---|---|---|
-| `/reconcile` | `_app.reconcile.tsx` | Account picker, book balance display, real-balance input, transaction builder |
-
-The page shows a left-panel list of reconcilable accounts (pending/done for today) and a right-panel form. Account selection updates `?account=id` in the URL.
+| `/reconcile` | `_app.reconcile._index.tsx` | List of reconcilable accounts with pending/done status |
+| `/reconcile/:id` | `_app.reconcile.$id.tsx` | Book balance display, real-balance input, transaction builder for the selected account |
 
 ## Sidebar Placement
 

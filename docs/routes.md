@@ -15,6 +15,8 @@ All routes live in `app/routes/` and are registered explicitly in `app/routes.ts
 | `_app.accounts._index.tsx` | `/accounts` | |
 | `_app.accounts.new.tsx` | `/accounts/new` | |
 | `_app.accounts.$id.tsx` | `/accounts/:id` | |
+| `_app.reconcile._index.tsx` | `/reconcile` | |
+| `_app.reconcile.$id.tsx` | `/reconcile/:id` | |
 | `_app.reports.balance-sheet.tsx` | `/reports/balance-sheet` | |
 | `_app.reports.income.tsx` | `/reports/income` | |
 | `_app.reports.net-worth.tsx` | `/reports/net-worth` | |

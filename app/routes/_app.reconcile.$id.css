@@ -1,64 +1,6 @@
-.reconcile-page {
+.reconcile-form-page {
   max-width: 860px;
   margin: 0 auto;
-}
-
-.reconcile-layout {
-  display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-.reconcile-account-panel {
-  width: 240px;
-  flex-shrink: 0;
-}
-
-.reconcile-account-list {
-  border: 1px solid var(--bulma-border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.reconcile-account-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  border-bottom: 1px solid var(--bulma-border);
-  font-size: 0.85rem;
-  text-decoration: none;
-  color: inherit;
-}
-
-.reconcile-account-item:last-child {
-  border-bottom: none;
-}
-
-.reconcile-account-item:hover {
-  background: var(--bulma-scheme-main-ter);
-}
-
-.reconcile-account-item.is-selected {
-  background: var(--bulma-link-light);
-  font-weight: 600;
-}
-
-.reconcile-account-item.is-done {
-  opacity: 0.5;
-}
-
-.reconcile-account-category {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.reconcile-form-panel {
-  flex: 1;
-  min-width: 0;
 }
 
 .reconcile-balance-grid {
