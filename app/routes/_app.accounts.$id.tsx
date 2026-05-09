@@ -24,8 +24,9 @@ export async function action({ request, params }: Route.ActionArgs) {
     accountType: form.get('accountType'),
     currencyId:  form.get('currencyId'),
     category:    form.get('category'),
-    isActive:    form.has('isActive') ? '1' : '0',
-    securityId:  form.get('securityId') || null,
+    isActive:        form.has('isActive') ? '1' : '0',
+    isReconcilable:  form.has('isReconcilable') ? '1' : '0',
+    securityId:      form.get('securityId') || null,
   };
 
   const parsed = accountFormSchema.safeParse(raw);
@@ -167,6 +168,14 @@ export default function EditAccountPage() {
             <div className="control">
               <input type="checkbox" name="isActive" value="1" defaultChecked={account.isActive === 1} />
             </div>
+          </div>
+
+          <div className="field">
+            <label className="label">{t('accounts.formIsReconcilable')}</label>
+            <div className="control">
+              <input type="checkbox" name="isReconcilable" value="1" defaultChecked={account.isReconcilable === 1} />
+            </div>
+            <p className="help">{t('accounts.formIsReconcilableHelp')}</p>
           </div>
 
           <div className="field is-grouped mt-5">

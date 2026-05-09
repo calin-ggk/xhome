@@ -1,0 +1,118 @@
+.reconcile-page {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.reconcile-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.reconcile-account-panel {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.reconcile-account-list {
+  border: 1px solid var(--bulma-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.reconcile-account-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bulma-border);
+  font-size: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.reconcile-account-item:last-child {
+  border-bottom: none;
+}
+
+.reconcile-account-item:hover {
+  background: var(--bulma-scheme-main-ter);
+}
+
+.reconcile-account-item.is-selected {
+  background: var(--bulma-link-light);
+  font-weight: 600;
+}
+
+.reconcile-account-item.is-done {
+  opacity: 0.5;
+}
+
+.reconcile-account-category {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reconcile-form-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.reconcile-balance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reconcile-balance-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bulma-text-weak);
+  margin-bottom: 0.25rem;
+}
+
+.reconcile-balance-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.reconcile-diff-positive {
+  color: var(--bulma-success);
+}
+
+.reconcile-diff-negative {
+  color: var(--bulma-danger);
+}
+
+.reconcile-fixed-row td,
+.reconcile-auto-row td {
+  background: var(--bulma-scheme-main-ter);
+  color: var(--bulma-text-weak);
+}
+
+.reconcile-side-badge {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.reconcile-side-badge.is-debit {
+  background: var(--bulma-info-light);
+  color: var(--bulma-info-dark);
+}
+
+.reconcile-side-badge.is-credit {
+  background: var(--bulma-warning-light);
+  color: var(--bulma-warning-dark);
+}
+
+.reconcile-entry-amount {
+  text-align: right;
+}

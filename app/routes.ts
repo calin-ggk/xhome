@@ -15,6 +15,7 @@ export default [
     route("settings/tags/:id/edit",           "routes/_app.settings.tags.$id.edit.tsx"),
     route("settings/preferences",             "routes/_app.settings.preferences.tsx"),
     route("snapshots",                         "routes/_app.snapshots.tsx"),
+    route("reconcile",                         "routes/_app.reconcile.tsx"),
     route("accounts",           "routes/_app.accounts._index.tsx"),
     route("accounts/new",       "routes/_app.accounts.new.tsx"),
     route("accounts/:id",       "routes/_app.accounts.$id.tsx"),

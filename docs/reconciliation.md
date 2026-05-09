@@ -4,16 +4,22 @@
 
 Reconciliation closes the gap between the **book balance** (sum of recorded entries) and the **real balance** (from a bank statement or broker platform). It produces a single, balanced adjustment transaction.
 
+## Account Eligibility
+
+Only accounts with `is_reconcilable = 1` appear in the reconciliation list. This flag is set per account in the account edit form (defaults to off). Typical candidates: bank accounts, cash accounts. Securities and income/expense accounts are normally excluded.
+
 ## Workflow
 
-1. User selects an account and enters the real balance from their statement (in the account's currency).
+1. The page lists all reconcilable accounts grouped into **pending** (not yet reconciled today) and **done** (already reconciled today, tracked via `reconciliation_log`).
+2. User selects a pending account and enters the real balance from their statement (in the account's currency).
 2. System computes: `diff = real_balance − book_balance` (cents).
-3. If `diff == 0`, nothing to do.
-4. If `diff != 0`, a transaction builder opens with:
+3. System computes: `diff = real_balance − book_balance` (cents).
+4. If `diff == 0`, user clicks **Mark as Reconciled** — a log entry is written with no transaction.
+5. If `diff != 0`, a transaction builder opens with:
    - **Fixed entry** (read-only): the reconciled account for `|diff|` on the correct side.
    - **User entries** (optional): any known missing transactions — account + amount each.
    - **Auto entry** (read-only): the appropriate Reconciliation Account for the remaining gap.
-5. User confirms → a standard double-entry transaction is saved.
+6. User confirms → a standard double-entry transaction is saved and a `reconciliation_log` row is written.
 
 ## Fixed Entry Direction
 
@@ -67,7 +73,7 @@ Reconciliation applies to the **monetary value** of the account (balance in acco
 |---|---|---|
 | `/reconcile` | `_app.reconcile.tsx` | Account picker, book balance display, real-balance input, transaction builder |
 
-The account is selected via a dropdown on the page itself (no sub-route per account).
+The page shows a left-panel list of reconcilable accounts (pending/done for today) and a right-panel form. Account selection updates `?account=id` in the URL.
 
 ## Sidebar Placement
 

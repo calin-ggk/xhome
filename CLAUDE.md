@@ -17,7 +17,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 
 ## Key Entities & Relationships
 
-- **Account:** Central unit linked to a `currency` and optionally a `security`.
+- **Account:** Central unit linked to a `currency` and optionally a `security`. Has `is_reconcilable` flag (default 0) to opt into monthly reconciliation.
 - **Transaction:** Header for a financial event. Has many `transaction_entries`.
 - **Entry:** A single leg linking an `account` to a `side` (debit/credit) and an `amount`.
 - **Tags:** Many-to-many relationship with `transactions` for cross-cutting tracking.

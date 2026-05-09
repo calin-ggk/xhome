@@ -41,8 +41,9 @@ export const accounts = sqliteTable('accounts', {
   accountType:  text('account_type').notNull(), // 'simple' | 'deposit' | 'security'
   currencyId:   integer('currency_id').notNull().references(() => currencies.id),
   category:     text('category').notNull().unique(), // e.g. "asset/bank/revolut"
-  isActive:     integer('is_active').notNull().default(1),
-  securityId:   integer('security_id').references(() => securities.id), // security subtype only
+  isActive:         integer('is_active').notNull().default(1),
+  isReconcilable:   integer('is_reconcilable').notNull().default(0),
+  securityId:       integer('security_id').references(() => securities.id), // security subtype only
 }, t => [
   index('idx_accounts_category').on(t.category),
   check('chk_security_has_id',    sql`${t.accountType} != 'security' OR ${t.securityId} IS NOT NULL`),
@@ -95,7 +96,18 @@ export const accountMonthlySnapshots = sqliteTable('account_monthly_snapshots', 
   balanceBase: integer('balance_base').notNull(),
 }, t => [uniqueIndex('snapshots_account_date').on(t.accountId, t.date)]);
 
-// 7. User Preferences
+// 7. Reconciliation Log
+
+export const reconciliationLog = sqliteTable('reconciliation_log', {
+  id:            integer('id').primaryKey(),
+  accountId:     integer('account_id').notNull().references(() => accounts.id),
+  date:          text('date').notNull(),          // YYYY-MM-DD
+  transactionId: integer('transaction_id').references(() => transactions.id),
+  bookBalance:   integer('book_balance').notNull(),
+  realBalance:   integer('real_balance').notNull(),
+}, t => [uniqueIndex('reconciliation_log_account_date').on(t.accountId, t.date)]);
+
+// 8. User Preferences
 
 export const userPreferences = sqliteTable('user_preferences', {
   id:                 integer('id').primaryKey(),
@@ -121,3 +133,5 @@ export type Tag                   = typeof tags.$inferSelect;
 export type InsertTag             = typeof tags.$inferInsert;
 export type AccountMonthlySnapshot     = typeof accountMonthlySnapshots.$inferSelect;
 export type InsertAccountMonthlySnapshot = typeof accountMonthlySnapshots.$inferInsert;
+export type ReconciliationLog          = typeof reconciliationLog.$inferSelect;
+export type InsertReconciliationLog    = typeof reconciliationLog.$inferInsert;

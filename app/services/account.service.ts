@@ -72,8 +72,9 @@ export function createAccount(
       accountType: data.accountType,
       currencyId:  data.currencyId,
       category:    data.category,
-      isActive:    data.isActive ?? 1,
-      securityId:  data.securityId ?? null,
+      isActive:        data.isActive ?? 1,
+      isReconcilable:  data.isReconcilable ?? 0,
+      securityId:      data.securityId ?? null,
     });
     logger.info({ event: 'account.created', id: account.id, category: data.category });
     return { ok: true, data: account };
@@ -99,8 +100,9 @@ export function updateAccount(
       accountType: data.accountType,
       currencyId:  data.currencyId,
       category:    data.category,
-      isActive:    data.isActive ?? 1,
-      securityId:  data.securityId ?? null,
+      isActive:        data.isActive ?? 1,
+      isReconcilable:  data.isReconcilable ?? 0,
+      securityId:      data.securityId ?? null,
     });
     logger.info({ event: 'account.updated', id });
     return { ok: true, data: account! };

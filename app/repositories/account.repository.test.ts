@@ -28,7 +28,9 @@ const DDL = `
     id INTEGER PRIMARY KEY, name TEXT NOT NULL,
     type TEXT NOT NULL, account_type TEXT NOT NULL,
     currency_id INTEGER NOT NULL, category TEXT NOT NULL UNIQUE,
-    is_active INTEGER NOT NULL DEFAULT 1, security_id INTEGER
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_reconcilable INTEGER NOT NULL DEFAULT 0,
+    security_id INTEGER
   );
   CREATE TABLE transaction_entries (
     id INTEGER PRIMARY KEY,
@@ -58,8 +60,8 @@ describe('getAllAccounts', () => {
   it('returns accounts sorted by category ascending', () => {
     const { db, sqlite } = makeDb();
     sqlite.exec(`
-      INSERT INTO accounts VALUES (1, 'Salary', 'credit', 'simple', 1, 'income/salary', 1, NULL);
-      INSERT INTO accounts VALUES (2, 'Bank',   'debit',  'simple', 1, 'asset/bank',    1, NULL);
+      INSERT INTO accounts VALUES (1, 'Salary', 'credit', 'simple', 1, 'income/salary', 1, 0, NULL);
+      INSERT INTO accounts VALUES (2, 'Bank',   'debit',  'simple', 1, 'asset/bank',    1, 0, NULL);
     `);
     const rows = getAllAccounts(db);
     expect(rows.map(r => r.category)).toEqual(['asset/bank', 'income/salary']);
@@ -67,21 +69,21 @@ describe('getAllAccounts', () => {
 
   it('joins currency code correctly', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, NULL)`);
+    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, 0, NULL)`);
     const [row] = getAllAccounts(db);
     expect(row?.currencyCode).toBe('RON');
   });
 
   it('returns null securityTicker for non-security accounts', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, NULL)`);
+    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, 0, NULL)`);
     const [row] = getAllAccounts(db);
     expect(row?.securityTicker).toBeNull();
   });
 
   it('joins security ticker when security_id is set', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Apple', 'debit', 'security', 2, 'asset/shares/aapl', 1, 1)`);
+    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Apple', 'debit', 'security', 2, 'asset/shares/aapl', 1, 0, 1)`);
     const [row] = getAllAccounts(db);
     expect(row?.securityTicker).toBe('AAPL');
   });
@@ -95,7 +97,7 @@ describe('getAccountById', () => {
 
   it('returns the account with joined currency code', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, NULL)`);
+    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Bank', 'debit', 'simple', 1, 'asset/bank', 1, 0, NULL)`);
     const row = getAccountById(db, 1);
     expect(row).toBeDefined();
     expect(row?.name).toBe('Bank');
@@ -105,7 +107,7 @@ describe('getAccountById', () => {
 
   it('returns security ticker for security accounts', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Apple', 'debit', 'security', 2, 'asset/shares/aapl', 1, 1)`);
+    sqlite.exec(`INSERT INTO accounts VALUES (1, 'Apple', 'debit', 'security', 2, 'asset/shares/aapl', 1, 0, 1)`);
     const row = getAccountById(db, 1);
     expect(row?.securityTicker).toBe('AAPL');
   });

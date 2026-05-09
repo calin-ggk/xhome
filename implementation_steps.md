@@ -92,9 +92,11 @@
 ## Phase 9: Month End
 
 - [x] **Navigation** — Add a **Month End** sidebar group; move Snapshots from `/settings/snapshots` to `/snapshots` and remove it from Settings nav.
-- [ ] **Reconciliation** — `/reconcile` page; see `docs/reconciliation.md` for full spec.
-  - Account dropdown + book balance display + real-balance input.
+- [x] **Reconciliation** — `/reconcile` page; see `docs/reconciliation.md` for full spec.
+  - `is_reconcilable` boolean on accounts (default 0); toggled in account edit form.
+  - Left panel: reconcilable accounts with pending/done status for today (tracked via `reconciliation_log` table).
   - Book balance = last snapshot balance + sum of entries since snapshot date (full sum if no snapshot).
-  - Transaction builder: 1 fixed entry (auto-directed, read-only) + N user-added entries (account + amount each, add/remove rows) + 1 auto Reconciliation Account entry filling the remaining gap.
+  - Transaction builder: 1 fixed entry (auto-directed, read-only) + N user-added entries + 1 auto Reconciliation Account entry filling the remaining gap.
+  - diff == 0 → Mark as Reconciled (log entry, no transaction); diff != 0 → save double-entry transaction + log entry.
   - Auto-create `equity/reconciliation-surplus` and `equity/reconciliation-deficit` on first use (both equity, credit-normal).
-  - Save produces a standard double-entry transaction.
+  - Exchange rates fetched from Yahoo Finance if not already stored for today.

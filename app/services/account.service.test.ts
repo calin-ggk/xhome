@@ -12,7 +12,7 @@ vi.mock('~/repositories/account.repository');
 
 const mockAccount = {
   id: 1, name: 'Bank', type: 'debit' as const, accountType: 'simple' as const,
-  currencyId: 1, category: 'asset/bank', isActive: 1, securityId: null,
+  currencyId: 1, category: 'asset/bank', isActive: 1, isReconcilable: 0, securityId: null,
 };
 
 function makeRow(category: string): AccountListRow {
@@ -53,7 +53,7 @@ describe('getAccountsPageData', () => {
 describe('createAccount', () => {
   const data = {
     name: 'Bank', type: 'debit' as const, accountType: 'simple' as const,
-    currencyId: 1, category: 'asset/bank', isActive: 1, securityId: null,
+    currencyId: 1, category: 'asset/bank', isActive: 1, isReconcilable: 0, securityId: null,
   };
 
   it('returns ok:true on success', () => {
@@ -81,7 +81,7 @@ describe('createAccount', () => {
 describe('updateAccount', () => {
   const data = {
     name: 'Bank', type: 'debit' as const, accountType: 'simple' as const,
-    currencyId: 1, category: 'asset/bank', isActive: 1, securityId: null,
+    currencyId: 1, category: 'asset/bank', isActive: 1, isReconcilable: 0, securityId: null,
   };
 
   it('returns ok:false with not-found error when account does not exist', () => {

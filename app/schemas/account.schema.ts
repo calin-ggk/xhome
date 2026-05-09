@@ -12,7 +12,8 @@ export const accountFormSchema = z.object({
     /^[a-z]+(?:\/[a-z0-9_-]+)+$/,
     'Use lowercase slash-separated segments, e.g. asset/bank/revolut',
   ),
-  isActive:    z.coerce.number().int().min(0).max(1).default(1),
+  isActive:         z.coerce.number().int().min(0).max(1).default(1),
+  isReconcilable:   z.coerce.number().int().min(0).max(1).default(0),
   securityId:  z.coerce.number().int().positive().nullable().optional(),
 }).superRefine((data, ctx) => {
   if (data.accountType === 'security' && !data.securityId) {

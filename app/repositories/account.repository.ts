@@ -47,16 +47,17 @@ export function getAccountById(
 ): AccountDetailRow | undefined {
   const row = db
     .select({
-      id:             accounts.id,
-      name:           accounts.name,
-      type:           accounts.type,
-      accountType:    accounts.accountType,
-      currencyId:     accounts.currencyId,
-      category:       accounts.category,
-      isActive:       accounts.isActive,
-      securityId:     accounts.securityId,
-      currencyCode:   currencies.code,
-      securityTicker: securities.ticker,
+      id:              accounts.id,
+      name:            accounts.name,
+      type:            accounts.type,
+      accountType:     accounts.accountType,
+      currencyId:      accounts.currencyId,
+      category:        accounts.category,
+      isActive:        accounts.isActive,
+      isReconcilable:  accounts.isReconcilable,
+      securityId:      accounts.securityId,
+      currencyCode:    currencies.code,
+      securityTicker:  securities.ticker,
     })
     .from(accounts)
     .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
