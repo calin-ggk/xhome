@@ -1,5 +1,6 @@
 import "./_app.snapshots.css";
 import { useActionData, useLoaderData, useNavigation } from 'react-router';
+import { AmountInput } from '~/components/AmountInput';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
 import {
@@ -138,11 +139,9 @@ export default function SnapshotsPage() {
                                 <td>{r.currencyCode}</td>
                                 <td>{fmtMonthLong(snapshotToMonthKey(r.snapshotDate))}</td>
                                 <td>
-                                  <input
+                                  <AmountInput
                                     className="input is-small snapshot-rate-input"
-                                    type="number"
-                                    step="0.0001"
-                                    min="0.0001"
+                                    decimals={4}
                                     name={`rate_${r.currencyId}_${r.snapshotDate}`}
                                     required
                                   />
@@ -171,11 +170,9 @@ export default function SnapshotsPage() {
                                 <td>{p.ticker}</td>
                                 <td>{fmtMonthLong(snapshotToMonthKey(p.snapshotDate))}</td>
                                 <td>
-                                  <input
+                                  <AmountInput
                                     className="input is-small snapshot-rate-input"
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
+                                    decimals={2}
                                     name={`price_${p.securityId}_${p.snapshotDate}`}
                                     required
                                   />

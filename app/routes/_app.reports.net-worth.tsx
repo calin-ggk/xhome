@@ -1,4 +1,5 @@
 import "./_app.reports.net-worth.css";
+import { AmountInput } from '~/components/AmountInput';
 import { useLoaderData, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -130,7 +131,7 @@ export default function NetWorthHistoryPage() {
                       <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: BASE_CURRENCY })}</label>
                     </div>
                     <div className="field-body">
-                      <input className="input is-small" style={{ maxWidth: '10rem' }} type="number" step="0.0001" min="0.0001" name={`rate_${r.currencyId}`} required />
+                      <AmountInput className="input is-small manual-rate-input" decimals={4} name={`rate_${r.currencyId}`} required />
                     </div>
                   </div>
                 ))}
@@ -140,7 +141,7 @@ export default function NetWorthHistoryPage() {
                       <label className="label">{t('reports.live.priceLabel', { ticker: p.ticker })}</label>
                     </div>
                     <div className="field-body">
-                      <input className="input is-small" style={{ maxWidth: '10rem' }} type="number" step="0.01" min="0.01" name={`price_${p.securityId}`} required />
+                      <AmountInput className="input is-small manual-rate-input" decimals={2} name={`price_${p.securityId}`} required />
                     </div>
                   </div>
                 ))}

@@ -43,9 +43,6 @@
 .tx-side-buttons { display: flex; gap: 0; }
 .tx-side-buttons .button { font-size: 0.75rem; padding: 0 0.5rem; }
 
-.tx-entries-table input[type="number"] {
-  text-align: right;
-}
 
 .tx-balance-bar {
   display: flex;

@@ -2,6 +2,7 @@ import './TransactionForm.css';
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { AmountInput } from '~/components/AmountInput';
 import { ConfirmModal } from '~/components/ConfirmModal';
 import type { AccountOption, ExchangeRateRow, TagOption, BaseCurrency } from '~/repositories/transaction.repository';
 import type { TransactionDetail } from '~/repositories/transaction.repository';
@@ -425,39 +426,30 @@ export function TransactionForm({
                             </div>
                           </td>
                           <td className="tx-col-amount">
-                            <input
+                            <AmountInput
                               className="input is-small"
-                              type="number"
-                              min="0"
-                              step="0.01"
+                              decimals={account?.currencyDecimalPlaces ?? 2}
                               value={entry.amountStr}
-                              onChange={e => handleAmountChange(entry.key, e.target.value)}
-                              placeholder="0.00"
+                              onChange={v => handleAmountChange(entry.key, v)}
                             />
                           </td>
                           <td className="tx-col-rate">
-                            <input
+                            <AmountInput
                               className="input is-small"
-                              type="number"
-                              min="0"
-                              step="any"
+                              decimals={4}
                               value={isBase ? '1' : entry.rateStr}
-                              onChange={e => handleRateChange(entry.key, e.target.value)}
+                              onChange={v => handleRateChange(entry.key, v)}
                               disabled={isBase}
-                              placeholder={isBase ? '1' : ''}
                             />
                           </td>
                           <td className="tx-col-base">
-                            <input
+                            <AmountInput
                               className="input is-small"
-                              type="number"
-                              min="0"
-                              step="0.01"
+                              decimals={baseDp}
                               value={isBase ? entry.amountStr : entry.baseAmountStr}
-                              onChange={e => isBase
-                                ? handleAmountChange(entry.key, e.target.value)
-                                : handleBaseAmountChange(entry.key, e.target.value)}
-                              placeholder={`0.${'0'.repeat(baseDp)}`}
+                              onChange={v => isBase
+                                ? handleAmountChange(entry.key, v)
+                                : handleBaseAmountChange(entry.key, v)}
                             />
                           </td>
                           <td className="tx-col-memo">
@@ -470,26 +462,20 @@ export function TransactionForm({
                             />
                           </td>
                           <td className="tx-col-qty">
-                            <input
+                            <AmountInput
                               className="input is-small"
-                              type="number"
-                              min="0"
-                              step="any"
+                              decimals={6}
                               value={entry.quantityStr}
-                              onChange={e => patchEntry(entry.key, { quantityStr: e.target.value })}
-                              placeholder={account?.accountType === 'security' ? '0' : ''}
+                              onChange={v => patchEntry(entry.key, { quantityStr: v })}
                               disabled={account?.accountType !== 'security'}
                             />
                           </td>
                           <td className="tx-col-int">
-                            <input
+                            <AmountInput
                               className="input is-small"
-                              type="number"
-                              min="0"
-                              step="0.01"
+                              decimals={2}
                               value={entry.interestRatePct}
-                              onChange={e => patchEntry(entry.key, { interestRatePct: e.target.value })}
-                              placeholder={account?.accountType === 'deposit' ? '%' : ''}
+                              onChange={v => patchEntry(entry.key, { interestRatePct: v })}
                               disabled={account?.accountType !== 'deposit'}
                             />
                           </td>

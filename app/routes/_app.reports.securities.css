@@ -41,3 +41,7 @@
 .sec-color-5 { background-color: #FFC107; }
 .sec-color-6 { background-color: #8B5CF6; }
 .sec-color-7 { background-color: #27AE60; }
+
+.manual-rate-input {
+  max-width: 10rem;
+}

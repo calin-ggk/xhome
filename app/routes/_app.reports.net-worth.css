@@ -40,3 +40,7 @@
 .nw-summary-box--negative .nw-summary-value {
   color: #dc2626;
 }
+
+.manual-rate-input {
+  max-width: 10rem;
+}

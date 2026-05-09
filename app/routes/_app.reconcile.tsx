@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { db } from '~/db/client';
 import { getReconciliationPageData, saveReconciliation } from '~/services/reconciliation.service';
 import type { AccountOption, UserEntry } from '~/services/reconciliation.service';
+import { AmountInput } from '~/components/AmountInput';
 import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reconcile';
 
@@ -220,13 +221,11 @@ export default function ReconcilePage() {
                     </div>
                     <div>
                       <div className="reconcile-balance-label">{t('reconcile.realBalance')}</div>
-                      <input
+                      <AmountInput
                         className="input"
-                        type="number"
-                        step={`${Math.pow(10, -dp).toFixed(dp)}`}
-                        placeholder={`0.${'0'.repeat(dp)}`}
+                        decimals={dp}
                         value={realBalanceInput}
-                        onChange={e => setRealBalanceInput(e.target.value)}
+                        onChange={setRealBalanceInput}
                       />
                       <p className="help">{t('reconcile.realBalanceHelp')}</p>
                     </div>
@@ -319,15 +318,12 @@ export default function ReconcilePage() {
                                 </div>
                               </td>
                               <td>
-                                <input
+                                <AmountInput
                                   className="input is-small"
-                                  type="number"
+                                  decimals={dp}
                                   name={`entry_${idx}_amount`}
-                                  step={`${Math.pow(10, -dp).toFixed(dp)}`}
-                                  min="0"
                                   value={e.amount}
-                                  onChange={ev => updateUserEntry(idx, 'amount', ev.target.value)}
-                                  style={{ textAlign: 'right' }}
+                                  onChange={v => updateUserEntry(idx, 'amount', v)}
                                 />
                               </td>
                               <td>
