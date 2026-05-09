@@ -1,12 +1,12 @@
 import "./_app.reports.net-worth.css";
 import { AmountInput } from '~/components/AmountInput';
-import { useLoaderData, useNavigate } from 'react-router';
+import { useLoaderData, useNavigate, useOutletContext } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/constants';
+import type { AppOutletContext } from './_app';
 import { getNetWorthByCurrencyData, type ManualLiveRate, type ManualLivePrice } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
@@ -67,6 +67,7 @@ function pctTickFmt(v: number): string {
 
 export default function NetWorthHistoryPage() {
   const { currencies, points, liveStatus, range } = useLoaderData<typeof loader>();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
   const { fmtAmount, fmtMonth, locale } = useFormat();
@@ -101,7 +102,7 @@ export default function NetWorthHistoryPage() {
 
   const tooltipFmtAbs = (value: unknown) =>
     typeof value === 'number'
-      ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
+      ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${baseCurrencyCode}`
       : '';
 
   const tooltipFmtPct = (value: unknown) =>
@@ -128,7 +129,7 @@ export default function NetWorthHistoryPage() {
                 {liveStatus.missingRates.map(r => (
                   <div key={r.currencyId} className="field is-horizontal mb-2">
                     <div className="field-label is-small" style={{ flexBasis: '12rem', flexGrow: 0 }}>
-                      <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: BASE_CURRENCY })}</label>
+                      <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: baseCurrencyCode })}</label>
                     </div>
                     <div className="field-body">
                       <AmountInput className="input is-small manual-rate-input" decimals={4} name={`rate_${r.currencyId}`} required />
@@ -155,7 +156,7 @@ export default function NetWorthHistoryPage() {
           ) : (
             <>
               <div className="box mb-4">
-                <p className="nw-chart-label">{t('reports.netWorth.chartAbsolute', { currency: BASE_CURRENCY })}</p>
+                <p className="nw-chart-label">{t('reports.netWorth.chartAbsolute', { currency: baseCurrencyCode })}</p>
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={absData} margin={{ top: 8, right: 16, bottom: 4, left: 16 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -208,7 +209,7 @@ export default function NetWorthHistoryPage() {
                 <div className={`nw-summary-box${latest.total < 0 ? ' nw-summary-box--negative' : ''}`}>
                   <span className="nw-summary-label">{t('reports.netWorth.latest')}</span>
                   <span className="nw-summary-value">
-                    {fmtAmount(latest.total)} {BASE_CURRENCY}
+                    {fmtAmount(latest.total)} {baseCurrencyCode}
                   </span>
                 </div>
               )}

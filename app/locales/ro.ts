@@ -201,6 +201,7 @@ const ro: TranslationSchema = {
     confirmDelete:        'Ștergi valuta "{{code}}"?',
     cannotDeleteBase:     'Nu se poate șterge valuta de bază.',
     cannotDeleteUsed:     'Nu se poate șterge o valută utilizată.',
+    cannotChangeBase:     'Valuta de bază nu poate fi schimbată după ce au fost înregistrate tranzacții.',
     notFound:             'Valuta nu a fost găsită.',
     duplicateCode:        'Există deja o valută cu acest cod.',
     formCode:             'Cod',

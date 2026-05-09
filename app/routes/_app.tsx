@@ -20,16 +20,18 @@ import {
 } from 'lucide-react';
 import type { Route } from './+types/_app';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/constants';
 import { getSession } from '~/session.server';
 import { getNetWorth } from '~/services/dashboard.service';
+import { getBaseCurrency } from '~/services/currency.service';
 import { LANG_KEY } from '~/i18n';
 import { useFormat } from '~/hooks/useFormat';
+
+export type AppOutletContext = { baseCurrencyCode: string };
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get('Cookie'));
   if (!session.get('authenticated')) throw redirect('/login');
-  return { netWorth: getNetWorth(db) };
+  return { netWorth: getNetWorth(db), baseCurrencyCode: getBaseCurrency(db)?.code ?? '' };
 }
 
 type NavItem  = { to: string; key: string; icon: LucideIcon; end?: boolean };
@@ -70,7 +72,7 @@ const NAV: NavGroup[] = [
 ];
 
 export default function AppLayout() {
-  const { netWorth } = useLoaderData<typeof loader>();
+  const { netWorth, baseCurrencyCode } = useLoaderData<typeof loader>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
@@ -98,7 +100,7 @@ export default function AppLayout() {
         <span className="app-title">{headerTitle}</span>
         <span className="app-net-worth">
           {t('header.netWorth')}:{' '}
-          <strong className="has-text-white">{fmtAmount(netWorth)} {BASE_CURRENCY}</strong>
+          <strong className="has-text-white">{fmtAmount(netWorth)} {baseCurrencyCode}</strong>
         </span>
         <button type="button" className="app-btn-lang" onClick={toggleLang}>
           {i18n.language.startsWith('ro') ? 'EN' : 'RO'}
@@ -146,7 +148,7 @@ export default function AppLayout() {
         </aside>
 
         <main className="app-main">
-          <Outlet />
+          <Outlet context={{ baseCurrencyCode } satisfies AppOutletContext} />
         </main>
       </div>
 

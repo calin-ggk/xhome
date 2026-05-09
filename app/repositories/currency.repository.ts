@@ -63,6 +63,12 @@ export function isUsedByExchangeRates(
   return (row?.n ?? 0) > 0;
 }
 
+export function getBaseCurrency(
+  db: BetterSQLite3Database<typeof schema>,
+): Currency | null {
+  return db.select().from(currencies).where(eq(currencies.isBase, 1)).get() ?? null;
+}
+
 export function clearAllBaseCurrencies(
   db: BetterSQLite3Database<typeof schema>,
 ): void {

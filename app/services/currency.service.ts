@@ -3,6 +3,7 @@ import type * as schema from '~/db/schema';
 import type { Currency } from '~/db/schema';
 import type { CurrencyFormData } from '~/schemas/currency.schema';
 import * as repo from '~/repositories/currency.repository';
+import { hasAnyTransactions } from '~/repositories/transaction.repository';
 import { logger } from '~/lib/logger';
 
 type CurrencyResult = { ok: true } | { ok: false; error: string };
@@ -18,6 +19,12 @@ export function getCurrencyById(
   id: number,
 ): Currency | undefined {
   return repo.getCurrencyById(db, id);
+}
+
+export function getBaseCurrency(
+  db: BetterSQLite3Database<typeof schema>,
+): Currency | null {
+  return repo.getBaseCurrency(db);
 }
 
 export function createCurrency(
@@ -91,6 +98,7 @@ export function setBaseCurrency(
 ): CurrencyResult {
   const existing = repo.getCurrencyById(db, id);
   if (!existing) return { ok: false, error: 'currencies.notFound' };
+  if (hasAnyTransactions(db)) return { ok: false, error: 'currencies.cannotChangeBase' };
   repo.clearAllBaseCurrencies(db);
   repo.setBaseCurrencyFlag(db, id);
   logger.info({ event: 'currency.base.set', id, code: existing.code });

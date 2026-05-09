@@ -199,6 +199,7 @@ const en = {
     confirmDelete:        'Delete currency "{{code}}"?',
     cannotDeleteBase:     'Cannot delete the base currency.',
     cannotDeleteUsed:     'Cannot delete a currency that is in use.',
+    cannotChangeBase:     'Cannot change the base currency after transactions have been recorded.',
     notFound:             'Currency not found.',
     duplicateCode:        'A currency with this code already exists.',
     formCode:             'Code',

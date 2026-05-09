@@ -1,11 +1,11 @@
 import "./_app.reports.income.css";
 import { useState } from 'react';
-import { useLoaderData, useSearchParams, useNavigate } from 'react-router';
+import { useLoaderData, useSearchParams, useNavigate, useOutletContext } from 'react-router';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/constants';
+import type { AppOutletContext } from './_app';
 import { getIncomeStatement, type ReportSection, type SpendingNode } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
@@ -29,6 +29,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 function SectionTable({ section, totalLabel }: { section: ReportSection; totalLabel: string }) {
   const { t } = useTranslation();
   const { fmtAmount } = useFormat();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   if (section.accounts.length === 0) {
     return <p className="has-text-grey is-size-7">{t('reports.income.noData')}</p>;
   }
@@ -37,7 +38,7 @@ function SectionTable({ section, totalLabel }: { section: ReportSection; totalLa
       <thead>
         <tr>
           <th>{t('reports.income.account')}</th>
-          <th className="has-text-right">{t('reports.income.amount', { currency: BASE_CURRENCY })}</th>
+          <th className="has-text-right">{t('reports.income.amount', { currency: baseCurrencyCode })}</th>
         </tr>
       </thead>
       <tbody>
@@ -116,6 +117,7 @@ function ChartView({
 }) {
   const { t } = useTranslation();
   const { fmtAmount } = useFormat();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const [drillStack, setDrillStack] = useState<DrillItem[]>([{ kind: 'top' }]);
   const current = drillStack[drillStack.length - 1]!;
 
@@ -182,7 +184,7 @@ function ChartView({
           </Pie>
           <Tooltip
             formatter={(value: unknown) =>
-              typeof value === 'number' ? [`${fmtAmount(value)} ${BASE_CURRENCY}`, ''] : ''
+              typeof value === 'number' ? [`${fmtAmount(value)} ${baseCurrencyCode}`, ''] : ''
             }
           />
         </PieChart>
@@ -220,6 +222,7 @@ function ChartView({
 export default function IncomeStatementPage() {
   const { income, expenses, netIncome, incomeTree, expensesTree, range } =
     useLoaderData<typeof loader>();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const { t }      = useTranslation();
   const navigate   = useNavigate();
   const { fmtAmount } = useFormat();
@@ -274,7 +277,7 @@ export default function IncomeStatementPage() {
               {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
             </span>
             <span className="is-net-value">
-              {fmtAmount(Math.abs(netIncome))} {BASE_CURRENCY}
+              {fmtAmount(Math.abs(netIncome))} {baseCurrencyCode}
             </span>
           </div>
 

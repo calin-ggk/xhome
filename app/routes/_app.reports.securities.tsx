@@ -1,14 +1,14 @@
 import "./_app.reports.securities.css";
 import { useState } from 'react';
 import { AmountInput } from '~/components/AmountInput';
-import { useLoaderData, useNavigate } from 'react-router';
+import { useLoaderData, useNavigate, useOutletContext } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import {
   CartesianGrid, Legend, Line, LineChart,
   ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/constants';
+import type { AppOutletContext } from './_app';
 import { getSecuritiesHistoryData, type ManualLiveRate, type ManualLivePrice } from '~/services/reports.service';
 import { getPreferences, computeDateRange, type ReportRange } from '~/services/preferences.service';
 import { REPORT_RANGE_OPTIONS } from '~/schemas/preferences.schema';
@@ -63,6 +63,7 @@ function pctTickFmt(v: number): string {
 
 export default function SecuritiesHistoryPage() {
   const { securities, points, pctPoints, liveStatus, range } = useLoaderData<typeof loader>();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
   const { fmtAmount, fmtMonth, locale } = useFormat();
@@ -114,7 +115,7 @@ export default function SecuritiesHistoryPage() {
                 {liveStatus.missingRates.map(r => (
                   <div key={r.currencyId} className="field is-horizontal mb-2">
                     <div className="field-label is-small" style={{ flexBasis: '12rem', flexGrow: 0 }}>
-                      <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: BASE_CURRENCY })}</label>
+                      <label className="label">{t('reports.live.rateLabel', { code: r.currencyCode, base: baseCurrencyCode })}</label>
                     </div>
                     <div className="field-body">
                       <AmountInput className="input is-small manual-rate-input" decimals={4} name={`rate_${r.currencyId}`} required />
@@ -163,7 +164,7 @@ export default function SecuritiesHistoryPage() {
                   <Tooltip
                     formatter={(value, name) =>
                       typeof value === 'number'
-                        ? [`${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`, name as string]
+                        ? [`${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${baseCurrencyCode}`, name as string]
                         : ['', name as string]
                     }
                   />

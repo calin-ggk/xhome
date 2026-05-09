@@ -12,9 +12,9 @@ import type { Route } from './+types/_app.reconcile.$id';
 
 export async function loader({ params }: Route.LoaderArgs) {
   const id   = Number(params.id);
-  const data = getReconciliationPageData(db, isFinite(id) ? id : undefined);
-  if (!data.selected) throw new Response('Not Found', { status: 404 });
-  return data;
+  const { selected, ...rest } = getReconciliationPageData(db, isFinite(id) ? id : undefined);
+  if (!selected) throw new Response('Not Found', { status: 404 });
+  return { ...rest, selected };
 }
 
 const EntrySchema = z.object({

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   accounts, currencies, exchangeRates, tags,
@@ -358,4 +358,11 @@ export function deleteTransaction(
   id: number,
 ): void {
   db.delete(transactions).where(eq(transactions.id, id)).run();
+}
+
+export function hasAnyTransactions(
+  db: BetterSQLite3Database<typeof schema>,
+): boolean {
+  const row = db.select({ n: count() }).from(transactions).get();
+  return (row?.n ?? 0) > 0;
 }

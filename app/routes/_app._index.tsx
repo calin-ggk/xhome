@@ -1,8 +1,8 @@
 import "./_app._index.css";
-import { useLoaderData } from 'react-router';
+import { useLoaderData, useOutletContext } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { BASE_CURRENCY } from '~/constants';
+import type { AppOutletContext } from './_app';
 import { db } from '~/db/client';
 import { getDashboardData } from '~/services/dashboard.service';
 import { useFormat } from '~/hooks/useFormat';
@@ -14,6 +14,7 @@ export async function loader(_: Route.LoaderArgs) {
 
 export default function Dashboard() {
   const { netWorth, currentMonth, recentTransactions, cashFlow } = useLoaderData<typeof loader>();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const { t } = useTranslation();
   const { fmtAmount, fmtShortMonth, fmtDate, locale } = useFormat();
 
@@ -31,26 +32,26 @@ export default function Dashboard() {
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.netWorth')}</p>
-              <p className="dash-card-value dash-card-value--teal">{fmtAmount(netWorth)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--teal">{fmtAmount(netWorth)} {baseCurrencyCode}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.incomeThisMonth')}</p>
-              <p className="dash-card-value dash-card-value--green">{fmtAmount(currentMonth.income)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--green">{fmtAmount(currentMonth.income)} {baseCurrencyCode}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.expensesThisMonth')}</p>
-              <p className="dash-card-value dash-card-value--orange">{fmtAmount(currentMonth.expenses)} {BASE_CURRENCY}</p>
+              <p className="dash-card-value dash-card-value--orange">{fmtAmount(currentMonth.expenses)} {baseCurrencyCode}</p>
             </div>
           </div>
           <div className="column">
             <div className="dash-card">
               <p className="dash-card-label">{t('dashboard.netThisMonth')}</p>
               <p className={`dash-card-value ${currentMonth.net >= 0 ? 'dash-card-value--green' : 'dash-card-value--red'}`}>
-                {fmtAmount(currentMonth.net)} {BASE_CURRENCY}
+                {fmtAmount(currentMonth.net)} {baseCurrencyCode}
               </p>
             </div>
           </div>
@@ -68,7 +69,7 @@ export default function Dashboard() {
                     <tr>
                       <th>{t('dashboard.date')}</th>
                       <th>{t('dashboard.description')}</th>
-                      <th className="has-text-right">{t('dashboard.amount', { currency: BASE_CURRENCY })}</th>
+                      <th className="has-text-right">{t('dashboard.amount', { currency: baseCurrencyCode })}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -95,7 +96,7 @@ export default function Dashboard() {
                   <Tooltip
                     formatter={(value) =>
                       typeof value === 'number'
-                        ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${BASE_CURRENCY}`
+                        ? `${value.toLocaleString(locale, { minimumFractionDigits: 2 })} ${baseCurrencyCode}`
                         : ''
                     }
                   />

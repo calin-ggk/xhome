@@ -1,10 +1,10 @@
 import "./_app.reports.balance-sheet.css";
-import { useLoaderData } from 'react-router';
+import { useLoaderData, useOutletContext } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { MonthPicker } from '~/components/MonthPicker';
 import { z } from 'zod';
 import { db } from '~/db/client';
-import { BASE_CURRENCY } from '~/constants';
+import type { AppOutletContext } from './_app';
 import { getBalanceSheet, type ReportSection } from '~/services/reports.service';
 import { useFormat } from '~/hooks/useFormat';
 import type { Route } from './+types/_app.reports.balance-sheet';
@@ -45,6 +45,7 @@ function SectionTable({
 }) {
   const { t } = useTranslation();
   const { fmtAmount } = useFormat();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   if (section.accounts.length === 0) {
     return <p className="has-text-grey is-size-7">{t('reports.balanceSheet.noData')}</p>;
   }
@@ -53,7 +54,7 @@ function SectionTable({
       <thead>
         <tr>
           <th>{t('reports.balanceSheet.account')}</th>
-          <th className="has-text-right">{t('reports.balanceSheet.amount', { currency: BASE_CURRENCY })}</th>
+          <th className="has-text-right">{t('reports.balanceSheet.amount', { currency: baseCurrencyCode })}</th>
         </tr>
       </thead>
       <tbody>
@@ -77,6 +78,7 @@ function SectionTable({
 export default function BalanceSheetPage() {
   const { selectedYear, selectedMonthNum, asOfDate, isSnapshot, assets, liabilities, equity, netWorth } =
     useLoaderData<typeof loader>();
+  const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
   const { t } = useTranslation();
   const { fmtAmount } = useFormat();
 
@@ -127,7 +129,7 @@ export default function BalanceSheetPage() {
         <div className={`bs-net-worth-card${netWorth < 0 ? ' is-negative' : ''}`}>
           <span className="bs-net-worth-label">{t('reports.balanceSheet.netWorth')}</span>
           <span className="bs-net-worth-value">
-            {fmtAmount(netWorth)} {BASE_CURRENCY}
+            {fmtAmount(netWorth)} {baseCurrencyCode}
           </span>
         </div>
         </div>
