@@ -54,6 +54,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 ## UX
 
 **Forms (Create/Edit):**
+- Use `app/components/AmountInput.tsx` for all numeric financial inputs: transaction amounts, exchange rates, and security quantities.
 - The **back link** (`← Feature`) sits outside the centered block, left-aligned inside `container is-fluid`.
 - Form content wraps in `.<feature>-form-page` with `max-width` + `margin: 0 auto` to center horizontally.
 - **Button group** (`field is-grouped`) uses `justify-content: center` so Save/Cancel sit at the horizontal center.
