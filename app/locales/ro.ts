@@ -223,6 +223,7 @@ const ro: TranslationSchema = {
     currency:              'Valută',
     type:                  'Tip',
     quantityScale:         'Zecimale Cant.',
+    quantity:              'Cantitate',
     actions:               'Acțiuni',
     edit:                  'Editează',
     delete:                'Șterge',
@@ -353,9 +354,10 @@ const ro: TranslationSchema = {
       chartPct:      '% Variație',
     },
     securities: {
-      title:   'Istoricul Titlurilor de Valoare',
-      noData:  'Nu există date de instantaneu pentru titluri de valoare.',
+      title:    'Istoricul Titlurilor de Valoare',
+      noData:   'Nu există date de instantaneu pentru titluri de valoare.',
       chartPct: '% variație față de începutul perioadei',
+      quantity: 'Portofoliu Curent',
     },
     live: {
       fetchFailed: 'Nu s-au putut obține cursurile/prețurile automat. Te rugăm să le introduci mai jos.',

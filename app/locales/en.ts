@@ -221,6 +221,7 @@ const en = {
     currency:              'Currency',
     type:                  'Type',
     quantityScale:         'Qty Scale',
+    quantity:              'Quantity',
     actions:               'Actions',
     edit:                  'Edit',
     delete:                'Delete',
@@ -351,9 +352,10 @@ const en = {
       chartPct:      '% Change',
     },
     securities: {
-      title:   'Securities History',
-      noData:  'No security snapshot data available.',
+      title:    'Securities History',
+      noData:   'No security snapshot data available.',
       chartPct: '% change from period start',
+      quantity: 'Current Holdings',
     },
     live: {
       fetchFailed: 'Could not fetch current rates/prices automatically. Please enter them below.',

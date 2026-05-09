@@ -89,6 +89,8 @@ export type SecurityLine = {
   ticker: string;
   securityName: string;
   label: string;
+  netQuantity: number;
+  quantityScale: number;
 };
 
 export type SecuritiesHistoryData = {
@@ -513,15 +515,21 @@ export async function getSecuritiesHistoryData(
   const rows = [...baseRows, ...liveRows];
   if (rows.length === 0) return { ...noData, liveStatus };
 
+  const liveQuantities = getLiveSecurityQuantities(db, today);
+  const quantityMap = new Map(liveQuantities.map(q => [q.accountId, q]));
+
   const secMap = new Map<number, SecurityLine>();
   for (const r of rows) {
     if (!secMap.has(r.accountId)) {
+      const lq = quantityMap.get(r.accountId);
       secMap.set(r.accountId, {
         accountId: r.accountId,
         accountName: r.accountName,
         ticker: r.ticker,
         securityName: r.securityName,
         label: `${r.ticker} (${r.accountName})`,
+        netQuantity: lq?.netQuantity ?? 0,
+        quantityScale: lq?.quantityScale ?? 0,
       });
     }
   }

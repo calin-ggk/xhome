@@ -65,7 +65,7 @@ export default function SecuritiesHistoryPage() {
   const { securities, points, pctPoints, liveStatus, range } = useLoaderData<typeof loader>();
   const { t }    = useTranslation();
   const navigate = useNavigate();
-  const { fmtMonth, locale } = useFormat();
+  const { fmtAmount, fmtMonth, locale } = useFormat();
 
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(securities.map(s => s.accountId)),
@@ -228,6 +228,30 @@ export default function SecuritiesHistoryPage() {
                     })}
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+
+            <div className="box">
+              <p className="is-size-7 has-text-weight-semibold mb-2">{t('reports.securities.quantity')}</p>
+              <table className="table is-narrow is-fullwidth is-size-7">
+                <thead>
+                  <tr>
+                    <th>{t('securities.ticker')}</th>
+                    <th>{t('securities.name')}</th>
+                    <th className="has-text-right">{t('securities.quantity')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {securities.map(sec => (
+                    <tr key={sec.accountId}>
+                      <td>{sec.ticker}</td>
+                      <td>{sec.accountName}</td>
+                      <td className="has-text-right">
+                        {fmtAmount(sec.netQuantity, sec.quantityScale)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
           )}
