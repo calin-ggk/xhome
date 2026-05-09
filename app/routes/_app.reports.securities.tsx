@@ -230,7 +230,7 @@ export default function SecuritiesHistoryPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="box">
+            {securities.some(sec => sec.netQuantity !== 0) && <div className="box">
               <p className="is-size-7 has-text-weight-semibold mb-2">{t('reports.securities.quantity')}</p>
               <table className="table is-narrow is-fullwidth is-size-7">
                 <thead>
@@ -241,7 +241,7 @@ export default function SecuritiesHistoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {securities.map(sec => (
+                  {securities.filter(sec => sec.netQuantity !== 0).map(sec => (
                     <tr key={sec.accountId}>
                       <td>{sec.ticker}</td>
                       <td>{sec.accountName}</td>
@@ -252,7 +252,7 @@ export default function SecuritiesHistoryPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </div>}
           </>
           )}
 
