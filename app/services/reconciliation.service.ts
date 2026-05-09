@@ -113,21 +113,14 @@ export async function saveReconciliation(
   const fixedSide = deriveFixedSide(account.type, diff);
   const fixedAmount = Math.abs(diff);
   const fixedAmountBase = toBase(fixedAmount, rate);
-  const fixedSigned = toSigned(fixedAmount, fixedSide);
 
-  // User entries
+  // Determine auto side using original-currency sign (rates are always positive so sign is preserved)
+  const fixedSigned = toSigned(fixedAmount, fixedSide);
   const userSigned = input.userEntries.reduce(
     (sum, e) => sum + toSigned(e.amount, e.side),
     0,
   );
-
-  const autoSigned = -(fixedSigned + userSigned);
-  if (autoSigned === 0 && input.userEntries.length > 0) {
-    // User entries fully explain the diff — still need a balanced transaction
-  }
-
-  const autoSide: 'debit' | 'credit' = autoSigned >= 0 ? 'debit' : 'credit';
-  const autoAmount = Math.abs(autoSigned);
+  const autoSide: 'debit' | 'credit' = (fixedSigned + userSigned) <= 0 ? 'debit' : 'credit';
 
   // Auto-create the appropriate reconciliation account
   const reconCategory = autoSide === 'credit'
@@ -160,10 +153,17 @@ export async function saveReconciliation(
     });
   }
 
+  // Auto entry balances in base currency (recon account is always in base currency)
+  const userSignedBase = userEntryRows.reduce(
+    (sum, e) => sum + toSigned(e.amountBase, e.side),
+    0,
+  );
+  const autoAmountBase = Math.abs(toSigned(fixedAmountBase, fixedSide) + userSignedBase);
+
   const entries: repo.EntryInput[] = [
     { accountId: input.accountId, side: fixedSide, amount: fixedAmount, amountBase: fixedAmountBase },
     ...userEntryRows,
-    { accountId: reconAccount.id, side: autoSide, amount: autoAmount, amountBase: autoAmount },
+    { accountId: reconAccount.id, side: autoSide, amount: autoAmountBase, amountBase: autoAmountBase },
   ];
 
   try {
