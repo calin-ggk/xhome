@@ -12,7 +12,7 @@ Reconciliation closes the gap between the **book balance** (sum of recorded entr
 4. If `diff != 0`, a transaction builder opens with:
    - **Fixed entry** (read-only): the reconciled account for `|diff|` on the correct side.
    - **User entries** (optional): any known missing transactions — account + amount each.
-   - **Auto entry** (read-only): the Reconciliation Account for the remaining gap.
+   - **Auto entry** (read-only): the appropriate Reconciliation Account for the remaining gap.
 5. User confirms → a standard double-entry transaction is saved.
 
 ## Fixed Entry Direction
@@ -34,16 +34,28 @@ reconciliation_amount = diff − Σ(signed user-entry amounts)
 
 Each user entry has a sign: debits are positive for debit accounts, negative for credit accounts (same convention as the balance calculation). The Reconciliation Account entry always equals whatever is left to zero out the transaction.
 
-## The Reconciliation Account
+## The Reconciliation Accounts
 
-- Auto-created on first use: `equity/reconciliation`, named **"Reconciliation Adjustments"**, credit-normal.
-- Its growing balance represents the total of unresolved discrepancies across all reconciliations.
-- Users can inspect it in the Accounts list or on the Balance Sheet to understand accumulated adjustments.
-- No user configuration required.
+Two equity (credit-normal) accounts absorb unresolved discrepancies, kept separate so equal-and-opposite adjustments across different reconciliations don't cancel each other out:
+
+| Account | Category | Used when |
+|---|---|---|
+| **Reconciliation Surplus** | `equity/reconciliation-surplus` | `diff > 0` — real balance exceeds book (unexplained gain) |
+| **Reconciliation Deficit** | `equity/reconciliation-deficit` | `diff < 0` — real balance is below book (unexplained loss) |
+
+- Both are auto-created on first use; no user configuration required.
+- A debit balance on the deficit account (or credit on the surplus account) is expected and normal.
+- Users can inspect either account in the Accounts list or on the Balance Sheet to understand accumulated unresolved discrepancies.
 
 ## Book Balance Calculation
 
-`book_balance` is the live running balance of the account up to and including today, computed from all transaction entries (same logic used in the account detail view). It is shown alongside the real-balance input so the user can see both at a glance.
+`book_balance` is computed as:
+
+```
+book_balance = last_snapshot_balance + Σ(entries since snapshot date)
+```
+
+If no snapshot exists for the account, all entries are summed from scratch. It is shown alongside the real-balance input so the user can see both at a glance.
 
 ## Share Accounts
 

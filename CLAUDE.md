@@ -79,5 +79,5 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Accounts Module:** `docs/accounts.md` (entity shape, category paths, routes, delete constraint, ConfirmModal pattern).
 - **Localisation:** `docs/localization.md` (useFormat hook, pure helpers, form-input caveat).
 - **REST API:** `docs/api.md` (endpoints, auth, request/response shapes, error reference). The web app is the source of truth — the REST API is a read-only projection of it. Whenever a service or data shape changes, update the API route and `docs/api.md` to match.
-- **Reconciliation Module:** `docs/reconciliation.md` (workflow, fixed-entry direction, reconciliation account, routes).
+- **Reconciliation Module:** `docs/reconciliation.md` (workflow, fixed-entry direction, two reconciliation accounts surplus/deficit, snapshot-based book balance, routes).
 - **Plan:** `implementation_steps.md`
