@@ -89,6 +89,7 @@ const en = {
     subtype:      'Subtype',
     currency:     'Currency',
     active:       'Active',
+    reconcilable: 'Rec.',
     actions:      'Actions',
     edit:         'Edit',
     delete:       'Delete',

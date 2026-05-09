@@ -11,6 +11,7 @@ export type AccountListRow = {
   accountType: string;
   category: string;
   isActive: number;
+  isReconcilable: number;
   currencyCode: string;
   securityTicker: string | null;
 };
@@ -30,8 +31,9 @@ export function getAllAccounts(
       type:           accounts.type,
       accountType:    accounts.accountType,
       category:       accounts.category,
-      isActive:       accounts.isActive,
-      currencyCode:   currencies.code,
+      isActive:        accounts.isActive,
+      isReconcilable:  accounts.isReconcilable,
+      currencyCode:    currencies.code,
       securityTicker: securities.ticker,
     })
     .from(accounts)

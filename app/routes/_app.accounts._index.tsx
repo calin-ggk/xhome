@@ -79,30 +79,32 @@ export default function AccountsIndex() {
         {visibleGroups.length === 0 ? (
           <p className="has-text-grey is-size-7">{t('accounts.empty')}</p>
         ) : (
-          visibleGroups.map(({ prefix, accounts }) => (
-            <div key={prefix}>
-              <p className="accounts-group-label">{t(`accounts.group${capitalize(prefix)}`, { defaultValue: prefix })}</p>
-              <table className="table is-fullwidth is-hoverable is-size-7 mb-4">
-                <thead>
-                  <tr>
-                    <th>{t('accounts.category')}</th>
-                    <th>{t('accounts.name')}</th>
-                    <th>{t('accounts.type')}</th>
-                    <th>{t('accounts.subtype')}</th>
-                    <th>{t('accounts.currency')}</th>
-                    <th>{t('accounts.active')}</th>
-                    <th className="has-text-right">{t('accounts.actions')}</th>
+          <table className="table is-fullwidth is-hoverable is-size-7">
+            <thead>
+              <tr>
+                <th>{t('accounts.name')}</th>
+                <th>{t('accounts.category')}</th>
+                <th>{t('accounts.type')}</th>
+                <th>{t('accounts.currency')}</th>
+                <th className="has-text-centered">{t('accounts.reconcilable')}</th>
+                <th className="has-text-centered">{t('accounts.active')}</th>
+                <th className="has-text-right">{t('accounts.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleGroups.map(({ prefix, accounts }) => (
+                <>
+                  <tr key={`group-${prefix}`} className="accounts-group-row">
+                    <td colSpan={7}>{t(`accounts.group${capitalize(prefix)}`, { defaultValue: prefix })}</td>
                   </tr>
-                </thead>
-                <tbody>
                   {accounts.map(account => (
                     <tr key={account.id} className={account.isActive ? '' : 'accounts-row-inactive'}>
-                      <td>{formatCategory(account.category)}</td>
                       <td>{account.name}</td>
-                      <td>{account.type}</td>
-                      <td>{account.accountType}</td>
+                      <td>{formatCategory(account.category)}</td>
+                      <td>{account.type} · {account.accountType}</td>
                       <td>{account.currencyCode}{account.securityTicker ? ` / ${account.securityTicker}` : ''}</td>
-                      <td>{account.isActive ? '✓' : '—'}</td>
+                      <td className="has-text-centered">{account.isReconcilable ? '✓' : '—'}</td>
+                      <td className="has-text-centered">{account.isActive ? '✓' : '—'}</td>
                       <td className="has-text-right">
                         <Link to={`/accounts/${account.id}`} className="button is-small is-light mr-1">
                           {t('accounts.edit')}
@@ -117,10 +119,10 @@ export default function AccountsIndex() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ))
+                </>
+              ))}
+            </tbody>
+          </table>
         )}
 
       </div>

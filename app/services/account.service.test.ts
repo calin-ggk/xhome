@@ -16,7 +16,7 @@ const mockAccount = {
 };
 
 function makeRow(category: string): AccountListRow {
-  return { id: 1, name: 'X', type: 'debit', accountType: 'simple', category, isActive: 1, currencyCode: 'RON', securityTicker: null };
+  return { id: 1, name: 'X', type: 'debit', accountType: 'simple', category, isActive: 1, isReconcilable: 0, currencyCode: 'RON', securityTicker: null };
 }
 
 beforeEach(() => { vi.resetAllMocks(); });

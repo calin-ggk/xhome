@@ -91,6 +91,7 @@ const ro: TranslationSchema = {
     subtype:      'Subtip',
     currency:     'Valută',
     active:       'Activ',
+    reconcilable: 'Rec.',
     actions:      'Acțiuni',
     edit:         'Editează',
     delete:       'Șterge',
