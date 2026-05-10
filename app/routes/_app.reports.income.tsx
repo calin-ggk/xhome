@@ -108,17 +108,18 @@ function nodesToSlices(nodes: SpendingNode[]): PieSlice[] {
 }
 
 function ChartView({
-  income, expenses, incomeTree, expensesTree,
+  income, expenses, incomeTree, expensesTree, drillStack, setDrillStack,
 }: {
   income: ReportSection;
   expenses: ReportSection;
   incomeTree: SpendingNode[];
   expensesTree: SpendingNode[];
+  drillStack: DrillItem[];
+  setDrillStack: (fn: (prev: DrillItem[]) => DrillItem[]) => void;
 }) {
   const { t } = useTranslation();
   const { fmtAmount } = useFormat();
   const { baseCurrencyCode } = useOutletContext<AppOutletContext>();
-  const [drillStack, setDrillStack] = useState<DrillItem[]>([{ kind: 'top' }]);
   const current = drillStack[drillStack.length - 1]!;
 
   const topSlices = (): PieSlice[] => {
@@ -227,8 +228,12 @@ export default function IncomeStatementPage() {
   const navigate   = useNavigate();
   const { fmtAmount } = useFormat();
   const [searchParams] = useSearchParams();
-  const view  = searchParams.get('view') === 'chart' ? 'chart' : 'table';
+  const [drillStack, setDrillStack] = useState<DrillItem[]>([{ kind: 'top' }]);
+  const view  = searchParams.get('view') === 'table' ? 'table' : 'chart';
   const isLoss = netIncome < 0;
+
+  const drillCurrent = drillStack[drillStack.length - 1]!;
+  const isChartDrilled = view === 'chart' && drillCurrent.kind === 'drilled';
 
   return (
     <section className="section pt-0">
@@ -245,17 +250,17 @@ export default function IncomeStatementPage() {
               <div className="is-view-toggle">
                 <button
                   type="button"
-                  className={`is-view-btn${view === 'table' ? ' is-active' : ''}`}
-                  onClick={() => navigate(`?range=${range}&view=table`)}
-                >
-                  {t('reports.income.viewTable')}
-                </button>
-                <button
-                  type="button"
                   className={`is-view-btn${view === 'chart' ? ' is-active' : ''}`}
                   onClick={() => navigate(`?range=${range}&view=chart`)}
                 >
                   {t('reports.income.viewChart')}
+                </button>
+                <button
+                  type="button"
+                  className={`is-view-btn${view === 'table' ? ' is-active' : ''}`}
+                  onClick={() => navigate(`?range=${range}&view=table`)}
+                >
+                  {t('reports.income.viewTable')}
                 </button>
               </div>
             </div>
@@ -269,17 +274,28 @@ export default function IncomeStatementPage() {
               expenses={expenses}
               incomeTree={incomeTree}
               expensesTree={expensesTree}
+              drillStack={drillStack}
+              setDrillStack={setDrillStack}
             />
           )}
 
-          <div className={`is-net-card${isLoss ? ' is-loss' : ''}`}>
-            <span className="is-net-label">
-              {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
-            </span>
-            <span className="is-net-value">
-              {fmtAmount(Math.abs(netIncome))} {baseCurrencyCode}
-            </span>
-          </div>
+          {isChartDrilled ? (
+            <div className="is-net-card">
+              <span className="is-net-label">{drillCurrent.label}</span>
+              <span className="is-net-value">
+                {fmtAmount(drillCurrent.nodes.reduce((s, n) => s + n.amount, 0))} {baseCurrencyCode}
+              </span>
+            </div>
+          ) : (
+            <div className={`is-net-card${isLoss ? ' is-loss' : ''}`}>
+              <span className="is-net-label">
+                {isLoss ? t('reports.income.netLoss') : t('reports.income.netIncome')}
+              </span>
+              <span className="is-net-value">
+                {fmtAmount(Math.abs(netIncome))} {baseCurrencyCode}
+              </span>
+            </div>
+          )}
 
         </div>
       </div>
