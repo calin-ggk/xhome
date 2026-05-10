@@ -8,9 +8,10 @@ services:
     environment:
       DATABASE_URL: /app/var/finance.db
       BASE_CURRENCY: EUR
-      AUTH_USERNAME: ${AUTH_USERNAME}
-      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH}
-      SESSION_SECRET: ${SESSION_SECRET}
-      API_KEY: ${API_KEY:-}
-    command: sh -c "npm run db:push && npm run seed:demo && npm run start"
+      AUTH_USERNAME: ${AUTH_USERNAME:-admin}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH:-$2b$12$IGca16Ruz/2X1yHLIGSB4.xRcNZ33QvtHTrBpYnGV4pNvMk/33Yt.}
+      SESSION_SECRET: ${SESSION_SECRET:-change-this-secret-for-production-use}
+      API_KEY: ${API_KEY:-xhome-demo-api-key}
+
+    command: sh -c "[ -f /app/var/finance.db ] || (npm run db:push -- --force && ./node_modules/.bin/tsx seed/demo.ts); npm run start"
     restart: unless-stopped
