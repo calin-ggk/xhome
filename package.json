@@ -12,6 +12,7 @@
     "import": "node --experimental-strip-types scripts/import.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "seed:init": "node --env-file=.env ./node_modules/.bin/tsx seed/init.ts .env",
     "seed:demo": "node --env-file=.env ./node_modules/.bin/tsx seed/demo.ts .env"
   },
   "dependencies": {
