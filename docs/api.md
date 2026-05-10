@@ -47,6 +47,7 @@ Returns the flat list of all accounts (all account types, active and inactive).
 | `accountType` | `"simple"` \| `"deposit"` \| `"security"` | |
 | `category` | string | Slash-separated path, e.g. `asset/bank/revolut` |
 | `isActive` | `0` \| `1` | |
+| `isReconcilable` | `0` \| `1` | Opted into monthly reconciliation |
 | `currencyCode` | string | ISO 4217 code |
 | `securityTicker` | string \| null | Set only for `security` accounts |
 
@@ -73,6 +74,7 @@ Create an account.
 | `currencyId` | yes | Foreign key to currencies |
 | `category` | yes | Lowercase slash-separated, e.g. `asset/bank/revolut` |
 | `isActive` | no | Default `1` |
+| `isReconcilable` | no | Default `0` |
 | `securityId` | required when `accountType=security` | Foreign key to securities |
 
 **Responses:** `201 Created`, `409 Conflict` (duplicate category), `422 Unprocessable Entity`
@@ -162,7 +164,7 @@ Create a transaction. Entries must balance (`sum(debit base) == sum(credit base)
 ### `GET /api/v1/transactions/:id`
 Get a transaction with all its entries and tag IDs.
 
-**Response `data`:** Transaction header + `entries[]` (each entry includes `currencyCode`, `currencyDecimalPlaces`, `isBaseCurrency`) + `tagIds[]`
+**Response `data`:** Transaction header + `entries[]` (each entry includes `currencyCode`, `currencyDecimalPlaces`) + `tagIds[]`
 
 **Responses:** `200`, `404`
 
@@ -183,7 +185,7 @@ Delete a transaction and all its entries.
 ### `GET /api/v1/currencies`
 Returns all currencies.
 
-**Response `data`:** `Currency[]` — `{ id, code, name, symbol, decimalPlaces, isBase }`
+**Response `data`:** `Currency[]` — `{ id, code, name, symbol, decimalPlaces }`
 
 ### `POST /api/v1/currencies`
 Create a currency.
@@ -199,11 +201,7 @@ Create a currency.
 **Responses:** `200`, `404`
 
 ### `PUT /api/v1/currencies/:id`
-Update currency details. To set as the base currency instead, pass `{ "isBase": true }`:
-
-```json
-{ "isBase": true }
-```
+Update currency details. Same body shape as POST.
 
 **Responses:** `200`, `409`, `422`
 
