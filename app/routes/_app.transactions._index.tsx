@@ -4,6 +4,7 @@ import { Link, redirect, useActionData, useLoaderData, useSearchParams, useSubmi
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from '~/components/ConfirmModal';
 import { RangePicker } from '~/components/RangePicker';
+import { TagPicker } from '~/components/TagPicker';
 import { db } from '~/db/client';
 import { getTransactionsPageData, deleteTransaction } from '~/services/transaction.service';
 import { computeDateRange } from '~/services/preferences.service';
@@ -71,7 +72,6 @@ export default function TransactionsIndex() {
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; description: string | null } | null>(null);
-
   const [qInput, setQInput] = useState(searchParams.get('q') ?? '');
 
   const dp   = baseCurrency?.decimalPlaces ?? 2;
@@ -129,17 +129,12 @@ export default function TransactionsIndex() {
               onChange={r => setFilter('range', r === 'all' ? '' : r)}
             />
             {filterTags.length > 0 && (
-              <div className="select is-small">
-                <select
-                  value={searchParams.get('tagId') ?? ''}
-                  onChange={e => setFilter('tagId', e.target.value)}
-                >
-                  <option value="">{t('transactions.allTags')}</option>
-                  {filterTags.map(tag => (
-                    <option key={tag.id} value={tag.id}>{tag.name}</option>
-                  ))}
-                </select>
-              </div>
+              <TagPicker
+                tags={filterTags}
+                value={Number(searchParams.get('tagId')) || null}
+                allLabel={t('transactions.allTags')}
+                onChange={id => setFilter('tagId', id ? String(id) : '')}
+              />
             )}
             {hasFilters && (
               <button type="button" className="delete is-small" onClick={clearFilters} />
@@ -189,6 +184,9 @@ export default function TransactionsIndex() {
                     <td className="has-text-right">
                       <Link to={`/transactions/${tx.id}`} className="button is-small is-light mr-1">
                         {t('transactions.edit')}
+                      </Link>
+                      <Link to={`/transactions/new?copyFromId=${tx.id}`} className="button is-small is-light mr-1">
+                        {t('transactions.repeat')}
                       </Link>
                       <button
                         type="button"

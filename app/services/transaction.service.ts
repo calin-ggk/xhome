@@ -67,6 +67,13 @@ export function getEditTransactionFormData(
   };
 }
 
+export function getTransactionForRepeat(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+): TransactionDetail | null {
+  return repo.getTransactionById(db, id);
+}
+
 // ── Mutations ────────────────────────────────────────────────────────────────
 
 export function createTransaction(

@@ -151,6 +151,7 @@ const en = {
     cancel:           'Cancel',
     delete:           'Delete',
     edit:             'Edit',
+    repeat:           'Repeat',
     empty:            'No transactions yet.',
     entriesCount:     'Entries',
     totalBase:        'Total ({{code}})',

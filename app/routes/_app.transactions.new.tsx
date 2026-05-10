@@ -1,14 +1,32 @@
 import { redirect, useActionData, useLoaderData } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { db } from '~/db/client';
-import { getNewTransactionFormData, createTransaction } from '~/services/transaction.service';
+import { getNewTransactionFormData, getTransactionForRepeat, createTransaction } from '~/services/transaction.service';
 import { transactionFormSchema } from '~/schemas/transaction.schema';
 import { TransactionForm } from '~/components/TransactionForm';
 import type { Route } from './+types/_app.transactions.new';
 
-export async function loader(_: Route.LoaderArgs) {
-  const today = new Date().toISOString().slice(0, 10);
-  return { ...getNewTransactionFormData(db), initialValues: { date: today, description: '', tagIds: [], entries: [] } };
+export async function loader({ request }: Route.LoaderArgs) {
+  const today    = new Date().toISOString().slice(0, 10);
+  const formData = getNewTransactionFormData(db);
+  const copyId   = Number(new URL(request.url).searchParams.get('copyFromId') ?? '');
+
+  if (copyId) {
+    const source = getTransactionForRepeat(db, copyId);
+    if (source) {
+      return {
+        ...formData,
+        initialValues: {
+          date:        today,
+          description: source.description ?? '',
+          tagIds:      source.tagIds,
+          entries:     source.entries,
+        },
+      };
+    }
+  }
+
+  return { ...formData, initialValues: { date: today, description: '', tagIds: [], entries: [] } };
 }
 
 export async function action({ request }: Route.ActionArgs) {

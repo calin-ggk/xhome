@@ -153,6 +153,7 @@ const ro: TranslationSchema = {
     cancel:           'Anulează',
     delete:           'Șterge',
     edit:             'Editează',
+    repeat:           'Repetă',
     empty:            'Nicio tranzacție.',
     entriesCount:     'Linii',
     totalBase:        'Total ({{code}})',

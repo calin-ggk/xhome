@@ -4,6 +4,7 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  getTransactionForRepeat,
 } from './transaction.service';
 import type { AccountOption } from '~/repositories/transaction.repository';
 
@@ -139,5 +140,19 @@ describe('deleteTransaction', () => {
     const result = deleteTransaction({} as never, 1);
     expect(result).toEqual({ ok: true, data: undefined });
     expect(repo.deleteTransaction).toHaveBeenCalledWith(expect.anything(), 1);
+  });
+});
+
+describe('getTransactionForRepeat', () => {
+  it('returns transaction when found', () => {
+    const detail = { ...mockTx, entries: [], tagIds: [] } as never;
+    vi.mocked(repo.getTransactionById).mockReturnValue(detail);
+    expect(getTransactionForRepeat({} as never, 1)).toBe(detail);
+    expect(repo.getTransactionById).toHaveBeenCalledWith(expect.anything(), 1);
+  });
+
+  it('returns null when transaction not found', () => {
+    vi.mocked(repo.getTransactionById).mockReturnValue(null);
+    expect(getTransactionForRepeat({} as never, 999)).toBeNull();
   });
 });
