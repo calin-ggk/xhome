@@ -99,16 +99,6 @@ export function findAccountByCategory(
     .get() ?? null;
 }
 
-export function getBaseCurrency(
-  db: BetterSQLite3Database<typeof schema>,
-): { id: number; code: string; decimalPlaces: number } | null {
-  return db
-    .select({ id: currencies.id, code: currencies.code, decimalPlaces: currencies.decimalPlaces })
-    .from(currencies)
-    .where(eq(currencies.isBase, 1))
-    .get() ?? null;
-}
-
 export function getStoredExchangeRate(
   db: BetterSQLite3Database<typeof schema>,
   currencyId: number,

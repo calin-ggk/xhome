@@ -39,14 +39,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
       return Response.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    const bodyObj = body as Record<string, unknown>;
-
-    if (bodyObj['isBase'] === true) {
-      const result = svc.setBaseCurrency(db, id);
-      if (!result.ok) return Response.json({ error: result.error }, { status: 409 });
-      return Response.json({ data: null });
-    }
-
     const parsed = currencyFormSchema.safeParse(body);
     if (!parsed.success) {
       return Response.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });

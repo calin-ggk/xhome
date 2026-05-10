@@ -15,7 +15,15 @@ const DDL = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
+  );
+  CREATE TABLE exchange_rates (
+    id INTEGER PRIMARY KEY,
+    currency_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    rate INTEGER NOT NULL,
+    rate_scale INTEGER NOT NULL DEFAULT 4,
+    UNIQUE(currency_id, date)
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -43,8 +51,7 @@ const DDL = `
     id INTEGER PRIMARY KEY,
     account_id INTEGER NOT NULL,
     date TEXT NOT NULL,
-    balance INTEGER NOT NULL,
-    balance_base INTEGER NOT NULL
+    balance INTEGER NOT NULL
   );
 `;
 
@@ -52,7 +59,7 @@ function createTestDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1);
+    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2);
     INSERT INTO accounts VALUES (1, 'Bank',    'debit',  'simple', 1, 'asset/bank/main',       1, NULL);
     INSERT INTO accounts VALUES (2, 'Loan',    'credit', 'simple', 1, 'liability/loan/main',   1, NULL);
     INSERT INTO accounts VALUES (3, 'Opening', 'credit', 'simple', 1, 'equity/opening-balance',1, NULL);
@@ -73,13 +80,13 @@ describe('hasSnapshotForDate', () => {
 
   it('returns true when a snapshot exists for the date', () => {
     const { db, sqlite } = createTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000, 100000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000)`);
     expect(hasSnapshotForDate(db, '2024-02-01')).toBe(true);
   });
 
   it('returns false for a different snapshot date', () => {
     const { db, sqlite } = createTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000, 100000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000)`);
     expect(hasSnapshotForDate(db, '2024-03-01')).toBe(false);
   });
 });
@@ -93,8 +100,8 @@ describe('getBalanceSheetFromSnapshots', () => {
   it('returns asset and liability snapshot rows', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000, 200000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -50000, -50000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -50000);
     `);
     const rows = getBalanceSheetFromSnapshots(db, '2024-02-01');
     expect(rows).toHaveLength(2);
@@ -107,9 +114,9 @@ describe('getBalanceSheetFromSnapshots', () => {
   it('excludes income and expense accounts from snapshots', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000, 100000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 4, '2024-02-01',  50000,  50000);
-      INSERT INTO account_monthly_snapshots VALUES (3, 5, '2024-02-01',  20000,  20000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 4, '2024-02-01',  50000);
+      INSERT INTO account_monthly_snapshots VALUES (3, 5, '2024-02-01',  20000);
     `);
     const rows = getBalanceSheetFromSnapshots(db, '2024-02-01');
     expect(rows.every(r => !r.category.startsWith('income/') && !r.category.startsWith('expense/'))).toBe(true);
@@ -118,8 +125,8 @@ describe('getBalanceSheetFromSnapshots', () => {
   it('only returns rows for the exact snapshot date', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000, 100000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 1, '2024-03-01', 120000, 120000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 1, '2024-03-01', 120000);
     `);
     const rows = getBalanceSheetFromSnapshots(db, '2024-02-01');
     expect(rows).toHaveLength(1);
@@ -251,8 +258,8 @@ describe('getNetWorthHistory', () => {
   it('sums asset and liability balances per snapshot date', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000, 200000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -50000, -50000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -50000);
     `);
     const rows = getNetWorthHistory(db);
     expect(rows).toHaveLength(1);
@@ -263,8 +270,8 @@ describe('getNetWorthHistory', () => {
   it('returns one point per snapshot date, ordered chronologically', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-03-01', 300000, 300000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 1, '2024-02-01', 200000, 200000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-03-01', 300000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 1, '2024-02-01', 200000);
     `);
     const rows = getNetWorthHistory(db);
     expect(rows).toHaveLength(2);
@@ -275,8 +282,8 @@ describe('getNetWorthHistory', () => {
   it('excludes income and expense account snapshots', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 4, '2024-02-01', 50000, 50000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 5, '2024-02-01', 20000, 20000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 4, '2024-02-01', 50000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 5, '2024-02-01', 20000);
     `);
     const rows = getNetWorthHistory(db);
     expect(rows).toEqual([]);
@@ -300,7 +307,7 @@ describe('getSecuritiesHistory', () => {
 
   it('returns security account snapshot data with ticker info', () => {
     const { db, sqlite } = createSecurityTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000)`);
     const rows = getSecuritiesHistory(db);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.ticker).toBe('AAPL');
@@ -312,8 +319,8 @@ describe('getSecuritiesHistory', () => {
   it('returns multiple points across dates, ordered by date', () => {
     const { db, sqlite } = createSecurityTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-03-01', 120000, 120000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 6, '2024-02-01', 100000, 100000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-03-01', 120000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 6, '2024-02-01', 100000);
     `);
     const rows = getSecuritiesHistory(db);
     expect(rows).toHaveLength(2);
@@ -323,7 +330,7 @@ describe('getSecuritiesHistory', () => {
 
   it('excludes non-security accounts', () => {
     const { db, sqlite } = createSecurityTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000, 200000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 200000)`);
     const rows = getSecuritiesHistory(db);
     expect(rows).toEqual([]);
   });

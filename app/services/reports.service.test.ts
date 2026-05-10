@@ -12,12 +12,21 @@ import {
 } from './reports.service';
 
 vi.mock('~/lib/yahoo-finance');
+vi.mock('~/config', () => ({ env: { BASE_CURRENCY: 'RON' } }));
 
 const DDL = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
+  );
+  CREATE TABLE exchange_rates (
+    id INTEGER PRIMARY KEY,
+    currency_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    rate INTEGER NOT NULL,
+    rate_scale INTEGER NOT NULL DEFAULT 4,
+    UNIQUE(currency_id, date)
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -45,8 +54,7 @@ const DDL = `
     id INTEGER PRIMARY KEY,
     account_id INTEGER NOT NULL,
     date TEXT NOT NULL,
-    balance INTEGER NOT NULL,
-    balance_base INTEGER NOT NULL
+    balance INTEGER NOT NULL
   );
 `;
 
@@ -54,7 +62,7 @@ function createTestDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1);
+    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2);
     INSERT INTO accounts VALUES (1, 'Bank',    'debit',  'simple', 1, 'asset/bank/main',       1, NULL);
     INSERT INTO accounts VALUES (2, 'Loan',    'credit', 'simple', 1, 'liability/loan/main',   1, NULL);
     INSERT INTO accounts VALUES (3, 'Opening', 'credit', 'simple', 1, 'equity/opening-balance',1, NULL);
@@ -86,8 +94,8 @@ describe('getBalanceSheet', () => {
   it('uses snapshot data when snapshot exists', () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000, 100000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -30000, -30000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-02-01', 100000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-02-01', -30000);
     `);
     const result = getBalanceSheet(db, '2024-01', '2024-01-31');
     expect(result.isSnapshot).toBe(true);
@@ -186,8 +194,8 @@ describe('getNetWorthHistoryData', () => {
     const { db, sqlite } = createTestDb();
     // snapshot date 2024-05-01 represents April 2024 closing balance
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-05-01', 200000, 200000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-05-01', -50000, -50000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-05-01', 200000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 2, '2024-05-01', -50000);
     `);
     const points = getNetWorthHistoryData(db);
     expect(points).toHaveLength(1);
@@ -198,7 +206,7 @@ describe('getNetWorthHistoryData', () => {
 
   it('handles January snapshot (2024-01-01 → December 2023)', () => {
     const { db, sqlite } = createTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-01-01', 100000, 100000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 1, '2024-01-01', 100000)`);
     const points = getNetWorthHistoryData(db);
     expect(points[0]?.month).toBe('2023-12');
   });
@@ -233,7 +241,7 @@ describe('getNetWorthByCurrencyData (live current-month fallback)', () => {
     const { db, sqlite } = createTestDb();
     // Snapshot for 2026-05 is stored as 2026-06-01
     sqlite.exec(`
-      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2026-06-01', 80000, 80000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 1, '2026-06-01', 80000);
     `);
     const result = await getNetWorthByCurrencyData(db, null, null, '2026-05-07');
     expect(result.points).toHaveLength(1);
@@ -245,7 +253,7 @@ describe('getNetWorthByCurrencyData (live current-month fallback)', () => {
   it('returns missing status when Yahoo Finance fails for a non-base currency', async () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2, 0);
+      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2);
       INSERT INTO accounts VALUES (6, 'EUR Bank', 'debit', 'simple', 2, 'asset/bank/eur', 1, NULL);
       INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Test', NULL);
       INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 10000, 46000, NULL, NULL, NULL, NULL);
@@ -262,7 +270,7 @@ describe('getNetWorthByCurrencyData (live current-month fallback)', () => {
   it('uses manual rate when provided', async () => {
     const { db, sqlite } = createTestDb();
     sqlite.exec(`
-      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2, 0);
+      INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2);
       INSERT INTO accounts VALUES (6, 'EUR Bank', 'debit', 'simple', 2, 'asset/bank/eur', 1, NULL);
       INSERT INTO transactions VALUES (10, '2026-05-01', '2026-05-01', 'Test', NULL);
       INSERT INTO transaction_entries VALUES (10, 10, 6, 'debit', 10000, 46000, NULL, NULL, NULL, NULL);
@@ -297,7 +305,7 @@ describe('getSecuritiesHistoryData', () => {
 
   it('returns one security line and pivoted points', async () => {
     const { db, sqlite } = createSecurityTestDb();
-    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000)`);
+    sqlite.exec(`INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000)`);
     const result = await getSecuritiesHistoryData(db);
     expect(result.securities).toHaveLength(1);
     expect(result.securities[0]?.ticker).toBe('AAPL');
@@ -312,8 +320,8 @@ describe('getSecuritiesHistoryData', () => {
     sqlite.exec(`
       INSERT INTO securities VALUES (2, 'GOOGL', 'Alphabet', 1, 'stock', 6);
       INSERT INTO accounts VALUES (7, 'My Google', 'debit', 'security', 1, 'asset/brokerage/googl', 1, 2);
-      INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000, 100000);
-      INSERT INTO account_monthly_snapshots VALUES (2, 7, '2024-02-01',  80000,  80000);
+      INSERT INTO account_monthly_snapshots VALUES (1, 6, '2024-02-01', 100000);
+      INSERT INTO account_monthly_snapshots VALUES (2, 7, '2024-02-01',  80000);
     `);
     const result = await getSecuritiesHistoryData(db);
     expect(result.securities).toHaveLength(2);

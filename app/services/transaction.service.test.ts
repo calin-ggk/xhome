@@ -8,23 +8,25 @@ import {
 import type { AccountOption } from '~/repositories/transaction.repository';
 
 vi.mock('~/repositories/transaction.repository');
+vi.mock('~/repositories/currency.repository');
+vi.mock('~/config', () => ({ env: { BASE_CURRENCY: 'RON' } }));
 
 const mockTx = { id: 1, date: '2024-01-15', description: 'Salary', hash: null, createdAt: '' };
 
 const baseAccount: AccountOption = {
   id: 1, category: 'asset/bank', name: 'Bank RON',
   currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
-  isBaseCurrency: 1, accountType: 'simple',
+  accountType: 'simple',
 };
 const foreignAccount: AccountOption = {
   id: 2, category: 'asset/bank/eur', name: 'Bank EUR',
   currencyId: 2, currencyCode: 'EUR', currencyDecimalPlaces: 2,
-  isBaseCurrency: 0, accountType: 'simple',
+  accountType: 'simple',
 };
 const incomeAccount: AccountOption = {
   id: 3, category: 'income/salary', name: 'Salary',
   currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
-  isBaseCurrency: 1, accountType: 'simple',
+  accountType: 'simple',
 };
 
 const formData = {

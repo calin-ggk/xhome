@@ -1,6 +1,6 @@
 import { and, eq, gte, like, lte, ne, or, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { accountMonthlySnapshots, accounts, currencies, securities, transactionEntries, transactions } from '~/db/schema';
+import { accountMonthlySnapshots, accounts, currencies, exchangeRates, securities, transactionEntries, transactions } from '~/db/schema';
 import type * as schema from '~/db/schema';
 
 export type BalanceSheetRow = {
@@ -59,10 +59,14 @@ export function getBalanceSheetFromSnapshots(
       accountId: accounts.id,
       name: accounts.name,
       category: accounts.category,
-      balanceBase: accountMonthlySnapshots.balanceBase,
+      balanceBase: sql<number>`ROUND(${accountMonthlySnapshots.balance} * COALESCE(${exchangeRates.rate}, 10000) / POWER(10, COALESCE(${exchangeRates.rateScale}, 4)))`,
     })
     .from(accountMonthlySnapshots)
     .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
+    .leftJoin(exchangeRates, and(
+      eq(exchangeRates.currencyId, accounts.currencyId),
+      eq(exchangeRates.date, accountMonthlySnapshots.date),
+    ))
     .where(and(
       eq(accountMonthlySnapshots.date, snapshotDate),
       or(
@@ -108,10 +112,14 @@ export function getNetWorthHistory(
   return db
     .select({
       date: accountMonthlySnapshots.date,
-      netWorthBase: sql<number>`SUM(${accountMonthlySnapshots.balanceBase})`,
+      netWorthBase: sql<number>`SUM(ROUND(${accountMonthlySnapshots.balance} * COALESCE(${exchangeRates.rate}, 10000) / POWER(10, COALESCE(${exchangeRates.rateScale}, 4))))`,
     })
     .from(accountMonthlySnapshots)
     .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
+    .leftJoin(exchangeRates, and(
+      eq(exchangeRates.currencyId, accounts.currencyId),
+      eq(exchangeRates.date, accountMonthlySnapshots.date),
+    ))
     .where(or(
       like(accounts.category, 'asset/%'),
       like(accounts.category, 'liability/%'),
@@ -128,11 +136,15 @@ export function getNetWorthHistoryByCurrency(
     .select({
       date: accountMonthlySnapshots.date,
       currencyCode: currencies.code,
-      netWorthBase: sql<number>`SUM(${accountMonthlySnapshots.balanceBase})`,
+      netWorthBase: sql<number>`SUM(ROUND(${accountMonthlySnapshots.balance} * COALESCE(${exchangeRates.rate}, 10000) / POWER(10, COALESCE(${exchangeRates.rateScale}, 4))))`,
     })
     .from(accountMonthlySnapshots)
     .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
     .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .leftJoin(exchangeRates, and(
+      eq(exchangeRates.currencyId, accounts.currencyId),
+      eq(exchangeRates.date, accountMonthlySnapshots.date),
+    ))
     .where(or(
       like(accounts.category, 'asset/%'),
       like(accounts.category, 'liability/%'),
@@ -152,38 +164,40 @@ export function getSecuritiesHistory(
       accountName: accounts.name,
       ticker: securities.ticker,
       securityName: securities.name,
-      balanceBase: accountMonthlySnapshots.balanceBase,
+      balanceBase: sql<number>`ROUND(${accountMonthlySnapshots.balance} * COALESCE(${exchangeRates.rate}, 10000) / POWER(10, COALESCE(${exchangeRates.rateScale}, 4)))`,
     })
     .from(accountMonthlySnapshots)
     .innerJoin(accounts, eq(accountMonthlySnapshots.accountId, accounts.id))
     .innerJoin(securities, eq(accounts.securityId, securities.id))
+    .leftJoin(exchangeRates, and(
+      eq(exchangeRates.currencyId, accounts.currencyId),
+      eq(exchangeRates.date, accountMonthlySnapshots.date),
+    ))
     .where(eq(accounts.accountType, 'security'))
     .orderBy(accountMonthlySnapshots.date, accounts.id)
     .all();
 }
 
 export type LiveRegularBalance = {
-  accountId:      number;
-  accountName:    string;
-  category:       string;
-  currencyId:     number;
-  currencyCode:   string;
-  isBaseCurrency: number;
-  balance:        number;
+  accountId:    number;
+  accountName:  string;
+  category:     string;
+  currencyId:   number;
+  currencyCode: string;
+  balance:      number;
 };
 
 export type LiveSecurityQuantity = {
-  accountId:      number;
-  accountName:    string;
-  securityId:     number;
-  ticker:         string;
-  securityName:   string;
-  quantityScale:  number;
-  currencyId:     number;
-  currencyCode:   string;
-  decimalPlaces:  number;
-  isBaseCurrency: number;
-  netQuantity:    number;
+  accountId:     number;
+  accountName:   string;
+  securityId:    number;
+  ticker:        string;
+  securityName:  string;
+  quantityScale: number;
+  currencyId:    number;
+  currencyCode:  string;
+  decimalPlaces: number;
+  netQuantity:   number;
 };
 
 // Running balance for asset/liability (non-security) accounts up to asOfDate inclusive.
@@ -196,9 +210,8 @@ export function getLiveRegularBalances(
       accountId:      accounts.id,
       accountName:    accounts.name,
       category:       accounts.category,
-      currencyId:     accounts.currencyId,
-      currencyCode:   currencies.code,
-      isBaseCurrency: currencies.isBase,
+      currencyId:   accounts.currencyId,
+      currencyCode: currencies.code,
       balance: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.amount} ELSE -(${transactionEntries.amount}) END)`,
     })
     .from(transactionEntries)
@@ -230,10 +243,9 @@ export function getLiveSecurityQuantities(
       ticker:         securities.ticker,
       securityName:   securities.name,
       quantityScale:  securities.quantityScale,
-      currencyId:     accounts.currencyId,
-      currencyCode:   currencies.code,
-      decimalPlaces:  currencies.decimalPlaces,
-      isBaseCurrency: currencies.isBase,
+      currencyId:    accounts.currencyId,
+      currencyCode:  currencies.code,
+      decimalPlaces: currencies.decimalPlaces,
       netQuantity: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.quantity} ELSE -(${transactionEntries.quantity}) END)`,
     })
     .from(transactionEntries)
@@ -247,16 +259,6 @@ export function getLiveSecurityQuantities(
     ))
     .groupBy(accounts.id)
     .all();
-}
-
-export function getBaseCurrencyCode(
-  db: BetterSQLite3Database<typeof schema>,
-): string {
-  return db
-    .select({ code: currencies.code })
-    .from(currencies)
-    .where(eq(currencies.isBase, 1))
-    .get()?.code ?? '';
 }
 
 export function getIncomeStatementData(

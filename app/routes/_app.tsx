@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 import type { Route } from './+types/_app';
 import { db } from '~/db/client';
+import { env } from '~/config';
 import { getSession } from '~/session.server';
 import { getNetWorth } from '~/services/dashboard.service';
-import { getBaseCurrency } from '~/services/currency.service';
 import { LANG_KEY } from '~/i18n';
 import { useFormat } from '~/hooks/useFormat';
 
@@ -31,7 +31,7 @@ export type AppOutletContext = { baseCurrencyCode: string };
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get('Cookie'));
   if (!session.get('authenticated')) throw redirect('/login');
-  return { netWorth: getNetWorth(db), baseCurrencyCode: getBaseCurrency(db)?.code ?? '' };
+  return { netWorth: getNetWorth(db), baseCurrencyCode: env.BASE_CURRENCY };
 }
 
 type NavItem  = { to: string; key: string; icon: LucideIcon; end?: boolean };

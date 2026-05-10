@@ -17,7 +17,7 @@ function makeReq(method: string, url: string, body?: unknown) {
   });
 }
 
-const mockCurrency = { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2, isBase: 1 };
+const mockCurrency = { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 };
 const validBody    = { code: 'EUR', name: 'Euro', symbol: '€', decimalPlaces: 2 };
 
 beforeEach(() => { vi.resetAllMocks(); });
@@ -74,16 +74,6 @@ describe('GET /api/v1/currencies/:id', () => {
     const res = await detailLoader({ request: req, params: { id: '1' }, context: {} } as never) as Response;
     const json = await res.json();
     expect(json.data.code).toBe('USD');
-  });
-});
-
-describe('PUT /api/v1/currencies/:id with isBase:true', () => {
-  it('sets base currency', async () => {
-    vi.mocked(svc.setBaseCurrency).mockReturnValue({ ok: true });
-    const req = makeReq('PUT', 'http://localhost/api/v1/currencies/1', { isBase: true });
-    const res = await detailAction({ request: req, params: { id: '1' }, context: {} } as never) as Response;
-    expect(res.status).toBe(200);
-    expect(svc.setBaseCurrency).toHaveBeenCalledWith(expect.anything(), 1);
   });
 });
 

@@ -2,7 +2,9 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '~/db/schema';
 import * as repo from '~/repositories/reconciliation.repository';
 import type { AccountOption } from '~/repositories/reconciliation.repository';
+import { getCurrencyByCode } from '~/repositories/currency.repository';
 import { fetchExchangeRate } from '~/lib/yahoo-finance';
+import { env } from '~/config';
 import { logger } from '~/lib/logger';
 
 export type { AccountOption };
@@ -48,7 +50,6 @@ export function getReconciliationPageData(
 ): PageData {
   const allAccounts = repo.getAccountsForReconciliation(db);
   const reconciledIds = repo.getReconciledAccountIds(db, today);
-  const baseCurrency = repo.getBaseCurrency(db);
 
   const accounts: AccountWithStatus[] = allAccounts.map(a => ({
     ...a,
@@ -69,7 +70,7 @@ export function getReconciliationPageData(
     accounts,
     pendingCount,
     selected,
-    baseCurrencyCode: baseCurrency?.code ?? '',
+    baseCurrencyCode: env.BASE_CURRENCY,
     today,
   };
 }
@@ -98,7 +99,7 @@ export async function saveReconciliation(
   }
 
   // Resolve exchange rate for the account's currency
-  const baseCurrency = repo.getBaseCurrency(db);
+  const baseCurrency = getCurrencyByCode(db, env.BASE_CURRENCY);
   if (!baseCurrency) return { ok: false, error: 'reconcile.notFound' };
 
   const rate = await resolveExchangeRate(
@@ -144,7 +145,7 @@ export async function saveReconciliation(
   for (const e of input.userEntries) {
     const ua = allAccounts.find(a => a.id === e.accountId);
     if (!ua) return { ok: false, error: 'reconcile.invalidAccount' };
-    const uRate = await resolveExchangeRate(db, ua.currencyId, ua.currencyCode, baseCurrency.code, input.today);
+    const uRate = await resolveExchangeRate(db, ua.currencyId, ua.currencyCode, env.BASE_CURRENCY, input.today);
     userEntryRows.push({
       accountId:  e.accountId,
       side:       e.side,

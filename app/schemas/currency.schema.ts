@@ -11,8 +11,4 @@ export const deleteCurrencySchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-export const setBaseCurrencySchema = z.object({
-  id: z.coerce.number().int().positive(),
-});
-
 export type CurrencyFormData = z.infer<typeof currencyFormSchema>;

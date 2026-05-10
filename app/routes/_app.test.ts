@@ -6,6 +6,7 @@ import { loader } from './_app';
 vi.mock('~/session.server');
 vi.mock('~/db/client', () => ({ db: {} }));
 vi.mock('~/services/dashboard.service');
+vi.mock('~/config', () => ({ env: { BASE_CURRENCY: 'RON' } }));
 
 const mockSession = {
   get: vi.fn(),
@@ -44,6 +45,6 @@ describe('loader', () => {
     mockSession.get.mockReturnValue(true);
     vi.mocked(getNetWorth).mockReturnValue(42000);
     const result = await loader(makeArgs() as never);
-    expect(result).toEqual({ netWorth: 42000 });
+    expect(result).toEqual({ netWorth: 42000, baseCurrencyCode: 'RON' });
   });
 });

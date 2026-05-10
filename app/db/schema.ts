@@ -9,7 +9,6 @@ export const currencies = sqliteTable('currencies', {
   name:           text('name').notNull(),
   symbol:         text('symbol').notNull(),
   decimalPlaces:  integer('decimal_places').notNull().default(2),
-  isBase:         integer('is_base').notNull().default(0),
 });
 
 export const exchangeRates = sqliteTable('exchange_rates', {
@@ -93,7 +92,6 @@ export const accountMonthlySnapshots = sqliteTable('account_monthly_snapshots', 
   accountId:   integer('account_id').notNull().references(() => accounts.id),
   date:        text('date').notNull(), // YYYY-MM-01
   balance:     integer('balance').notNull(),
-  balanceBase: integer('balance_base').notNull(),
 }, t => [uniqueIndex('snapshots_account_date').on(t.accountId, t.date)]);
 
 // 7. Reconciliation Log

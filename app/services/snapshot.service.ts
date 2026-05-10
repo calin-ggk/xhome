@@ -3,6 +3,7 @@ import type * as schema from '~/db/schema';
 import * as repo from '~/repositories/snapshot.repository';
 import type { RequiredRate, SecurityAccountInfo } from '~/repositories/snapshot.repository';
 import { fetchExchangeRate, fetchSecurityPrice } from '~/lib/yahoo-finance';
+import { env } from '~/config';
 import { logger } from '~/lib/logger';
 
 // ── Public types ──────────────────────────────────────────────────────────────
@@ -93,17 +94,16 @@ export async function generateMissingSnapshots(
   // Collect all exchange rates still needed across every missing month
   const neededRates = new Map<string, RequiredRate>();
   for (const snapshotDate of missingMonths) {
-    for (const r of repo.getRequiredRates(db, snapshotDate)) {
+    for (const r of repo.getRequiredRates(db, snapshotDate, env.BASE_CURRENCY)) {
       neededRates.set(`${r.currencyId}:${r.snapshotDate}`, r);
     }
   }
 
   // Try Yahoo Finance for each missing exchange rate
-  const baseCurrencyCode = repo.getBaseCurrencyCode(db);
   const stillMissingRates: MissingRate[] = [];
 
   for (const [, required] of neededRates) {
-    const fetched = await fetchExchangeRate(required.currencyCode, baseCurrencyCode, required.snapshotDate);
+    const fetched = await fetchExchangeRate(required.currencyCode, env.BASE_CURRENCY, required.snapshotDate);
     if (fetched) {
       repo.upsertExchangeRate(db, required.currencyId, required.snapshotDate, fetched.rate, fetched.rateScale);
     } else {
@@ -139,45 +139,27 @@ export async function generateMissingSnapshots(
     for (const snapshotDate of missingMonths) {
       // Non-security accounts: running balance from transaction amounts
       const balances = repo.computeAccountBalancesAtDate(db, snapshotDate);
-      const regularRows = balances.map(b => {
-        let balanceBase: number;
-        if (b.isBaseCurrency) {
-          balanceBase = b.balance;
-        } else {
-          const rateRow = repo.getExchangeRate(db, b.currencyId, snapshotDate);
-          if (!rateRow) throw new Error(`No rate for currency ${b.currencyId} at ${snapshotDate}`);
-          balanceBase = Math.round(b.balance * rateRow.rate / Math.pow(10, rateRow.rateScale));
-        }
-        return { accountId: b.accountId, date: snapshotDate, balance: b.balance, balanceBase };
-      });
+      const regularRows = balances.map(b => ({
+        accountId: b.accountId, date: snapshotDate, balance: b.balance,
+      }));
 
       // Security accounts: market value = net_quantity × close_price
       const secQuantities = secQuantitiesMap.get(snapshotDate) ?? [];
       const secRows = secQuantities.map(sq => {
         if (sq.netQuantity === 0) {
-          return { accountId: sq.accountId, date: snapshotDate, balance: 0, balanceBase: 0 };
+          return { accountId: sq.accountId, date: snapshotDate, balance: 0 };
         }
 
         const priceRow = resolvedPrices.get(`${sq.securityId}:${snapshotDate}`);
         if (!priceRow) throw new Error(`No price for security ${sq.securityId} at ${snapshotDate}`);
 
-        // Compute market value in the security's currency (smallest unit / cents)
         const balance = Math.round(
           (sq.netQuantity / Math.pow(10, sq.quantityScale)) *
           (priceRow.rate  / Math.pow(10, priceRow.rateScale)) *
           Math.pow(10, sq.decimalPlaces),
         );
 
-        let balanceBase: number;
-        if (sq.isBaseCurrency) {
-          balanceBase = balance;
-        } else {
-          const rateRow = repo.getExchangeRate(db, sq.currencyId, snapshotDate);
-          if (!rateRow) throw new Error(`No rate for currency ${sq.currencyId} at ${snapshotDate}`);
-          balanceBase = Math.round(balance * rateRow.rate / Math.pow(10, rateRow.rateScale));
-        }
-
-        return { accountId: sq.accountId, date: snapshotDate, balance, balanceBase };
+        return { accountId: sq.accountId, date: snapshotDate, balance };
       });
 
       repo.upsertSnapshots(db, [...regularRows, ...secRows]);

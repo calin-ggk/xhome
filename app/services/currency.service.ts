@@ -3,7 +3,6 @@ import type * as schema from '~/db/schema';
 import type { Currency } from '~/db/schema';
 import type { CurrencyFormData } from '~/schemas/currency.schema';
 import * as repo from '~/repositories/currency.repository';
-import { hasAnyTransactions } from '~/repositories/transaction.repository';
 import { logger } from '~/lib/logger';
 
 type CurrencyResult = { ok: true } | { ok: false; error: string };
@@ -21,10 +20,11 @@ export function getCurrencyById(
   return repo.getCurrencyById(db, id);
 }
 
-export function getBaseCurrency(
+export function getCurrencyByCode(
   db: BetterSQLite3Database<typeof schema>,
-): Currency | null {
-  return repo.getBaseCurrency(db);
+  code: string,
+): Currency | undefined {
+  return repo.getCurrencyByCode(db, code);
 }
 
 export function createCurrency(
@@ -33,11 +33,10 @@ export function createCurrency(
 ): CurrencyResult {
   try {
     repo.createCurrency(db, {
-      code:         data.code,
-      name:         data.name,
-      symbol:       data.symbol,
+      code:          data.code,
+      name:          data.name,
+      symbol:        data.symbol,
       decimalPlaces: data.decimalPlaces,
-      isBase:       0,
     });
     logger.info({ event: 'currency.created', code: data.code });
     return { ok: true };
@@ -58,9 +57,9 @@ export function updateCurrency(
   if (!existing) return { ok: false, error: 'currencies.notFound' };
   try {
     repo.updateCurrency(db, id, {
-      code:         data.code,
-      name:         data.name,
-      symbol:       data.symbol,
+      code:          data.code,
+      name:          data.name,
+      symbol:        data.symbol,
       decimalPlaces: data.decimalPlaces,
     });
     logger.info({ event: 'currency.updated', id, code: data.code });
@@ -79,7 +78,6 @@ export function deleteCurrency(
 ): CurrencyResult {
   const existing = repo.getCurrencyById(db, id);
   if (!existing) return { ok: false, error: 'currencies.notFound' };
-  if (existing.isBase) return { ok: false, error: 'currencies.cannotDeleteBase' };
   if (
     repo.isUsedByAccounts(db, id) ||
     repo.isUsedBySecurities(db, id) ||
@@ -89,18 +87,5 @@ export function deleteCurrency(
   }
   repo.deleteCurrency(db, id);
   logger.info({ event: 'currency.deleted', id, code: existing.code });
-  return { ok: true };
-}
-
-export function setBaseCurrency(
-  db: BetterSQLite3Database<typeof schema>,
-  id: number,
-): CurrencyResult {
-  const existing = repo.getCurrencyById(db, id);
-  if (!existing) return { ok: false, error: 'currencies.notFound' };
-  if (hasAnyTransactions(db)) return { ok: false, error: 'currencies.cannotChangeBase' };
-  repo.clearAllBaseCurrencies(db);
-  repo.setBaseCurrencyFlag(db, id);
-  logger.info({ event: 'currency.base.set', id, code: existing.code });
   return { ok: true };
 }

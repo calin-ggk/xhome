@@ -17,6 +17,13 @@ export function getCurrencyById(
   return db.select().from(currencies).where(eq(currencies.id, id)).get() ?? undefined;
 }
 
+export function getCurrencyByCode(
+  db: BetterSQLite3Database<typeof schema>,
+  code: string,
+): Currency | undefined {
+  return db.select().from(currencies).where(eq(currencies.code, code)).get() ?? undefined;
+}
+
 export function createCurrency(
   db: BetterSQLite3Database<typeof schema>,
   data: InsertCurrency,
@@ -63,21 +70,3 @@ export function isUsedByExchangeRates(
   return (row?.n ?? 0) > 0;
 }
 
-export function getBaseCurrency(
-  db: BetterSQLite3Database<typeof schema>,
-): Currency | null {
-  return db.select().from(currencies).where(eq(currencies.isBase, 1)).get() ?? null;
-}
-
-export function clearAllBaseCurrencies(
-  db: BetterSQLite3Database<typeof schema>,
-): void {
-  db.update(currencies).set({ isBase: 0 }).run();
-}
-
-export function setBaseCurrencyFlag(
-  db: BetterSQLite3Database<typeof schema>,
-  id: number,
-): void {
-  db.update(currencies).set({ isBase: 1 }).where(eq(currencies.id, id)).run();
-}

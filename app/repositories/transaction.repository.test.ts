@@ -269,7 +269,7 @@ describe('getActiveAccountOptions', () => {
     const { db, sqlite } = makeDb();
     sqlite.exec(`INSERT INTO accounts VALUES (4, 'Inactive', 'debit', 'simple', 1, 'asset/inactive', 0, NULL)`);
     const rows = getActiveAccountOptions(db);
-    expect(rows.every(r => r.isBaseCurrency !== undefined)).toBe(true);
+    expect(rows.every(r => r.currencyCode !== undefined)).toBe(true);
     expect(rows.map(r => r.category)).not.toContain('asset/inactive');
   });
 });

@@ -10,21 +10,19 @@ import type * as schema from '~/db/schema';
 // ── Public types ─────────────────────────────────────────────────────────────
 
 export type AccountBalance = {
-  accountId:      number;
-  currencyId:     number;
-  isBaseCurrency: number;
-  balance:        number;
+  accountId:  number;
+  currencyId: number;
+  balance:    number;
 };
 
 export type SecurityAccountInfo = {
-  accountId:      number;
-  securityId:     number;
-  ticker:         string;
-  quantityScale:  number;
-  currencyId:     number;
-  decimalPlaces:  number;
-  isBaseCurrency: number;
-  netQuantity:    number;
+  accountId:     number;
+  securityId:    number;
+  ticker:        string;
+  quantityScale: number;
+  currencyId:    number;
+  decimalPlaces: number;
+  netQuantity:   number;
 };
 
 export type RequiredRate = {
@@ -79,15 +77,13 @@ export function computeAccountBalancesAtDate(
 ): AccountBalance[] {
   return db
     .select({
-      accountId:      transactionEntries.accountId,
-      currencyId:     accounts.currencyId,
-      isBaseCurrency: currencies.isBase,
+      accountId:  transactionEntries.accountId,
+      currencyId: accounts.currencyId,
       balance: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.amount} ELSE -(${transactionEntries.amount}) END)`,
     })
     .from(transactionEntries)
     .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
     .innerJoin(accounts,     eq(transactionEntries.accountId, accounts.id))
-    .innerJoin(currencies,   eq(accounts.currencyId, currencies.id))
     .where(and(lt(transactions.date, snapshotDate), ne(accounts.accountType, 'security')))
     .groupBy(transactionEntries.accountId)
     .all();
@@ -103,13 +99,12 @@ export function getSecurityAccountQuantities(
 ): SecurityAccountInfo[] {
   return db
     .select({
-      accountId:      transactionEntries.accountId,
-      securityId:     securities.id,
-      ticker:         securities.ticker,
-      quantityScale:  securities.quantityScale,
-      currencyId:     accounts.currencyId,
-      decimalPlaces:  currencies.decimalPlaces,
-      isBaseCurrency: currencies.isBase,
+      accountId:     transactionEntries.accountId,
+      securityId:    securities.id,
+      ticker:        securities.ticker,
+      quantityScale: securities.quantityScale,
+      currencyId:    accounts.currencyId,
+      decimalPlaces: currencies.decimalPlaces,
       netQuantity: sql<number>`SUM(CASE WHEN ${transactionEntries.side}='debit' THEN ${transactionEntries.quantity} ELSE -(${transactionEntries.quantity}) END)`,
     })
     .from(transactionEntries)
@@ -129,6 +124,7 @@ export function getSecurityAccountQuantities(
 export function getRequiredRates(
   db: BetterSQLite3Database<typeof schema>,
   snapshotDate: string,
+  baseCurrencyCode: string,
 ): RequiredRate[] {
   const needed = db
     .selectDistinct({ currencyId: accounts.currencyId, currencyCode: currencies.code })
@@ -136,7 +132,7 @@ export function getRequiredRates(
     .innerJoin(transactions, eq(transactionEntries.transactionId, transactions.id))
     .innerJoin(accounts,     eq(transactionEntries.accountId, accounts.id))
     .innerJoin(currencies,   eq(accounts.currencyId, currencies.id))
-    .where(and(lt(transactions.date, snapshotDate), eq(currencies.isBase, 0)))
+    .where(and(lt(transactions.date, snapshotDate), ne(currencies.code, baseCurrencyCode)))
     .all();
 
   return needed
@@ -154,16 +150,6 @@ export function getExchangeRate(
     .from(exchangeRates)
     .where(and(eq(exchangeRates.currencyId, currencyId), eq(exchangeRates.date, date)))
     .get() ?? null;
-}
-
-export function getBaseCurrencyCode(
-  db: BetterSQLite3Database<typeof schema>,
-): string {
-  return db
-    .select({ code: currencies.code })
-    .from(currencies)
-    .where(eq(currencies.isBase, 1))
-    .get()?.code ?? '';
 }
 
 export function getSnapshotCount(
@@ -202,10 +188,7 @@ export function upsertSnapshots(
     .values(rows)
     .onConflictDoUpdate({
       target: [accountMonthlySnapshots.accountId, accountMonthlySnapshots.date],
-      set: {
-        balance:     sql`excluded.balance`,
-        balanceBase: sql`excluded.balance_base`,
-      },
+      set: { balance: sql`excluded.balance` },
     })
     .run();
 }

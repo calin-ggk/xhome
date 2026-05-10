@@ -4,9 +4,12 @@ import type * as schema from '~/db/schema';
 
 // Mock repository and yahoo-finance
 vi.mock('~/repositories/reconciliation.repository');
+vi.mock('~/repositories/currency.repository');
 vi.mock('~/lib/yahoo-finance');
+vi.mock('~/config', () => ({ env: { BASE_CURRENCY: 'RON' } }));
 
 import * as repo from '~/repositories/reconciliation.repository';
+import * as currencyRepo from '~/repositories/currency.repository';
 import * as yahoo from '~/lib/yahoo-finance';
 import {
   computeBookBalance,
@@ -22,13 +25,13 @@ const baseAccount = {
   currencyId: 1, currencyCode: 'RON', decimalPlaces: 2, isReconcilable: 1,
 };
 
-const baseCurrency = { id: 1, code: 'RON', decimalPlaces: 2 };
+const baseCurrency = { id: 1, code: 'RON', name: 'Romanian Leu', symbol: 'RON', decimalPlaces: 2 };
 
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(repo.getAccountsForReconciliation).mockReturnValue([baseAccount]);
   vi.mocked(repo.getReconciledAccountIds).mockReturnValue(new Set());
-  vi.mocked(repo.getBaseCurrency).mockReturnValue(baseCurrency);
+  vi.mocked(currencyRepo.getCurrencyByCode).mockReturnValue(baseCurrency);
   vi.mocked(repo.getStoredExchangeRate).mockReturnValue({ rate: 10000, rateScale: 4 });
   vi.mocked(repo.saveReconciliationTransaction).mockReturnValue({ id: 42 });
   vi.mocked(repo.saveReconciliationLog).mockReturnValue(undefined);

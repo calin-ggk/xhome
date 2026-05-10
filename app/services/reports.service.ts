@@ -4,7 +4,6 @@ import { logger } from '~/lib/logger';
 import {
   getBalanceSheetFromSnapshots,
   getBalanceSheetLive,
-  getBaseCurrencyCode,
   getIncomeStatementData,
   getLiveRegularBalances,
   getLiveSecurityQuantities,
@@ -15,6 +14,7 @@ import {
   type IncomeRow,
 } from '~/repositories/reports.repository';
 import { fetchCurrentPrices } from '~/lib/yahoo-finance';
+import { env } from '~/config';
 
 export type ReportAccount = {
   id: number;
@@ -194,7 +194,7 @@ async function computeLiveNetWorthByCurrency(
   manualRates: ManualLiveRate[],
   manualPrices: ManualLivePrice[],
 ): Promise<LiveNWResult> {
-  const baseCurrency    = getBaseCurrencyCode(db);
+  const baseCurrency    = env.BASE_CURRENCY;
   const regularBalances = getLiveRegularBalances(db, today);
   const secQuantities   = getLiveSecurityQuantities(db, today);
 
@@ -208,12 +208,12 @@ async function computeLiveNetWorthByCurrency(
   // Non-base currencies still needing FX from Yahoo Finance
   const needFxFor = new Map<string, MissingLiveRate>();
   for (const b of regularBalances) {
-    if (!b.isBaseCurrency && !manualRateMap.has(b.currencyId)) {
+    if (b.currencyCode !== baseCurrency && !manualRateMap.has(b.currencyId)) {
       needFxFor.set(b.currencyCode, { currencyId: b.currencyId, currencyCode: b.currencyCode });
     }
   }
   for (const s of secQuantities) {
-    if (s.netQuantity !== 0 && !s.isBaseCurrency && !manualRateMap.has(s.currencyId)) {
+    if (s.netQuantity !== 0 && s.currencyCode !== baseCurrency && !manualRateMap.has(s.currencyId)) {
       needFxFor.set(s.currencyCode, { currencyId: s.currencyId, currencyCode: s.currencyCode });
     }
   }
@@ -263,7 +263,7 @@ async function computeLiveNetWorthByCurrency(
   const byCurrency = new Map<string, number>();
 
   for (const b of regularBalances) {
-    const balanceBase = b.isBaseCurrency
+    const balanceBase = b.currencyCode === baseCurrency
       ? b.balance
       : Math.round(b.balance * fxRateMap.get(b.currencyCode)!);
     byCurrency.set(b.currencyCode, (byCurrency.get(b.currencyCode) ?? 0) + balanceBase);
@@ -276,7 +276,7 @@ async function computeLiveNetWorthByCurrency(
       * priceMap.get(s.securityId)!
       * Math.pow(10, s.decimalPlaces),
     );
-    const balanceBase = s.isBaseCurrency
+    const balanceBase = s.currencyCode === baseCurrency
       ? marketCents
       : Math.round(marketCents * fxRateMap.get(s.currencyCode)!);
     byCurrency.set(s.currencyCode, (byCurrency.get(s.currencyCode) ?? 0) + balanceBase);
@@ -298,7 +298,7 @@ async function computeLiveSecurities(
   manualRates: ManualLiveRate[],
   manualPrices: ManualLivePrice[],
 ): Promise<LiveSecResult> {
-  const baseCurrency  = getBaseCurrencyCode(db);
+  const baseCurrency  = env.BASE_CURRENCY;
   const secQuantities = getLiveSecurityQuantities(db, today);
 
   if (secQuantities.length === 0) return { ok: true, rows: [] };
@@ -308,7 +308,7 @@ async function computeLiveSecurities(
 
   const needFxFor = new Map<string, MissingLiveRate>();
   for (const s of secQuantities) {
-    if (s.netQuantity !== 0 && !s.isBaseCurrency && !manualRateMap.has(s.currencyId)) {
+    if (s.netQuantity !== 0 && s.currencyCode !== baseCurrency && !manualRateMap.has(s.currencyId)) {
       needFxFor.set(s.currencyCode, { currencyId: s.currencyId, currencyCode: s.currencyCode });
     }
   }
@@ -360,7 +360,7 @@ async function computeLiveSecurities(
       * priceMap.get(s.securityId)!
       * Math.pow(10, s.decimalPlaces),
     );
-    const balanceBase = s.isBaseCurrency
+    const balanceBase = s.currencyCode === baseCurrency
       ? marketCents
       : Math.round(marketCents * fxRateMap.get(s.currencyCode)!);
     return { accountId: s.accountId, accountName: s.accountName, ticker: s.ticker, securityName: s.securityName, balanceBase };

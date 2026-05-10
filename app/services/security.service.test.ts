@@ -18,7 +18,7 @@ const mockSecurity: Security = {
   id: 1, ticker: 'AAPL', name: 'Apple Inc.', currencyId: 1, type: 'stock', quantityScale: 6,
 };
 const mockCurrency: Currency = {
-  id: 1, code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2, isBase: 1,
+  id: 1, code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2,
 };
 const formData = { ticker: 'AAPL', name: 'Apple Inc.', currencyId: 1, type: 'stock' as const, quantityScale: 6 };
 

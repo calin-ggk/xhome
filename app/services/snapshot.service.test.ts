@@ -8,6 +8,7 @@ vi.mock('~/lib/yahoo-finance', () => ({
   fetchExchangeRate:   vi.fn(),
   fetchSecurityPrice:  vi.fn(),
 }));
+vi.mock('~/config', () => ({ env: { BASE_CURRENCY: 'RON' } }));
 
 import { fetchExchangeRate, fetchSecurityPrice } from '~/lib/yahoo-finance';
 const mockFetch      = vi.mocked(fetchExchangeRate);
@@ -17,7 +18,7 @@ const DDL = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -49,7 +50,7 @@ const DDL = `
   );
   CREATE TABLE account_monthly_snapshots (
     id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL,
-    date TEXT NOT NULL, balance INTEGER NOT NULL, balance_base INTEGER NOT NULL,
+    date TEXT NOT NULL, balance INTEGER NOT NULL,
     UNIQUE(account_id, date)
   );
 `;
@@ -58,8 +59,8 @@ function makeDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1,'RON','Romanian Leu','RON',2,1);
-    INSERT INTO currencies VALUES (2,'EUR','Euro','€',2,0);
+    INSERT INTO currencies VALUES (1,'RON','Romanian Leu','RON',2);
+    INSERT INTO currencies VALUES (2,'EUR','Euro','€',2);
     INSERT INTO accounts VALUES (1,'Bank RON','debit','simple',1,'asset/bank-ron',1,NULL);
     INSERT INTO accounts VALUES (2,'Bank EUR','debit','simple',2,'asset/bank-eur',1,NULL);
     INSERT INTO accounts VALUES (3,'Salary','credit','simple',1,'income/salary',1,NULL);
@@ -189,7 +190,7 @@ const DDL_WITH_SECURITY = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -221,7 +222,7 @@ const DDL_WITH_SECURITY = `
   );
   CREATE TABLE account_monthly_snapshots (
     id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL,
-    date TEXT NOT NULL, balance INTEGER NOT NULL, balance_base INTEGER NOT NULL,
+    date TEXT NOT NULL, balance INTEGER NOT NULL,
     UNIQUE(account_id, date)
   );
 `;
@@ -230,8 +231,8 @@ function makeSecurityDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL_WITH_SECURITY);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1,'RON','Romanian Leu','RON',2,1);
-    INSERT INTO currencies VALUES (2,'USD','US Dollar','$',2,0);
+    INSERT INTO currencies VALUES (1,'RON','Romanian Leu','RON',2);
+    INSERT INTO currencies VALUES (2,'USD','US Dollar','$',2);
     INSERT INTO securities VALUES (1,'AAPL','Apple Inc.',2,'stock',6);
     INSERT INTO accounts VALUES (1,'Bank RON','debit','simple',1,'asset/bank-ron',1,NULL);
     INSERT INTO accounts VALUES (2,'AAPL Portfolio','debit','security',2,'asset/security/aapl',1,1);

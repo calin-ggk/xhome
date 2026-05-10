@@ -11,14 +11,13 @@ import {
   upsertExchangeRate,
   upsertSnapshots,
   getSnapshotCount,
-  getBaseCurrencyCode,
 } from './snapshot.repository';
 
 const DDL = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -50,7 +49,7 @@ const DDL = `
   );
   CREATE TABLE account_monthly_snapshots (
     id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL,
-    date TEXT NOT NULL, balance INTEGER NOT NULL, balance_base INTEGER NOT NULL,
+    date TEXT NOT NULL, balance INTEGER NOT NULL,
     UNIQUE(account_id, date)
   );
 `;
@@ -59,8 +58,8 @@ function makeDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1);
-    INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2, 0);
+    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2);
+    INSERT INTO currencies VALUES (2, 'EUR', 'Euro', '€', 2);
     INSERT INTO accounts VALUES (1, 'Bank RON', 'debit', 'simple', 1, 'asset/bank-ron', 1, NULL);
     INSERT INTO accounts VALUES (2, 'Bank EUR', 'debit', 'simple', 2, 'asset/bank-eur', 1, NULL);
     INSERT INTO accounts VALUES (3, 'Salary',   'credit', 'simple', 1, 'income/salary',  1, NULL);
@@ -92,7 +91,7 @@ describe('getMissingSnapshotMonths', () => {
     const { db, sqlite } = makeDb();
     sqlite.exec(`
       INSERT INTO transactions VALUES (1,'2024-03-15',CURRENT_TIMESTAMP,'tx',NULL);
-      INSERT INTO account_monthly_snapshots VALUES (1,1,'2024-04-01',1000,1000);
+      INSERT INTO account_monthly_snapshots VALUES (1,1,'2024-04-01',1000);
     `);
     expect(getMissingSnapshotMonths(db, '2024-05-15')).toEqual([]);
   });
@@ -154,7 +153,7 @@ describe('computeAccountBalancesAtDate', () => {
     expect(computeAccountBalancesAtDate(db, '2024-05-01')).toEqual([]);
   });
 
-  it('flags base currency accounts', () => {
+  it('returns balance for each account', () => {
     const { db, sqlite } = makeDb();
     sqlite.exec(`
       INSERT INTO transactions VALUES (1,'2024-04-01',CURRENT_TIMESTAMP,'tx',NULL);
@@ -162,8 +161,8 @@ describe('computeAccountBalancesAtDate', () => {
       INSERT INTO transaction_entries VALUES (2,1,2,'credit',10000,50000,NULL,NULL,NULL,NULL);
     `);
     const rows = computeAccountBalancesAtDate(db, '2024-05-01');
-    expect(rows.find(r => r.accountId === 1)?.isBaseCurrency).toBe(1);
-    expect(rows.find(r => r.accountId === 2)?.isBaseCurrency).toBe(0);
+    expect(rows.find(r => r.accountId === 1)?.balance).toBe(10000);
+    expect(rows.find(r => r.accountId === 2)?.balance).toBe(-10000);
   });
 });
 
@@ -176,7 +175,7 @@ describe('getRequiredRates', () => {
       INSERT INTO transactions VALUES (1,'2024-04-10',CURRENT_TIMESTAMP,'tx',NULL);
       INSERT INTO transaction_entries VALUES (1,1,1,'debit',50000,50000,NULL,NULL,NULL,NULL);
     `);
-    expect(getRequiredRates(db, '2024-05-01')).toEqual([]);
+    expect(getRequiredRates(db, '2024-05-01', 'RON')).toEqual([]);
   });
 
   it('returns foreign currency without exact rate on snapshotDate', () => {
@@ -185,7 +184,7 @@ describe('getRequiredRates', () => {
       INSERT INTO transactions VALUES (1,'2024-04-10',CURRENT_TIMESTAMP,'tx',NULL);
       INSERT INTO transaction_entries VALUES (1,1,2,'debit',10000,49700,NULL,NULL,NULL,NULL);
     `);
-    const result = getRequiredRates(db, '2024-05-01');
+    const result = getRequiredRates(db, '2024-05-01', 'RON');
     expect(result).toHaveLength(1);
     expect(result[0]?.currencyCode).toBe('EUR');
     expect(result[0]?.snapshotDate).toBe('2024-05-01');
@@ -198,7 +197,7 @@ describe('getRequiredRates', () => {
       INSERT INTO transaction_entries VALUES (1,1,2,'debit',10000,49700,NULL,NULL,NULL,NULL);
       INSERT INTO exchange_rates VALUES (1,2,49700,4,'2024-05-01');
     `);
-    expect(getRequiredRates(db, '2024-05-01')).toEqual([]);
+    expect(getRequiredRates(db, '2024-05-01', 'RON')).toEqual([]);
   });
 
   it('returns empty when no entries before snapshotDate', () => {
@@ -207,7 +206,7 @@ describe('getRequiredRates', () => {
       INSERT INTO transactions VALUES (1,'2024-05-05',CURRENT_TIMESTAMP,'tx',NULL);
       INSERT INTO transaction_entries VALUES (1,1,2,'debit',10000,49700,NULL,NULL,NULL,NULL);
     `);
-    expect(getRequiredRates(db, '2024-05-01')).toEqual([]);
+    expect(getRequiredRates(db, '2024-05-01', 'RON')).toEqual([]);
   });
 });
 
@@ -240,22 +239,22 @@ describe('getExchangeRate', () => {
 describe('upsertSnapshots', () => {
   it('inserts snapshot rows', () => {
     const { db } = makeDb();
-    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 50000, balanceBase: 50000 }]);
+    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 50000 }]);
     expect(getSnapshotCount(db)).toBe(1);
   });
 
   it('updates balance on conflict', () => {
     const { db } = makeDb();
-    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 50000, balanceBase: 50000 }]);
-    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 60000, balanceBase: 60000 }]);
+    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 50000 }]);
+    upsertSnapshots(db, [{ accountId: 1, date: '2024-05-01', balance: 60000 }]);
     expect(getSnapshotCount(db)).toBe(1);
   });
 
   it('counts distinct dates, not rows', () => {
     const { db } = makeDb();
     upsertSnapshots(db, [
-      { accountId: 1, date: '2024-05-01', balance: 10000, balanceBase: 10000 },
-      { accountId: 2, date: '2024-05-01', balance: 20000, balanceBase: 20000 },
+      { accountId: 1, date: '2024-05-01', balance: 10000 },
+      { accountId: 2, date: '2024-05-01', balance: 20000 },
     ]);
     expect(getSnapshotCount(db)).toBe(1);
   });
@@ -267,23 +266,14 @@ describe('upsertSnapshots', () => {
   });
 });
 
-// ── getBaseCurrencyCode ───────────────────────────────────────────────────────
-
-describe('getBaseCurrencyCode', () => {
-  it('returns the base currency code', () => {
-    const { db } = makeDb();
-    expect(getBaseCurrencyCode(db)).toBe('RON');
-  });
-});
-
 // ── getSecurityAccountQuantities ──────────────────────────────────────────────
 
 function makeSecurityDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
   sqlite.exec(`
-    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1);
-    INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2, 0);
+    INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2);
+    INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2);
     INSERT INTO securities VALUES (1, 'AAPL', 'Apple Inc.', 2, 'stock', 6);
     INSERT INTO accounts VALUES (1, 'Bank RON', 'debit', 'simple', 1, 'asset/bank-ron', 1, NULL);
     INSERT INTO accounts VALUES (2, 'AAPL Portfolio', 'debit', 'security', 2, 'asset/security/aapl', 1, 1);

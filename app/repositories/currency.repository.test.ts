@@ -5,21 +5,20 @@ import * as schema from '~/db/schema';
 import {
   getAllCurrencies,
   getCurrencyById,
+  getCurrencyByCode,
   createCurrency,
   updateCurrency,
   deleteCurrency,
   isUsedByAccounts,
   isUsedBySecurities,
   isUsedByExchangeRates,
-  clearAllBaseCurrencies,
-  setBaseCurrencyFlag,
 } from './currency.repository';
 
 const DDL = `
   CREATE TABLE currencies (
     id INTEGER PRIMARY KEY, code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL, symbol TEXT NOT NULL,
-    decimal_places INTEGER NOT NULL DEFAULT 2, is_base INTEGER NOT NULL DEFAULT 0
+    decimal_places INTEGER NOT NULL DEFAULT 2
   );
   CREATE TABLE securities (
     id INTEGER PRIMARY KEY, ticker TEXT NOT NULL UNIQUE,
@@ -42,14 +41,14 @@ const DDL = `
 function makeDb() {
   const sqlite = new Database(':memory:');
   sqlite.exec(DDL);
-  sqlite.exec(`INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2, 1)`);
+  sqlite.exec(`INSERT INTO currencies VALUES (1, 'RON', 'Romanian Leu', 'RON', 2)`);
   return { db: drizzle(sqlite, { schema }), sqlite };
 }
 
 describe('getAllCurrencies', () => {
   it('returns all currencies ordered by code', () => {
     const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2, 0)`);
+    sqlite.exec(`INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2)`);
     expect(getAllCurrencies(db).map(c => c.code)).toEqual(['RON', 'USD']);
   });
 });
@@ -66,10 +65,22 @@ describe('getCurrencyById', () => {
   });
 });
 
+describe('getCurrencyByCode', () => {
+  it('returns the currency when it exists', () => {
+    const { db } = makeDb();
+    expect(getCurrencyByCode(db, 'RON')?.id).toBe(1);
+  });
+
+  it('returns undefined for unknown code', () => {
+    const { db } = makeDb();
+    expect(getCurrencyByCode(db, 'XYZ')).toBeUndefined();
+  });
+});
+
 describe('createCurrency', () => {
   it('creates and returns a new currency', () => {
     const { db } = makeDb();
-    const result = createCurrency(db, { code: 'EUR', name: 'Euro', symbol: '€', decimalPlaces: 2, isBase: 0 });
+    const result = createCurrency(db, { code: 'EUR', name: 'Euro', symbol: '€', decimalPlaces: 2 });
     expect(result.code).toBe('EUR');
     expect(result.id).toBeTruthy();
   });
@@ -132,23 +143,5 @@ describe('isUsedByExchangeRates', () => {
     const { db, sqlite } = makeDb();
     sqlite.exec(`INSERT INTO exchange_rates VALUES (1, 1, 10000, 4, '2024-01-01')`);
     expect(isUsedByExchangeRates(db, 1)).toBe(true);
-  });
-});
-
-describe('clearAllBaseCurrencies and setBaseCurrencyFlag', () => {
-  it('clears all base flags', () => {
-    const { db } = makeDb();
-    clearAllBaseCurrencies(db);
-    expect(getAllCurrencies(db).every(c => c.isBase === 0)).toBe(true);
-  });
-
-  it('sets the base flag for the specified currency only', () => {
-    const { db, sqlite } = makeDb();
-    sqlite.exec(`INSERT INTO currencies VALUES (2, 'USD', 'US Dollar', '$', 2, 0)`);
-    clearAllBaseCurrencies(db);
-    setBaseCurrencyFlag(db, 2);
-    const all = getAllCurrencies(db);
-    expect(all.find(c => c.id === 2)?.isBase).toBe(1);
-    expect(all.find(c => c.id === 1)?.isBase).toBe(0);
   });
 });

@@ -65,8 +65,9 @@ function fmtCents(cents: number, decimalPlaces = 2): string {
 function entryToRow(
   entry: TransactionDetail['entries'][number],
   key: string,
+  baseCurrencyCode: string,
 ): EntryRow {
-  const isBase      = entry.isBaseCurrency === 1;
+  const isBase      = entry.currencyCode === baseCurrencyCode;
   const rateDecimal = isBase ? 1 : entry.amountBase / entry.amount;
   const dp          = entry.currencyDecimalPlaces;
   return {
@@ -136,7 +137,7 @@ export function TransactionForm({
   );
   const [entries, setEntries]   = useState<EntryRow[]>(() =>
     initialValues?.entries.length
-      ? initialValues.entries.map((e, i) => entryToRow(e, `init-${i}`))
+      ? initialValues.entries.map((e, i) => entryToRow(e, `init-${i}`, baseCurrency?.code ?? ''))
       : [blankRow('init-0', 'debit'), blankRow('init-1', 'credit')],
   );
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -159,7 +160,7 @@ export function TransactionForm({
       if (e.key !== key) return e;
       if (!account) return { ...e, accountId: accountIdStr };
       let rateStr = e.rateStr;
-      if (account.isBaseCurrency) {
+      if (account.currencyCode === baseCurrency?.code) {
         rateStr = '1';
       } else {
         const found = findRate(account.currencyId, txDate, exchangeRates);
@@ -201,7 +202,7 @@ export function TransactionForm({
     setEntries(prev => prev.map(e => {
       if (!e.accountId) return e;
       const account = accountMap.get(parseInt(e.accountId));
-      if (!account || account.isBaseCurrency) return e;
+      if (!account || account.currencyCode === baseCurrency?.code) return e;
       const found = findRate(account.currencyId, date, exchangeRates);
       if (found === null) return e;
       const rateStr = found.toFixed(6).replace(/\.?0+$/, '');
@@ -245,7 +246,7 @@ export function TransactionForm({
     const incomplete = entries.some(en => {
       if (!en.accountId || !en.amountStr) return true;
       const acc = accountMap.get(parseInt(en.accountId));
-      return acc && !acc.isBaseCurrency && !en.rateStr;
+      return acc && acc.currencyCode !== (baseCurrency?.code ?? '') && !en.rateStr;
     });
     if (incomplete) {
       setClientError(t('transactions.incompleteEntries'));
@@ -388,7 +389,7 @@ export function TransactionForm({
                   <tbody>
                     {entries.map(entry => {
                       const account = entry.accountId ? accountMap.get(parseInt(entry.accountId)) : undefined;
-                      const isBase  = account?.isBaseCurrency === 1;
+                      const isBase  = account?.currencyCode === baseCurrency?.code;
                       return (
                         <tr key={entry.key}>
                           <td className="tx-col-account">

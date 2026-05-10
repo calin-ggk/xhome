@@ -3,8 +3,8 @@ import { Link, redirect, useActionData, useLoaderData, useSubmit } from 'react-r
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from '~/components/ConfirmModal';
 import { db } from '~/db/client';
-import { getAllCurrencies, deleteCurrency, setBaseCurrency } from '~/services/currency.service';
-import { deleteCurrencySchema, setBaseCurrencySchema } from '~/schemas/currency.schema';
+import { getAllCurrencies, deleteCurrency } from '~/services/currency.service';
+import { deleteCurrencySchema } from '~/schemas/currency.schema';
 import type { Route } from './+types/_app.settings.currencies';
 
 export async function loader(_: Route.LoaderArgs) {
@@ -19,14 +19,6 @@ export async function action({ request }: Route.ActionArgs) {
     const parsed = deleteCurrencySchema.safeParse({ id: form.get('id') });
     if (!parsed.success) return { error: 'currencies.notFound' };
     const result = deleteCurrency(db, parsed.data.id);
-    if (!result.ok) return { error: result.error };
-    return redirect('/settings/currencies');
-  }
-
-  if (intent === 'set-base') {
-    const parsed = setBaseCurrencySchema.safeParse({ id: form.get('id') });
-    if (!parsed.success) return { error: 'currencies.notFound' };
-    const result = setBaseCurrency(db, parsed.data.id);
     if (!result.ok) return { error: result.error };
     return redirect('/settings/currencies');
   }
@@ -70,7 +62,6 @@ export default function CurrenciesPage() {
                 <th>{t('currencies.name')}</th>
                 <th>{t('currencies.symbol')}</th>
                 <th className="has-text-right">{t('currencies.decimalPlaces')}</th>
-                <th>{t('currencies.isBase')}</th>
                 <th className="has-text-right">{t('currencies.actions')}</th>
               </tr>
             </thead>
@@ -81,11 +72,6 @@ export default function CurrenciesPage() {
                   <td>{currency.name}</td>
                   <td>{currency.symbol}</td>
                   <td className="has-text-right">{currency.decimalPlaces}</td>
-                  <td>
-                    {currency.isBase ? (
-                      <span className="tag is-success is-small">{t('currencies.baseBadge')}</span>
-                    ) : '—'}
-                  </td>
                   <td className="has-text-right">
                     <Link
                       to={`/settings/currencies/${currency.id}/edit`}
@@ -93,15 +79,6 @@ export default function CurrenciesPage() {
                     >
                       {t('currencies.edit')}
                     </Link>
-                    {!currency.isBase && (
-                      <button
-                        type="button"
-                        className="button is-small is-info is-light mr-1"
-                        onClick={() => submit({ _intent: 'set-base', id: String(currency.id) }, { method: 'post' })}
-                      >
-                        {t('currencies.setAsBase')}
-                      </button>
-                    )}
                     <button
                       type="button"
                       className="button is-small is-danger is-light"

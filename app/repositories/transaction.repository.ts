@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   accounts, currencies, exchangeRates, tags,
@@ -42,7 +42,6 @@ export type AccountOption = {
   currencyId: number;
   currencyCode: string;
   currencyDecimalPlaces: number;
-  isBaseCurrency: number;
   accountType: string;
 };
 
@@ -59,7 +58,6 @@ export type TransactionDetail = Transaction & {
   entries: (TransactionEntry & {
     currencyCode: string;
     currencyDecimalPlaces: number;
-    isBaseCurrency: number;
   })[];
   tagIds: number[];
 };
@@ -175,7 +173,6 @@ export function getTransactionById(
       memo:                  transactionEntries.memo,
       currencyCode:          currencies.code,
       currencyDecimalPlaces: currencies.decimalPlaces,
-      isBaseCurrency:        currencies.isBase,
     })
     .from(transactionEntries)
     .innerJoin(accounts,   eq(transactionEntries.accountId, accounts.id))
@@ -204,7 +201,6 @@ export function getActiveAccountOptions(
       currencyId:            accounts.currencyId,
       currencyCode:          currencies.code,
       currencyDecimalPlaces: currencies.decimalPlaces,
-      isBaseCurrency:        currencies.isBase,
       accountType:           accounts.accountType,
     })
     .from(accounts)
@@ -225,7 +221,6 @@ export function getAllAccountOptions(
       currencyId:            accounts.currencyId,
       currencyCode:          currencies.code,
       currencyDecimalPlaces: currencies.decimalPlaces,
-      isBaseCurrency:        currencies.isBase,
       accountType:           accounts.accountType,
     })
     .from(accounts)
@@ -247,16 +242,6 @@ export function getAllExchangeRates(
     .from(exchangeRates)
     .orderBy(asc(exchangeRates.currencyId), asc(exchangeRates.date))
     .all();
-}
-
-export function getBaseCurrency(
-  db: BetterSQLite3Database<typeof schema>,
-): BaseCurrency | null {
-  return db
-    .select({ code: currencies.code, symbol: currencies.symbol, decimalPlaces: currencies.decimalPlaces })
-    .from(currencies)
-    .where(eq(currencies.isBase, 1))
-    .get() ?? null;
 }
 
 export function getAllTagOptions(
@@ -360,9 +345,3 @@ export function deleteTransaction(
   db.delete(transactions).where(eq(transactions.id, id)).run();
 }
 
-export function hasAnyTransactions(
-  db: BetterSQLite3Database<typeof schema>,
-): boolean {
-  const row = db.select({ n: count() }).from(transactions).get();
-  return (row?.n ?? 0) > 0;
-}

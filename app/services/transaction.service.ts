@@ -3,6 +3,8 @@ import type * as schema from '~/db/schema';
 import type { Transaction } from '~/db/schema';
 import type { TransactionFormData } from '~/schemas/transaction.schema';
 import * as repo from '~/repositories/transaction.repository';
+import { getCurrencyByCode } from '~/repositories/currency.repository';
+import { env } from '~/config';
 import { logger } from '~/lib/logger';
 import type {
   TransactionListRow, TransactionDetail, AccountOption,
@@ -18,6 +20,11 @@ export type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: strin
 
 const PAGE_SIZE = 10;//25;
 
+function getBaseCurrency(db: BetterSQLite3Database<typeof schema>): BaseCurrency | null {
+  const c = getCurrencyByCode(db, env.BASE_CURRENCY);
+  return c ? { code: c.code, symbol: c.symbol, decimalPlaces: c.decimalPlaces } : null;
+}
+
 export function getTransactionsPageData(
   db: BetterSQLite3Database<typeof schema>,
   filters: TransactionFilters,
@@ -25,7 +32,7 @@ export function getTransactionsPageData(
 ) {
   const result      = repo.getTransactionsPaginated(db, filters, page, PAGE_SIZE);
   const filterTags  = repo.getAllTagOptions(db);
-  const baseCurrency = repo.getBaseCurrency(db);
+  const baseCurrency = getBaseCurrency(db);
   return { ...result, filterTags, baseCurrency };
 }
 
@@ -34,7 +41,7 @@ export function getNewTransactionFormData(db: BetterSQLite3Database<typeof schem
     accounts:      repo.getActiveAccountOptions(db),
     exchangeRates: repo.getAllExchangeRates(db),
     tags:          repo.getAllTagOptions(db),
-    baseCurrency:  repo.getBaseCurrency(db),
+    baseCurrency:  getBaseCurrency(db),
     today:         new Date().toISOString().slice(0, 10),
   };
 }
@@ -56,7 +63,7 @@ export function getEditTransactionFormData(
     accounts:      repo.getAllAccountOptions(db),
     exchangeRates: repo.getAllExchangeRates(db),
     tags:          repo.getAllTagOptions(db),
-    baseCurrency:  repo.getBaseCurrency(db),
+    baseCurrency:  getBaseCurrency(db),
   };
 }
 
@@ -169,7 +176,7 @@ function saveNewRates(
   const seen = new Set<number>();
   for (const e of data.entries) {
     const account = accountMap.get(e.accountId);
-    if (!account || account.isBaseCurrency) continue;
+    if (!account || account.currencyCode === env.BASE_CURRENCY) continue;
     if (seen.has(account.currencyId)) continue;
     seen.add(account.currencyId);
 
