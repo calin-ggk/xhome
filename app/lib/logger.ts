@@ -9,10 +9,10 @@ function createLogger() {
   const transport = pino.transport({
     target: 'pino-roll',
     options: {
-      file: `${logDir}/app.log`,
+      file: `${logDir}/app`,
       frequency: 'daily',
+      dateFormat: 'yyyy-MM-dd',
       mkdir: true,
-      size: '10m',
       limit: { count: retention },
     },
   });
