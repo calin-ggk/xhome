@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./var:/app/var
+    environment:
+      DATABASE_URL: /app/var/finance.db
+      BASE_CURRENCY: EUR
+      AUTH_USERNAME: ${AUTH_USERNAME}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH}
+      SESSION_SECRET: ${SESSION_SECRET}
+      API_KEY: ${API_KEY:-}
+    command: sh -c "npm run db:push && npm run seed:demo && npm run start"
+    restart: unless-stopped
