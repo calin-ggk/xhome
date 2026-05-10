@@ -7,7 +7,8 @@ import { TransactionForm } from '~/components/TransactionForm';
 import type { Route } from './+types/_app.transactions.new';
 
 export async function loader(_: Route.LoaderArgs) {
-  return getNewTransactionFormData(db);
+  const today = new Date().toISOString().slice(0, 10);
+  return { ...getNewTransactionFormData(db), initialValues: { date: today, description: '', tagIds: [], entries: [] } };
 }
 
 export async function action({ request }: Route.ActionArgs) {
