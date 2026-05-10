@@ -4,7 +4,10 @@
 
 - **Units:** All amounts are stored as `INTEGER` (cents/smallest unit) to avoid floating-point errors.
 - **Integrity:** Every transaction must satisfy `sum(debit) == sum(credit)`.
-- **Currency:** `amount` is in account's native currency; `amount_base` is the value in system's base currency at transaction time.
+- **Base Currency:** Set via `BASE_CURRENCY` env var (default `EUR`). Not stored in the DB.
+- **Currency conversion:** All reporting converts to base currency at runtime using the `exchange_rates` table. Resolution order: DB → Yahoo Finance → manual user input.
+- **`amount_base` on entries:** Stored only on `transaction_entries`. Captures the base-currency value at transaction time using the published exchange rate. Used to validate double-entry balance in base currency and to detect implicit commissions (spread between published rate and actual payment amount).
+- **`balance_base` on snapshots:** Not stored. Past-month reports derive base-currency values from exchange rates persisted at snapshot creation time.
 - **Hierarchy:** Uses **Path Strategy** (`category`) for account organization.
 
 ---
@@ -18,8 +21,8 @@ CREATE TABLE currencies (
   code        TEXT    NOT NULL UNIQUE, -- ISO 4217 (USD, EUR, RON)
   name        TEXT    NOT NULL,
   symbol      TEXT    NOT NULL,
-  decimal_places INTEGER NOT NULL DEFAULT 2, -- cents scale (USD=2, BTC=8, JPY=0)
-  is_base     INTEGER NOT NULL DEFAULT 0 -- 1 = system base currency
+  decimal_places INTEGER NOT NULL DEFAULT 2 -- cents scale (USD=2, BTC=8, JPY=0)
+  -- base currency is defined by BASE_CURRENCY env var, not stored here
 );
 
 CREATE TABLE exchange_rates (
@@ -106,7 +109,7 @@ CREATE TABLE account_monthly_snapshots (
   account_id    INTEGER NOT NULL REFERENCES accounts(id),
   date          TEXT    NOT NULL, -- YYYY-MM-01
   balance       INTEGER NOT NULL, -- Native cents
-  balance_base  INTEGER NOT NULL, -- Base currency cents
+  -- balance_base not stored; derived at runtime from exchange_rates for the snapshot date
   UNIQUE (account_id, date)
 );
 ```
@@ -115,9 +118,22 @@ CREATE TABLE account_monthly_snapshots (
 
 1.  **The Balancing Act:** Any `action` that creates `transaction_entries` must wrap them in a DB transaction and verify:
     `SUM(entries WHERE side='debit') - SUM(entries WHERE side='credit') == 0`.
+    The same check applies in base currency using `amount_base`.
 2.  **Asset/Expense:** Are `debit` accounts (increase with debit entries).
 3.  **Income/Equity/Liability:** Are `credit` accounts (increase with credit entries).
-4.  **Security Purchase Example:**
+4.  **Exchange Rate Resolution:** Whenever a base-currency value is needed for a given currency + date:
+    1. Look up `exchange_rates` table (exact date match).
+    2. Fetch from Yahoo Finance for that date.
+    3. Prompt user to enter manually.
+    For the base currency itself the rate is always 1 — no lookup needed.
+5.  **Snapshot Creation:** Before saving snapshots, persist exchange rates for the snapshot date for all non-base-currency accounts (same resolution chain). This guarantees past-month reports always have the rates they need.
+6.  **`amount_base` on entries:** Set at transaction creation time using the published exchange rate from `exchange_rates` for the transaction date. For base-currency entries: `amount_base = amount`. Used to validate double-entry balance in base currency and to surface implicit commissions.
+7.  **Multi-Currency Transaction (3-entry pattern):** When paying for foreign currency at a bank rate worse than the published rate:
+    - Debit foreign-currency account (at published exchange rate → `amount_base`)
+    - Credit base-currency account (actual amount paid)
+    - Debit Commission/Expense (spread = actual payment − published-rate value)
+    Double-entry balances: `amount_base(foreign) + commission = actual_payment`.
+8.  **Security Purchase Example:**
     - Debit `asset/shares/apple` (Value)
     - Debit `expense/fees` (Commission)
     - Credit `asset/bank/checking` (Total cost)

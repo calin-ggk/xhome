@@ -9,11 +9,15 @@ A double-entry accounting system for multi-currency tracking and security perfor
 
 - **Double-Entry:** Every transaction MUST balance: `sum(debit) == sum(credit)`.
 - **Cents Only:** All currency amounts in DB are `INTEGER` (cents). Never use floats for money.
-- **Base Currency:** All reporting uses `amount_base`, calculated at transaction time.
+- **Base Currency:** Defined by the `BASE_CURRENCY` env var (default `EUR`). Not stored on the `currencies` table. All reporting converts to base currency at runtime using exchange rates.
+- **Entry `amount_base`:** Stored on `transaction_entries` only — the base-currency value at transaction time using the published exchange rate. Used for double-entry balance validation and automatic commission detection (difference between actual payment and published-rate value).
+- **Exchange Rate Resolution:** When a rate is needed for a given currency and date: (1) look up `exchange_rates` table, (2) fetch from Yahoo Finance, (3) prompt user to enter manually.
+- **Snapshot Rates:** At snapshot creation time, exchange rates for all non-base-currency accounts are persisted for the snapshot date (same resolution chain), guaranteeing past-month reports always have the rates they need.
 - **Account Types:**
   - `debit`: Assets (Bank, Cash, Shares), Expenses.
   - `credit`: Income, Liabilities (Loans), Equity.
 - **Security Logic:** Buying shares increases `quantity` on a `debit` account (Asset).
+- **Multi-Currency Transactions:** A single transaction may have 3+ entries. Example — buying USD with RON at a bank rate worse than published: Debit USD account (at published rate), Credit RON account (actual amount paid), Debit Commission/Expense (the spread). Double-entry balances in base currency.
 
 ## Key Entities & Relationships
 
@@ -22,7 +26,7 @@ A double-entry accounting system for multi-currency tracking and security perfor
 - **Entry:** A single leg linking an `account` to a `side` (debit/credit) and an `amount`.
 - **Tags:** Many-to-many relationship with `transactions` for cross-cutting tracking.
 - **UserPreferences:** Singleton row storing app-wide settings (e.g. `default_report_range`). Valid range values: `current_month`, `last_month`, `current_year`, `last_year`, `all_time`.
-- **Currency:** Defines `decimal_places` (scale for amounts) and which is the `is_base` currency for reporting.
+- **Currency:** Defines `decimal_places` (scale for amounts). No `is_base` flag — base currency is set via `BASE_CURRENCY` env var.
 - **ExchangeRate:** One rate per currency per date; stored as a scaled integer (`rate / 10^rate_scale`, default scale 4).
 - **Security:** A tradeable instrument (stock/ETF/crypto) with its own `quantity_scale` (default 6).
 
