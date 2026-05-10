@@ -404,7 +404,7 @@ export function TransactionForm({
                                   <optgroup key={prefix} label={prefix.charAt(0).toUpperCase() + prefix.slice(1)}>
                                     {accs.map(acc => (
                                       <option key={acc.id} value={acc.id}>
-                                        {acc.category} ({acc.currencyCode})
+                                        {acc.name} ({acc.category})
                                       </option>
                                     ))}
                                   </optgroup>

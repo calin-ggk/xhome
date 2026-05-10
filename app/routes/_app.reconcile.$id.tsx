@@ -151,7 +151,7 @@ export default function ReconcileDetailPage() {
         </div>
 
         <div className="reconcile-form-page">
-          <h2 className="title is-4 mb-4">{account.category}</h2>
+          <h2 className="title is-4 mb-4">{account.name} <span className="has-text-grey is-size-6">({account.category})</span></h2>
 
           {actionData && 'error' in actionData && (
             <div className="notification is-danger is-light mb-4">
@@ -227,7 +227,7 @@ export default function ReconcileDetailPage() {
                   <tr className="reconcile-fixed-row">
                     <td>
                       <small className="has-text-grey">{t('reconcile.fixedEntry')}</small>
-                      <br />{account.category}
+                      <br />{account.name} <span className="has-text-grey is-size-7">({account.category})</span>
                     </td>
                     <td>
                       <span className={`reconcile-side-badge is-${fixedSide}`}>
@@ -253,7 +253,7 @@ export default function ReconcileDetailPage() {
                           >
                             <option value="">{t('reconcile.account')}…</option>
                             {accounts.map(a => (
-                              <option key={a.id} value={a.id}>{a.category}</option>
+                              <option key={a.id} value={a.id}>{a.name} ({a.category})</option>
                             ))}
                           </select>
                         </div>
