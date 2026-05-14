@@ -49,24 +49,23 @@ Coming from a background in **PHP/Symfony** and **Java**, I designed X-House wit
 ```bash
 cp .env.example .env      # set credentials, DATABASE_URL, etc.
 npm install
-npm run db:push           # create the database schema
 npm run seed:demo         # populate with several months of demo data
 npm run dev               # http://localhost:5173
 ```
 
-> For a clean production setup (no demo data), use `npm run seed:init` instead — it creates currencies, securities, and accounts only.
+> For a clean production init (no demo data), use `npm run seed:init` instead — it creates currencies, securities, and accounts with zero balances.
 
 ### Scripts
 
 | Command | Description |
 |---|---|
 | `npm run dev` | Start development server with HMR |
-| `npm run build` | Production build |
+| `npm run build` | Production build (app + seed scripts) |
 | `npm run typecheck` | Type-check with generated route types |
-| `npm run db:push` | Apply schema changes to the dev DB |
-| `npm run db:push:test` | Apply schema changes to the test DB |
-| `npm run seed:demo` | Populate DB with several months of demo data |
-| `npm run seed:init` | Production init: currencies, securities, accounts |
+| `npm run db:generate` | Generate a SQL migration file from schema changes |
+| `npm run db:migrate` | Run DB migrations — dev only, no build needed |
+| `npm run seed:demo` | Seed DB with demo data — dev only, no build needed |
+| `npm run seed:init` | Seed DB with empty account structure — dev only, no build needed |
 | `npx drizzle-kit studio` | Browse database in the browser |
 
 ### Environment
@@ -77,6 +76,27 @@ AUTH_USERNAME=admin
 AUTH_PASSWORD_HASH=<bcrypt hash>
 SESSION_SECRET=<32+ char secret>
 API_KEY=<16+ char secret>   # enables REST API at /api/v1/*
+```
+
+### Docker
+
+The image is self-contained — no dev dependencies at runtime. Seeding is controlled by the `SEED_MODE` environment variable:
+
+| `SEED_MODE` | Behaviour |
+|---|---|
+| *(unset)* | Migrations only |
+| `demo` | Wipe DB, migrate, seed with demo data |
+| `init` | Wipe DB, migrate, seed with empty account structure |
+
+```bash
+# Quick demo
+SEED_MODE=demo docker compose up
+
+# Production first boot
+SEED_MODE=init docker compose up
+
+# Production (DB already initialised)
+docker compose up
 ```
 
 ## 📁 Project Structure
@@ -90,6 +110,8 @@ app/
   routes/          # React Router route modules
   services/        # business logic
   repositories/    # DB queries
+scripts/           # migrate + init/demo scripts (run with tsx)
+drizzle/           # SQL migration files (generated, committed)
 docs/
   domain.md        # full schema & business rules
 ```

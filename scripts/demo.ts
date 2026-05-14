@@ -1,4 +1,3 @@
-import { createInterface } from 'node:readline/promises';
 import { db } from '~/db/client';
 import * as currencySvc from '~/services/currency.service';
 import * as securitySvc from '~/services/security.service';
@@ -28,15 +27,6 @@ type Entry = {
 };
 
 async function seed() {
-  const envFile = process.argv[2];
-  if (envFile === '.env') {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    const answer = await rl.question(`Seeding production database (${process.env.DATABASE_URL}). Continue? [y/N] `);
-    rl.close();
-    if (answer.trim().toLowerCase() !== 'y') { console.log('Aborted.'); return; }
-  }
-
-
   // ── 1. Currencies ─────────────────────────────────────────────────────────
   for (const c of [
     { code: 'EUR', name: 'Euro',           symbol: '€',   decimalPlaces: 2 },
@@ -62,6 +52,10 @@ async function seed() {
 
   // ── 3. Accounts ───────────────────────────────────────────────────────────
   const existingCats = new Set(accountRepo.getAllAccounts(db).map(a => a.category));
+  if (existingCats.size > 0) {
+    console.log('Demo data already exists — skipping. Drop the DB and re-run to re-seed.');
+    return;
+  }
   const defs = [
     { name: 'Current RON',          type: 'debit'  as const, accountType: 'simple'   as const, currencyId: ron.id, category: 'asset/bank/current-ron',    isReconcilable: 1 },
     { name: 'Current USD',          type: 'debit'  as const, accountType: 'simple'   as const, currencyId: usd.id, category: 'asset/bank/current-usd',    isReconcilable: 1 },
@@ -105,12 +99,6 @@ async function seed() {
     openingRon: g('equity/opening/ron'),
     openingUsd: g('equity/opening/usd'),
   };
-
-  // ── Guard: skip if already seeded ─────────────────────────────────────────
-  if (accountRepo.hasTransactionEntries(db, acct.salary.id)) {
-    console.log('Demo data already exists — skipping. Drop the DB and re-run to re-seed.');
-    return;
-  }
 
   // ── 5. Transactions ───────────────────────────────────────────────────────
   // Rates: EUR per foreign currency unit (approximate 2025/2026 values)

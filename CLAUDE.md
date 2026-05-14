@@ -69,6 +69,11 @@ A double-entry accounting system for multi-currency tracking and security perfor
 
 **Localisation:** Use `useFormat()` for all displayed amounts, dates, and month labels. See `docs/localization.md`.
 
+## Scripts
+
+- `scripts/` — `migrate.ts`, `init.ts`, `demo.ts`. Dev: `npm run db:migrate` / `seed:init` / `seed:demo` (tsx, no build needed). Prod: bundled to `build/scripts/` by `npm run build`, invoked by Docker entrypoint.
+- Docker `SEED_MODE=demo|init` wipes the DB and re-seeds; unset = migrations only.
+
 ## Reference
 
 - `docs/domain.md` — full schema & business rules

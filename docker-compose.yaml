@@ -8,10 +8,10 @@ services:
     environment:
       DATABASE_URL: /app/var/finance.db
       BASE_CURRENCY: EUR
+      SEED_MODE: ${SEED_MODE:-}   # set to "demo" or "init" to wipe and re-seed; omit (or leave blank) for production
       AUTH_USERNAME: ${AUTH_USERNAME:-admin}
       AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH:-$2b$12$IGca16Ruz/2X1yHLIGSB4.xRcNZ33QvtHTrBpYnGV4pNvMk/33Yt.}
       SESSION_SECRET: ${SESSION_SECRET:-change-this-secret-for-production-use}
       API_KEY: ${API_KEY:-xhome-demo-api-key}
-
-    command: sh -c "[ -f /app/var/finance.db ] || (npm run db:push -- --force && ./node_modules/.bin/tsx seed/demo.ts); npm run start"
+    command: 'sh -c "if [ -n \"$$SEED_MODE\" ]; then rm -f $$DATABASE_URL; fi && node /app/build/scripts/migrate.js && if [ -n \"$$SEED_MODE\" ]; then node /app/build/scripts/$$SEED_MODE.js; fi && npm run start"'
     restart: unless-stopped

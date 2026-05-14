@@ -1,6 +1,5 @@
 // Production initialisation — edit the two constants below, then run once on
 // a fresh database: npm run seed:init
-import { createInterface } from 'node:readline/promises';
 import { db } from '~/db/client';
 import * as currencySvc from '~/services/currency.service';
 import * as securitySvc from '~/services/security.service';
@@ -63,14 +62,6 @@ function ok<T>(r: { ok: true; data: T } | { ok: false; error: string }, label: s
 }
 
 async function init() {
-  const envFile = process.argv[2];
-  if (envFile === '.env') {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    const answer = await rl.question(`Seeding production database (${process.env.DATABASE_URL}). Continue? [y/N] `);
-    rl.close();
-    if (answer.trim().toLowerCase() !== 'y') { console.log('Aborted.'); return; }
-  }
-
   // ── Currencies ────────────────────────────────────────────────────────────
   for (const c of CURRENCIES) {
     if (!currencyRepo.getCurrencyByCode(db, c.code)) currencySvc.createCurrency(db, c);
