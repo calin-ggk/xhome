@@ -89,7 +89,7 @@ The image is self-contained — no dev dependencies at runtime. Seeding is contr
 | `init` | Wipe DB, migrate, seed with empty account structure |
 
 ```bash
-# Quick demo
+# Quick demo (default login: admin / 123)
 SEED_MODE=demo docker compose up
 
 # Production first boot
@@ -132,4 +132,4 @@ For full transparency:
 
 ---
 
-**License:** GPL-3.0
+**License:** MIT
