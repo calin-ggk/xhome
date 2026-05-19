@@ -49,9 +49,12 @@ Coming from a background in **PHP/Symfony** and **Java**, I designed X-House wit
 ```bash
 cp .env.example .env      # set credentials, DATABASE_URL, etc.
 npm install
+npm run db:migrate        # creates database
 npm run seed:demo         # populate with several months of demo data
 npm run dev               # http://localhost:5173
 ```
+
+> Default login: **admin / 123**
 
 > For a clean production init (no demo data), use `npm run seed:init` instead — it creates currencies, securities, and accounts with zero balances.
 
