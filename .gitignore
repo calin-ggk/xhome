@@ -1,4 +1,5 @@
 .DS_Store
+/scripts/init.local.ts
 .env
 /node_modules/
 /var/

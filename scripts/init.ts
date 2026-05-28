@@ -1,5 +1,5 @@
-// Production initialisation — edit the two constants below, then run once on
-// a fresh database: npm run seed:init
+// Production initialisation — copy scripts/init.local.example.ts to
+// scripts/init.local.ts, fill in your data, then run: npm run seed:init
 import { db } from '~/db/client';
 import * as currencySvc from '~/services/currency.service';
 import * as securitySvc from '~/services/security.service';
@@ -8,46 +8,18 @@ import * as txSvc from '~/services/transaction.service';
 import * as currencyRepo from '~/repositories/currency.repository';
 import * as securityRepo from '~/repositories/security.repository';
 import * as accountRepo from '~/repositories/account.repository';
+import { CURRENCIES, ACCOUNTS } from './init.local';
 
-// ── Customise these two constants ────────────────────────────────────────────
-
-const CURRENCIES = [
-  { code: 'EUR', name: 'Euro',           symbol: '€',   decimalPlaces: 2 },
-  { code: 'RON', name: 'Romanian Leu',   symbol: 'lei', decimalPlaces: 2 },
-  { code: 'USD', name: 'US Dollar',      symbol: '$',   decimalPlaces: 2 },
-];
-
-type AccountDef = {
+export type AccountDef = {
   category: string;
   name: string;
   type: 'debit' | 'credit';
-  accountType: 'simple' | 'security';
+  accountType: 'simple' | 'security' | 'deposit';
   currency: string;
   isReconcilable?: 1 | 0;
   security?: { ticker: string; name: string; type: 'stock' | 'etf' | 'crypto'; quantityScale: number };
   opening?: { amount: string; rate: string; quantity?: string };
 };
-
-const ACCOUNTS: AccountDef[] = [
-  // ── Assets ──
-  { category: 'asset/bank/current-ron',   name: 'Current RON',   type: 'debit', accountType: 'simple',   currency: 'RON', isReconcilable: 1, opening: { amount: '0.00', rate: '0.2009' } },
-  { category: 'asset/bank/current-usd',   name: 'Current USD',   type: 'debit', accountType: 'simple',   currency: 'USD', isReconcilable: 1, opening: { amount: '0.00', rate: '0.9250' } },
-  { category: 'asset/savings/savings-ron', name: 'Savings RON',  type: 'debit', accountType: 'simple',   currency: 'RON', isReconcilable: 1, opening: { amount: '0.00', rate: '0.2009' } },
-  { category: 'asset/securities/aapl',    name: 'AAPL',          type: 'debit', accountType: 'security', currency: 'USD',
-    security: { ticker: 'AAPL', name: 'Apple Inc.',             type: 'stock', quantityScale: 6 },
-    opening: { amount: '0.00', rate: '0.9250', quantity: '0' } },
-  { category: 'asset/securities/amd',     name: 'AMD',           type: 'debit', accountType: 'security', currency: 'USD',
-    security: { ticker: 'AMD',  name: 'Advanced Micro Devices', type: 'stock', quantityScale: 6 },
-    opening: { amount: '0.00', rate: '0.9250', quantity: '0' } },
-  // ── Income ──
-  { category: 'income/salary',     name: 'Salary',          type: 'credit', accountType: 'simple', currency: 'RON' },
-  { category: 'income/dividends',  name: 'Dividends',       type: 'credit', accountType: 'simple', currency: 'USD' },
-  // ── Expenses ──
-  { category: 'expense/rent',      name: 'Rent',            type: 'debit',  accountType: 'simple', currency: 'RON' },
-  { category: 'expense/food',      name: 'Food & Groceries',type: 'debit',  accountType: 'simple', currency: 'RON' },
-  { category: 'expense/transport', name: 'Transport',       type: 'debit',  accountType: 'simple', currency: 'RON' },
-  { category: 'expense/utilities', name: 'Utilities',       type: 'debit',  accountType: 'simple', currency: 'RON' },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -106,14 +78,14 @@ async function init() {
   for (const def of ACCOUNTS) {
     if (existingCats.has(def.category)) continue;
     ok(accountSvc.createAccount(db, {
-      name:           def.name,
-      type:           def.type,
-      accountType:    def.accountType,
-      currencyId:     getCurrency(def.currency).id,
-      category:       def.category,
-      isActive:        1,
-      isReconcilable:  def.isReconcilable ?? 0,
-      securityId:      def.security ? getSecurityId(def.security.ticker) : null,
+      name:          def.name,
+      type:          def.type,
+      accountType:   def.accountType,
+      currencyId:    getCurrency(def.currency).id,
+      category:      def.category,
+      isActive:      1,
+      isReconcilable: def.isReconcilable ?? 0,
+      securityId:    def.security ? getSecurityId(def.security.ticker) : null,
     }), def.category);
   }
 
