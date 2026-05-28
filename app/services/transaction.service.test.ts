@@ -17,17 +17,27 @@ const mockTx = { id: 1, date: '2024-01-15', description: 'Salary', hash: null, c
 const baseAccount: AccountOption = {
   id: 1, category: 'asset/bank', name: 'Bank RON',
   currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
-  accountType: 'simple',
+  accountType: 'simple', quantityScale: null,
 };
 const foreignAccount: AccountOption = {
   id: 2, category: 'asset/bank/eur', name: 'Bank EUR',
   currencyId: 2, currencyCode: 'EUR', currencyDecimalPlaces: 2,
-  accountType: 'simple',
+  accountType: 'simple', quantityScale: null,
 };
 const incomeAccount: AccountOption = {
   id: 3, category: 'income/salary', name: 'Salary',
   currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
-  accountType: 'simple',
+  accountType: 'simple', quantityScale: null,
+};
+const securityAccountScale0: AccountOption = {
+  id: 4, category: 'asset/securities/snp', name: 'SNP',
+  currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
+  accountType: 'security', quantityScale: 0,
+};
+const securityAccountScale6: AccountOption = {
+  id: 5, category: 'asset/securities/btc', name: 'BTC',
+  currencyId: 1, currencyCode: 'RON', currencyDecimalPlaces: 2,
+  accountType: 'security', quantityScale: 6,
 };
 
 const formData = {
@@ -105,6 +115,42 @@ describe('createTransaction', () => {
     createTransaction({} as never, formData);
 
     expect(repo.insertExchangeRate).not.toHaveBeenCalled();
+  });
+
+  it('stores quantity as integer shares for quantityScale=0 security', () => {
+    vi.mocked(repo.getAllAccountOptions).mockReturnValue([securityAccountScale0, incomeAccount]);
+    vi.mocked(repo.createTransaction).mockReturnValue(mockTx);
+    vi.mocked(repo.hasExchangeRate).mockReturnValue(true);
+
+    const data = {
+      ...formData,
+      entries: [
+        { accountId: 4, side: 'debit'  as const, amountStr: '12060.00', rateStr: '0.1920', memo: '', quantityStr: '12000', interestRatePct: null, maturityDate: null },
+        { accountId: 3, side: 'credit' as const, amountStr: '12060.00', rateStr: '0.1920', memo: '', quantityStr: null,     interestRatePct: null, maturityDate: null },
+      ],
+    };
+    createTransaction({} as never, data);
+
+    const [, , entryRows] = vi.mocked(repo.createTransaction).mock.calls[0]!;
+    expect(entryRows[0]!.quantity).toBe(12000); // scale 0: stored as-is
+  });
+
+  it('stores quantity as scaled integer for quantityScale=6 security', () => {
+    vi.mocked(repo.getAllAccountOptions).mockReturnValue([securityAccountScale6, incomeAccount]);
+    vi.mocked(repo.createTransaction).mockReturnValue(mockTx);
+    vi.mocked(repo.hasExchangeRate).mockReturnValue(true);
+
+    const data = {
+      ...formData,
+      entries: [
+        { accountId: 5, side: 'debit'  as const, amountStr: '100.00', rateStr: '1', memo: '', quantityStr: '1.5', interestRatePct: null, maturityDate: null },
+        { accountId: 3, side: 'credit' as const, amountStr: '100.00', rateStr: '1', memo: '', quantityStr: null,   interestRatePct: null, maturityDate: null },
+      ],
+    };
+    createTransaction({} as never, data);
+
+    const [, , entryRows] = vi.mocked(repo.createTransaction).mock.calls[0]!;
+    expect(entryRows[0]!.quantity).toBe(1500000); // 1.5 × 10^6
   });
 
   it('returns ok:false when account is not found', () => {

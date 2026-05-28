@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, like, lte, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
-  accounts, currencies, exchangeRates, tags,
+  accounts, currencies, exchangeRates, securities, tags,
   transactionEntries, transactionTagMap, transactions,
 } from '~/db/schema';
 import type {
@@ -43,6 +43,7 @@ export type AccountOption = {
   currencyCode: string;
   currencyDecimalPlaces: number;
   accountType: string;
+  quantityScale: number | null;
 };
 
 export type ExchangeRateRow = {
@@ -202,9 +203,11 @@ export function getActiveAccountOptions(
       currencyCode:          currencies.code,
       currencyDecimalPlaces: currencies.decimalPlaces,
       accountType:           accounts.accountType,
+      quantityScale:         securities.quantityScale,
     })
     .from(accounts)
     .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .leftJoin(securities, eq(accounts.securityId, securities.id))
     .where(eq(accounts.isActive, 1))
     .orderBy(asc(accounts.category))
     .all();
@@ -222,9 +225,11 @@ export function getAllAccountOptions(
       currencyCode:          currencies.code,
       currencyDecimalPlaces: currencies.decimalPlaces,
       accountType:           accounts.accountType,
+      quantityScale:         securities.quantityScale,
     })
     .from(accounts)
     .innerJoin(currencies, eq(accounts.currencyId, currencies.id))
+    .leftJoin(securities, eq(accounts.securityId, securities.id))
     .orderBy(asc(accounts.category))
     .all();
 }

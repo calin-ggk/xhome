@@ -152,7 +152,8 @@ function buildEntryRows(
 
     let quantity: number | null = null;
     if (e.quantityStr && account.accountType === 'security') {
-      quantity = Math.round(parseFloat(e.quantityStr) * 1e6);
+      const scale = account.quantityScale ?? 6;
+      quantity = Math.round(parseFloat(e.quantityStr) * 10 ** scale);
     }
 
     let interestRate: number | null = null;
